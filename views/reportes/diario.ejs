@@ -1,0 +1,48 @@
+<%- include('../plantillas/header') %>
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="h3 mb-0">Reporte diario de compras · <%= fecha %></h1>
+  <form class="d-flex gap-2 d-print-none" method="GET" action="/reportes/diario">
+    <input class="form-control" type="date" name="fecha" value="<%= fecha %>" required>
+    <button class="btn btn-primary" type="submit">Ver</button>
+    <a class="btn btn-outline-secondary" href="/reportes/diario.csv?fecha=<%= fecha %>">CSV</a>
+    <button class="btn btn-outline-secondary" type="button" onclick="window.print()">Imprimir</button>
+  </form>
+</div>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-md-3"><div class="card text-center"><div class="card-body"><div class="h3"><%= totales.compras %></div><div class="text-muted">Compras</div></div></div></div>
+  <div class="col-6 col-md-3"><div class="card text-center"><div class="card-body"><div class="h3"><%= totales.cajas %></div><div class="text-muted">Cajas</div></div></div></div>
+  <div class="col-6 col-md-3"><div class="card text-center"><div class="card-body"><div class="h3"><%= totales.kilos.toFixed(2) %></div><div class="text-muted">Kilos</div></div></div></div>
+  <div class="col-6 col-md-3"><div class="card text-center"><div class="card-body"><div class="h3"><%= dinero(totales.total) %></div><div class="text-muted">Importe total</div></div></div></div>
+</div>
+
+<% if (!filas.length) { %>
+  <div class="alert alert-info">No hay compras registradas en esta fecha.</div>
+<% } else { %>
+<h2 class="h5">Detalle</h2>
+<div class="table-responsive">
+<table class="table table-striped table-sm align-middle">
+  <thead><tr><th>Hora</th><th>Lote</th><th>Especies</th><th>Comprador</th><th class="text-end">Cajas</th><th class="text-end">Kilos</th><th class="text-end">Salida/kg</th><th class="text-end">Final/kg</th><th class="text-end">Total</th></tr></thead>
+  <tbody>
+  <% filas.forEach(f => { %>
+    <tr><td><%= f.hora %></td><td><%= f.lote %></td><td><%= f.especies %></td><td><%= f.comprador %></td>
+      <td class="text-end"><%= f.cajas %></td><td class="text-end"><%= f.kilos.toFixed(2) %></td>
+      <td class="text-end"><%= dinero(f.precio_salida) %></td><td class="text-end"><%= dinero(f.precio_final) %></td>
+      <td class="text-end"><strong><%= dinero(f.total) %></strong></td></tr>
+  <% }) %>
+  </tbody>
+  <tfoot><tr class="table-secondary"><th colspan="4">TOTAL</th><th class="text-end"><%= totales.cajas %></th><th class="text-end"><%= totales.kilos.toFixed(2) %></th><th></th><th></th><th class="text-end"><%= dinero(totales.total) %></th></tr></tfoot>
+</table>
+</div>
+
+<h2 class="h5 mt-4">Resumen por comprador</h2>
+<table class="table table-sm w-auto">
+  <thead><tr><th>Comprador</th><th class="text-end">Compras</th><th class="text-end">Kilos</th><th class="text-end">Importe</th></tr></thead>
+  <tbody>
+  <% resumen.forEach(r => { %>
+    <tr><td><%= r.comprador %></td><td class="text-end"><%= r.compras %></td><td class="text-end"><%= r.kilos.toFixed(2) %></td><td class="text-end"><%= dinero(r.total) %></td></tr>
+  <% }) %>
+  </tbody>
+</table>
+<% } %>
+<%- include('../plantillas/footer') %>

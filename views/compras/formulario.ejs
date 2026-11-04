@@ -1,0 +1,32 @@
+<%- include('../plantillas/header') %>
+<h1 class="h3 mb-3"><%= editando ? 'Editar compra del lote ' + compra.id_cmp : 'Registrar compra' %></h1>
+<%- include('../plantillas/mensajes', { mensaje: null }) %>
+<form action="<%= action %>" method="POST" class="col-lg-6">
+  <div class="mb-3"><label class="form-label" for="id_cmp">Lote</label>
+    <% if (editando) { %>
+      <input type="text" class="form-control" value="Lote <%= compra.id_cmp %>" disabled>
+    <% } else { %>
+    <select class="form-select" id="id_cmp" name="id_cmp" required>
+      <option value="">Selecciona un lote disponible…</option>
+      <% lotes.forEach(l => { %>
+      <option value="<%= l.id_lte %>" <%= compra && String(compra.id_cmp) === String(l.id_lte) ? 'selected' : '' %>>
+        Lote <%= l.id_lte %> · <%= l.especies.map(e => e.nombre).join(', ') || 'sin especies' %> · <%= Number(l.kilos).toFixed(2) %> kg · salida <%= dinero(l.precio_kilo_salida) %>/kg
+      </option>
+      <% }) %>
+    </select>
+    <% } %>
+  </div>
+  <div class="mb-3"><label class="form-label" for="codigo_cpr">Comprador</label>
+    <select class="form-select" id="codigo_cpr" name="codigo_cpr" required>
+      <option value="">Selecciona…</option>
+      <% compradores.forEach(c => { %>
+      <option value="<%= c.codigo_cpr %>" <%= compra && String(compra.codigo_cpr) === String(c.codigo_cpr) ? 'selected' : '' %>><%= c.codigo_cpr %> · <%= c.nombre %> <%= c.apellido_paterno %> <%= c.apellido_materno || '' %></option>
+      <% }) %>
+    </select></div>
+  <div class="mb-3"><label class="form-label" for="precio_kilo_final">Precio final por kilo (MXN)</label>
+    <input class="form-control" type="number" step="0.01" min="0.01" id="precio_kilo_final" name="precio_kilo_final" value="<%= compra ? (compra.precio_kilo_final || '') : '' %>" required>
+    <div class="form-text">El total se calcula automáticamente: kilos del lote × precio final por kilo.</div></div>
+  <button class="btn btn-primary" type="submit">Guardar</button>
+  <a class="btn btn-link" href="/compras">Cancelar</a>
+</form>
+<%- include('../plantillas/footer') %>

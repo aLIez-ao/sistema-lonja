@@ -1,0 +1,21 @@
+<%- include('../plantillas/header') %>
+<h1 class="h3 mb-3"><%= us && us.id ? 'Editar' : 'Nuevo' %> usuario</h1>
+<%- include('../plantillas/mensajes', { mensaje: null }) %>
+<form action="<%= action %>" method="POST" class="col-lg-6">
+  <div class="mb-3"><label class="form-label" for="usuario">Usuario</label>
+    <input class="form-control" id="usuario" name="usuario" maxlength="40" value="<%= us ? us.usuario : '' %>" required></div>
+  <div class="mb-3"><label class="form-label" for="nombre_completo">Nombre completo</label>
+    <input class="form-control" id="nombre_completo" name="nombre_completo" maxlength="80" value="<%= us ? us.nombre_completo : '' %>" required></div>
+  <div class="mb-3"><label class="form-label" for="rol">Rol</label>
+    <select class="form-select" id="rol" name="rol">
+      <% roles.forEach(r => { %><option value="<%= r %>" <%= us && us.rol === r ? 'selected' : '' %>><%= r %></option><% }) %>
+    </select></div>
+  <div class="mb-3"><label class="form-label" for="password">Contraseña<%= us && us.id ? ' (déjala vacía para no cambiarla)' : '' %></label>
+    <input class="form-control" type="password" id="password" name="password" minlength="8" maxlength="72" autocomplete="new-password" <%= us && us.id ? '' : 'required' %>></div>
+  <% if (us && us.id) { %>
+  <div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="activo" name="activo" <%= us.activo ? 'checked' : '' %>><label class="form-check-label" for="activo">Activo</label></div>
+  <% } %>
+  <button class="btn btn-primary" type="submit">Guardar</button>
+  <a class="btn btn-link" href="/usuarios">Cancelar</a>
+</form>
+<%- include('../plantillas/footer') %>

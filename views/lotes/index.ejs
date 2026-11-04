@@ -1,0 +1,40 @@
+<%- include('../plantillas/header') %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Lotes</h1>
+  <a class="btn btn-primary" href="/lotes/crear">Nuevo lote</a>
+</div>
+<%- include('../plantillas/mensajes', { errores: [] }) %>
+<div class="table-responsive">
+<table class="table table-striped align-middle">
+  <thead><tr><th>Lote</th><th>Fecha</th><th>Especies</th><th>Cajas</th><th>Kilos</th><th>Precio salida/kg</th><th>Estado</th><th class="text-end">Acciones</th></tr></thead>
+  <tbody>
+  <% lotes.forEach(l => { %>
+    <tr>
+      <td><%= l.id_lte %></td>
+      <td><%= fechaHora(l.fecha) %></td>
+      <td><%= l.especies.map(e => e.nombre + ' (' + e.tipo.nombre + ')').join(', ') || '—' %>
+        <a class="small" href="/especies/crear?lote=<%= l.id_lte %>">+ agregar</a></td>
+      <td><%= l.numero_cajas %></td>
+      <td><%= Number(l.kilos).toFixed(2) %></td>
+      <td><%= dinero(l.precio_kilo_salida) %></td>
+      <td>
+        <% if (l.compra) { %><span class="badge text-bg-success">Comprado por <%= l.compra.comprador.nombre %> <%= l.compra.comprador.apellido_paterno %></span>
+        <% } else { %><span class="badge text-bg-warning">Disponible</span><% } %>
+      </td>
+      <td class="text-end text-nowrap">
+        <% if (!l.compra) { %>
+        <a class="btn btn-sm btn-success" href="/compras/crear?lote=<%= l.id_lte %>">Vender</a>
+        <a class="btn btn-sm btn-outline-secondary" href="/lotes/<%= l.id_lte %>/editar">Editar</a>
+        <% } %>
+        <% if (usuario.rol === 'admin' && !l.compra) { %>
+        <form action="/lotes/<%= l.id_lte %>?_method=DELETE" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este lote y sus especies?')">
+          <button class="btn btn-sm btn-outline-danger" type="submit">Eliminar</button>
+        </form>
+        <% } %>
+      </td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>
+</div>
+<%- include('../plantillas/footer') %>

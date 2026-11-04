@@ -1,0 +1,8 @@
+<% if (typeof mensaje !== 'undefined' && mensaje) { %>
+  <div class="alert alert-success" role="alert"><%= mensaje %></div>
+<% } %>
+<% if (typeof errores !== 'undefined' && errores.length) { %>
+  <div class="alert alert-danger" role="alert">
+    <ul class="mb-0"><% errores.forEach(e => { %><li><%= e %></li><% }) %></ul>
+  </div>
+<% } %>

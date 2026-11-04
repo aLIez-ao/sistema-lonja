@@ -1,0 +1,26 @@
+<%- include('../plantillas/header') %>
+<h1 class="h3 mb-3"><%= especie && especie.id_epe ? 'Editar' : 'Nueva' %> especie</h1>
+<%- include('../plantillas/mensajes') %>
+<form action="<%= action %>" method="POST" class="col-lg-6">
+  <div class="mb-3"><label class="form-label" for="nombre">Nombre</label>
+    <input class="form-control" id="nombre" name="nombre" maxlength="25" value="<%= especie ? (especie.nombre || '') : '' %>" required></div>
+  <div class="mb-3"><label class="form-label" for="id_lte">Lote</label>
+    <select class="form-select" id="id_lte" name="id_lte" required>
+      <option value="">Selecciona…</option>
+      <% lotes.forEach(l => { %>
+      <option value="<%= l.id_lte %>" <%= especie && String(especie.id_lte) === String(l.id_lte) ? 'selected' : '' %>>Lote <%= l.id_lte %> · <%= Number(l.kilos).toFixed(2) %> kg · <%= fechaHora(l.fecha) %></option>
+      <% }) %>
+    </select></div>
+  <div class="mb-3"><label class="form-label" for="id_tpo">Tipo</label>
+    <select class="form-select" id="id_tpo" name="id_tpo" required>
+      <option value="">Selecciona…</option>
+      <% tipos.forEach(t => { %>
+      <option value="<%= t.id_tpo %>" <%= especie && String(especie.id_tpo) === String(t.id_tpo) ? 'selected' : '' %>><%= t.nombre %></option>
+      <% }) %>
+    </select></div>
+  <div class="mb-3"><label class="form-label" for="imagen">Imagen (ruta o URL, opcional)</label>
+    <input class="form-control" id="imagen" name="imagen" maxlength="100" value="<%= especie ? (especie.imagen || '') : '' %>"></div>
+  <button class="btn btn-primary" type="submit">Guardar</button>
+  <a class="btn btn-link" href="/especies">Cancelar</a>
+</form>
+<%- include('../plantillas/footer') %>

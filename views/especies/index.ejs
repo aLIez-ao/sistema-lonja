@@ -1,0 +1,31 @@
+<%- include('../plantillas/header') %>
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="h3 mb-0">Especies</h1>
+  <a class="btn btn-primary" href="/especies/crear">Nueva especie</a>
+</div>
+<%- include('../plantillas/mensajes', { errores: [] }) %>
+<div class="table-responsive">
+<table class="table table-striped align-middle">
+  <thead><tr><th>ID</th><th>Imagen</th><th>Nombre</th><th>Tipo</th><th>Lote</th><th class="text-end">Acciones</th></tr></thead>
+  <tbody>
+  <% especies.forEach(e => { %>
+    <tr>
+      <td><%= e.id_epe %></td>
+      <td><% if (e.imagen) { %><img src="<%= e.imagen %>" alt="<%= e.nombre %>" height="40" class="rounded" onerror="this.style.display='none'"><% } else { %>—<% } %></td>
+      <td><%= e.nombre %></td>
+      <td><%= e.tipo.nombre %></td>
+      <td><%= e.id_lte %></td>
+      <td class="text-end">
+        <a class="btn btn-sm btn-outline-secondary" href="/especies/<%= e.id_epe %>/editar">Editar</a>
+        <% if (usuario.rol === 'admin') { %>
+        <form action="/especies/<%= e.id_epe %>?_method=DELETE" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar esta especie?')">
+          <button class="btn btn-sm btn-outline-danger" type="submit">Eliminar</button>
+        </form>
+        <% } %>
+      </td>
+    </tr>
+  <% }) %>
+  </tbody>
+</table>
+</div>
+<%- include('../plantillas/footer') %>
