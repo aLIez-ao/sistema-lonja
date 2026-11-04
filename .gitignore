@@ -1,0 +1,69 @@
+# ==========================================
+# Environment & Secrets
+# ==========================================
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.cert
+*.zip
+
+# ==========================================
+# Databases & Storage
+# ==========================================
+*.sqlite
+*.sqlite3
+*.db
+
+# ==========================================
+# Dependencies & Package Managers
+# ==========================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-store/
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ==========================================
+# IDEs & Code Editors
+# ==========================================
+# VS Code
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# IntelliJ / JetBrains / WebStorm
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Other Editors
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# ==========================================
+# Build Outputs & Generated Reports
+# ==========================================
+dist/
+build/
+out/
+coverage/
+reports/
+*.log
+
+# ==========================================
+# Git Configuration
+# ==========================================
+.gitattributes
+.gitignore
