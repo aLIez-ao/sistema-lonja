@@ -4,21 +4,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="img/favicon.svg" type="image/x-icon">
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
   <title>Sistema Lonja</title>
   <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css">
-  <!-- TODO: Esta cargando el css? -->
   <link rel="stylesheet" href="/css/lonja.css">
 </head>
 
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary d-print-none">
-    <div class="container-fluid">
+  <nav class="navbar navbar-expand-lg navbar-lonja d-print-none">
+    <div class="container-fluid px-lg-4">
       <a class="navbar-brand" href="/inicio">
-        <!-- TODO: no se ve la imagen -->
-        <img src="/img/logo.svg" alt="Lonja de Veracruz" style="max-height: 50px; width: auto;"
-          onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
-        <span style="display: none;" class="fw-bold">Lonja de Veracruz</span>
+        <img src="/img/logo.svg" alt="Lonja de Veracruz" style="max-height: 42px; width: auto;">
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu" aria-controls="menu"
         aria-expanded="false" aria-label="Menú">
@@ -26,7 +22,7 @@
       </button>
       <div class="collapse navbar-collapse" id="menu">
         <% if (usuario) { %>
-          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
             <li class="nav-item"><a class="nav-link" href="/compras">Compras</a></li>
             <li class="nav-item"><a class="nav-link" href="/lotes">Lotes</a></li>
             <li class="nav-item"><a class="nav-link" href="/especies">Especies</a></li>
@@ -37,8 +33,8 @@
               <li class="nav-item"><a class="nav-link" href="/usuarios">Usuarios</a></li>
               <% } %>
           </ul>
-          <span class="navbar-text me-3">
-            <%= usuario.nombre_completo %> (<%= usuario.rol %>)
+          <span class="navbar-text me-3 small">
+            <%= usuario.nombre_completo %> <span class="text-muted">· <%= usuario.rol %></span>
           </span>
           <a class="btn btn-outline-light btn-sm" href="/cerrarsesion">Cerrar sesión</a>
           <% } %>

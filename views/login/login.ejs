@@ -1,9 +1,10 @@
 <%- include('../plantillas/header') %>
 <div class="row justify-content-center">
-  <div class="col-md-6 col-lg-4">
-    <div class="card shadow">
+  <div class="col-md-8 col-lg-5 col-xl-4">
+    <div class="card login-card">
       <div class="card-body p-4">
-        <h1 class="h3 text-center mb-1">Sistema Lonja</h1>
+        <div class="login-brand"><img src="/img/logo.svg" alt="Lonja de Veracruz"></div>
+        <h1 class="h4 text-center mb-1">Sistema Lonja</h1>
         <p class="text-center text-muted">Acceso solo para personal autorizado</p>
         <%- include('../plantillas/mensajes', { mensaje: null }) %>
         <form action="/credenciales" method="POST">
