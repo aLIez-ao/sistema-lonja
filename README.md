@@ -51,6 +51,7 @@ views/ · public/ · scripts/ · test/ · doc/ · reports/
 ```
 
 ## Documentación
+- [Guía del código](docs/README.md): explicación numerada de cada archivo, los recorridos principales y dónde empezar a hacer cambios.
 - [doc/](doc/README.md): arquitectura, base de datos, rutas y permisos, instalación, seguridad, pruebas y **[TODO](doc/TODO.md)** (preguntas abiertas para el cliente).
 - [reports/](reports/README.md): qué se hizo y el flujo de desarrollo.
 
