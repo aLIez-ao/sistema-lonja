@@ -13,3 +13,4 @@
 Reportes de trabajo: [qué se hizo](reports/01-que-se-hizo.md), [flujo de desarrollo](reports/02-flujo-de-desarrollo.md) y [rediseño visual](reports/03-redisenio-visual.md). El listado de pendientes de desarrollo está en [reports/TODO.md](reports/TODO.md).
 
 Ver también el [README principal](../README.md).
+Para una explicación archivo por archivo del código, consulta la [guía numerada](../docs/README.md).
