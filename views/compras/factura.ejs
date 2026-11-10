@@ -9,13 +9,13 @@
   <div class="d-flex gap-2 flex-wrap">
     <!-- Descargar PDF -->
     <a class="btn btn-primary" href="/compras/<%= compra.id_cmp %>/factura.pdf">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-1" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+      <%- icono('download', 16, 'me-1') %>
       <%= t('descargar_pdf') %>
     </a>
 
     <!-- Compartir -->
     <button class="btn btn-outline-secondary" type="button" onclick="compartirEnlace('Factura Lonja Veracruz #<%= compra.id_cmp %>', 'Factura oficial de compra lote #<%= compra.id_cmp %> por <%= dinero(compra.precio_total) %>')">
-      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-1" viewBox="0 0 16 16"><path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.5 2.5 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5m-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3m11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3"/></svg>
+      <%- icono('share', 16, 'me-1') %>
       <%= t('compartir') %>
     </button>
 
@@ -23,7 +23,7 @@
     <% if (compra.comprador && compra.comprador.correo) { %>
       <form action="/compras/<%= compra.id_cmp %>/enviar-correo" method="POST" class="d-inline" onsubmit="return confirm('¿Enviar factura PDF a <%= compra.comprador.correo %>?')">
         <button class="btn btn-outline-primary" type="submit">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-1" viewBox="0 0 16 16"><path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1zm13 2.383-4.708 2.825L15 11.105zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741M1 11.105l4.708-2.897L1 5.383z"/></svg>
+          <%- icono('envelope', 16, 'me-1') %>
           <%= t('enviar_correo') %>
         </button>
       </form>

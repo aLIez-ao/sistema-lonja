@@ -323,6 +323,20 @@ main.container {
   border-bottom: 1px solid var(--lonja-border);
 }
 
+/* Encabezados ordenables */
+.th-ordenable { cursor: pointer; user-select: none; white-space: nowrap; }
+.th-ordenable:hover, .th-ordenable:focus-visible { color: var(--lonja-navy); outline: none; }
+.th-ordenable:focus-visible { box-shadow: inset 0 -2px 0 var(--lonja-teal); }
+.sort-indicator { display: inline-block; margin-left: 0.35rem; font-size: 0.7rem; opacity: 0.45; }
+.sort-indicator::after { content: "\21C5"; }
+.th-ordenable[aria-sort="ascending"] .sort-indicator,
+.th-ordenable[aria-sort="descending"] .sort-indicator { opacity: 1; color: var(--lonja-teal); }
+.th-ordenable[aria-sort="ascending"] .sort-indicator::after { content: "\25B2"; }
+.th-ordenable[aria-sort="descending"] .sort-indicator::after { content: "\25BC"; }
+
+/* Botones de acción de las tablas: solo icono, mismo tamaño en todas */
+td .btn-sm { padding: 0.3rem 0.55rem; line-height: 1; }
+
 .table-hover tbody tr:hover {
   background-color: var(--lonja-surface-subtle);
 }
