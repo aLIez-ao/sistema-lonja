@@ -1,33 +1,55 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 120" width="100%" height="100%">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 340 70" width="100%" height="100%">
   <defs>
-    <!-- Degradado vibrante moderno -->
-    <linearGradient id="gradBrand" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#FF512F" />
-      <stop offset="100%" stop-color="#DD2476" />
+    <!-- Gradiente Océano Profundo -->
+    <linearGradient id="lonjaOceanGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0B3954" />
+      <stop offset="60%" stop-color="#087E8B" />
+      <stop offset="100%" stop-color="#00A6FB" />
     </linearGradient>
 
-    <!-- Sombra sutil -->
-    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
-      <feDropShadow dx="0" dy="3" stdDeviation="5" flood-color="#DD2476" flood-opacity="0.2" />
+    <!-- Gradiente Acento Onda Marina -->
+    <linearGradient id="lonjaWaveGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00A6FB" />
+      <stop offset="100%" stop-color="#05D9E8" />
+    </linearGradient>
+
+    <!-- Filtro sombra suave Google-style -->
+    <filter id="softGlow" x="-10%" y="-10%" width="130%" height="130%">
+      <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#0B3954" flood-opacity="0.18" />
     </filter>
   </defs>
 
-  <!-- Isotipo (Icono Geométrico Entrelazado) -->
-  <g transform="translate(15, 12)" filter="url(#softShadow)">
-    <!-- Círculo exterior izquierdo -->
-    <circle cx="38" cy="48" r="26" fill="none" stroke="url(#gradBrand)" stroke-width="8" opacity="0.85" />
+  <!-- Isotipo: Pez estilizado y Olas marinas -->
+  <g transform="translate(6, 6)" filter="url(#softGlow)">
+    <!-- Círculo base náutico suave -->
+    <circle cx="28" cy="28" r="27" fill="#EBF4F6" />
     
-    <!-- Círculo exterior derecho -->
-    <circle cx="62" cy="48" r="26" fill="none" stroke="url(#gradBrand)" stroke-width="8" opacity="0.85" />
+    <!-- Silueta de pez geométrica moderna -->
+    <path d="M 12 28 C 20 16, 38 18, 46 28 C 38 38, 20 40, 12 28 Z" fill="url(#lonjaOceanGrad)" />
     
-    <!-- Núcleo central intersectado -->
-    <circle cx="50" cy="48" r="14" fill="url(#gradBrand)" />
+    <!-- Aleta cola -->
+    <path d="M 44 28 L 52 20 L 50 28 L 52 36 Z" fill="url(#lonjaOceanGrad)" />
+
+    <!-- Onda marina inferior -->
+    <path d="M 8 36 C 18 30, 24 42, 38 37 C 44 35, 48 37, 50 39" fill="none" stroke="url(#lonjaWaveGrad)" stroke-width="3" stroke-linecap="round" />
+
+    <!-- Ojo pez -->
+    <circle cx="19" cy="26" r="2.2" fill="#FFFFFF" />
   </g>
 
-  <!-- Logotipo (Texto) -->
-  <g transform="translate(135, 72)">
-    <text font-family="system-ui, -apple-system, BlinkMacSystemFont, &#39;Segoe UI&#39;, Roboto, sans-serif" font-size="38" font-weight="700" fill="#1E293B" letter-spacing="2">
-      LONJA<tspan font-weight="300" fill="#64748B">VERACRUZ</tspan>
+  <!-- Logotipo Texto con Tipografía Nítida -->
+  <g transform="translate(74, 45)">
+    <!-- LONJA -->
+    <text font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="28" font-weight="900" fill="#0B3954" letter-spacing="1.5">
+      LONJA
+    </text>
+    <!-- DE VERACRUZ -->
+    <text x="108" y="-1" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="22" font-weight="400" fill="#087E8B" letter-spacing="3">
+      VERACRUZ
+    </text>
+    <!-- Tagline puerto pesquero -->
+    <text x="2" y="16" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif" font-size="9" font-weight="600" fill="#64748B" letter-spacing="2.8">
+      SUBASTAS &bull; PUERTO PESQUERO
     </text>
   </g>
 </svg>

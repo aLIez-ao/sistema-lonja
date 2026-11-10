@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="<%= pref.idioma %>" data-theme="<%= pref.tema %>" data-font-size="<%= pref.tamanoFuente %>" data-font-family="<%= pref.tipoFuente %>">
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-  <title>Sistema Lonja</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <link rel="icon" href="/img/logo.svg" type="image/svg+xml">
+  <title><%= t('app_nombre') %> · Veracruz</title>
   <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css">
   <link rel="stylesheet" href="/css/lonja.css">
 </head>
@@ -13,32 +13,82 @@
 <body>
   <nav class="navbar navbar-expand-lg navbar-lonja d-print-none">
     <div class="container-fluid px-lg-4">
-      <a class="navbar-brand" href="/inicio">
-        <img src="/img/logo.svg" alt="Lonja de Veracruz" style="max-height: 42px; width: auto;">
+      <a class="navbar-brand" href="/inicio" title="Ir al Inicio">
+        <img src="/img/logo.svg" alt="Lonja de Veracruz">
       </a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menu" aria-controls="menu"
-        aria-expanded="false" aria-label="Menú">
+      
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal" aria-controls="menuPrincipal"
+        aria-expanded="false" aria-label="Abrir Menú">
         <span class="navbar-toggler-icon"></span>
       </button>
-      <div class="collapse navbar-collapse" id="menu">
+
+      <div class="collapse navbar-collapse" id="menuPrincipal">
         <% if (usuario) { %>
           <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
-            <li class="nav-item"><a class="nav-link" href="/compras">Compras</a></li>
-            <li class="nav-item"><a class="nav-link" href="/lotes">Lotes</a></li>
-            <li class="nav-item"><a class="nav-link" href="/especies">Especies</a></li>
-            <li class="nav-item"><a class="nav-link" href="/compradores">Compradores</a></li>
-            <li class="nav-item"><a class="nav-link" href="/tipos">Tipos</a></li>
-            <li class="nav-item"><a class="nav-link" href="/reportes/diario">Reporte diario</a></li>
-            <% if (usuario.rol==='admin' ) { %>
-              <li class="nav-item"><a class="nav-link" href="/usuarios">Usuarios</a></li>
-              <% } %>
+            <li class="nav-item">
+              <a class="nav-link" href="/inicio">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-house-door" viewBox="0 0 16 16"><path d="M8.354 1.146a.5.5 0 0 0-.708 0l-6 6A.5.5 0 0 0 1.5 7.5v7a.5.5 0 0 0 .5.5h4.5a.5.5 0 0 0 .5-.5v-4h2v4a.5.5 0 0 0 .5.5H14a.5.5 0 0 0 .5-.5v-7a.5.5 0 0 0-.146-.354L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293zM2.5 14V7.707l5.5-5.5 5.5 5.5V14H10v-4a.5.5 0 0 0-.5-.5h-3a.5.5 0 0 0-.5.5v4z"/></svg>
+                <%= t('inicio') %>
+              </a>
+            </li>
+            <li class="nav-item"><a class="nav-link" href="/compras"><%= t('compras') %></a></li>
+            <li class="nav-item"><a class="nav-link" href="/lotes"><%= t('lotes') %></a></li>
+            <li class="nav-item"><a class="nav-link" href="/especies"><%= t('especies') %></a></li>
+            <li class="nav-item"><a class="nav-link" href="/compradores"><%= t('compradores') %></a></li>
+            <li class="nav-item"><a class="nav-link" href="/tipos"><%= t('tipos') %></a></li>
+            <li class="nav-item"><a class="nav-link" href="/reportes/diario"><%= t('reporte_diario') %></a></li>
+            <% if (usuario.rol === 'admin') { %>
+              <li class="nav-item"><a class="nav-link" href="/usuarios"><%= t('usuarios') %></a></li>
+            <% } %>
+            <li class="nav-item">
+              <a class="nav-link" href="/configuracion">
+                <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" class="bi bi-gear" viewBox="0 0 16 16"><path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"/></svg>
+                <%= t('configuracion') %>
+              </a>
+            </li>
           </ul>
-          <span class="navbar-text me-3 small">
-            <%= usuario.nombre_completo %> <span class="text-muted">· <%= usuario.rol %></span>
-          </span>
-          <a class="btn btn-outline-light btn-sm" href="/cerrarsesion">Cerrar sesión</a>
-          <% } %>
+
+          <div class="d-flex align-items-center gap-2 flex-wrap">
+            <!-- Badge de Moneda Rápida -->
+            <div class="dropdown">
+              <button class="btn btn-sm btn-outline-secondary dropdown-toggle rounded-pill py-1 px-2" type="button" data-bs-toggle="dropdown">
+                <%= pref.moneda %>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                <li><button class="dropdown-item <%= pref.moneda === 'MXN' ? 'active' : '' %>" onclick="aplicarPreferencia('moneda', 'MXN')">MXN (Pesos Mexicanos)</button></li>
+                <li><button class="dropdown-item <%= pref.moneda === 'USD' ? 'active' : '' %>" onclick="aplicarPreferencia('moneda', 'USD')">USD (Dólares US)</button></li>
+                <li><button class="dropdown-item <%= pref.moneda === 'EUR' ? 'active' : '' %>" onclick="aplicarPreferencia('moneda', 'EUR')">EUR (Euros)</button></li>
+              </ul>
+            </div>
+
+            <!-- Idioma Rápido -->
+            <div class="dropdown">
+              <button class="btn btn-sm btn-outline-secondary dropdown-toggle rounded-pill py-1 px-2" type="button" data-bs-toggle="dropdown">
+                <%= pref.idioma.toUpperCase() %>
+              </button>
+              <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                <li><button class="dropdown-item <%= pref.idioma === 'es' ? 'active' : '' %>" onclick="aplicarPreferencia('idioma', 'es')">Español</button></li>
+                <li><button class="dropdown-item <%= pref.idioma === 'en' ? 'active' : '' %>" onclick="aplicarPreferencia('idioma', 'en')">English</button></li>
+              </ul>
+            </div>
+
+            <!-- Identificación Usuario -->
+            <a href="/configuracion#cuenta" class="text-decoration-none text-reset d-flex align-items-center me-2">
+              <span class="badge bg-light text-dark border p-2 rounded-pill">
+                <strong><%= usuario.nombre_completo || usuario.usuario %></strong>
+                <span class="text-muted ms-1">· <%= usuario.rol %></span>
+              </span>
+            </a>
+
+            <!-- Botón Cerrar Sesión Visible -->
+            <a class="btn-lonja-logout" href="/cerrarsesion" title="Cerrar la sesión actual">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/><path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/></svg>
+              <%= t('cerrar_sesion') %>
+            </a>
+          </div>
+        <% } %>
       </div>
     </div>
   </nav>
+
   <main class="container py-4">
