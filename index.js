@@ -3,6 +3,7 @@ import db from "./config/db.js";
 import "./models/index.js";
 import app from "./app.js";
 import { crearAdministradorInicial, crearTiposIniciales } from "./helpers/semillas.js";
+import { asegurarColumnasUsuario } from "./helpers/migraciones.js";
 
 dotenv.config({ path: ".env" });
 const port = process.env.PORT || 2800;
@@ -18,11 +19,13 @@ const port = process.env.PORT || 2800;
     await db.sync(modo === "force" ? { force: true } : modo === "alter" ? { alter: true } : {});
     console.log(`Modelos sincronizados (${modo}).`);
 
+    await asegurarColumnasUsuario();
     await crearAdministradorInicial();
     await crearTiposIniciales();
 
-    const PORT = process.env.PORT || 2800;
-    app.listen(port, () => {console.log(`Servidor corriendo en \x1b[36mhttp://localhost:${port}\x1b[0m`);});
+    app.listen(port, () => {
+      console.log(`Servidor corriendo en \x1b[36mhttp://localhost:${port}\x1b[0m`);
+    });
   } catch (err) {
     console.error("Error al iniciar:", err);
     process.exit(1);
