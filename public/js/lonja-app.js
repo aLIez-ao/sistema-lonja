@@ -289,8 +289,78 @@ function inicializarCalculadoraCompra() {
   actualizarCalculo();
 }
 
+// ==========================================================================
+// ORDENAMIENTO INTERACTIVO DE TABLAS POR CUALQUIER COLUMNA
+// ==========================================================================
+function inicializarTablasOrdenables() {
+  const tablas = document.querySelectorAll('.table-sortable, .table');
+  tablas.forEach((tabla) => {
+    const cabeceras = tabla.querySelectorAll('thead th');
+    cabeceras.forEach((th, indiceColumna) => {
+      if (th.hasAttribute('data-no-sort') || th.textContent.trim().toLowerCase().includes('acciones')) {
+        return;
+      }
+
+      th.style.cursor = 'pointer';
+      th.style.userSelect = 'none';
+      th.title = 'Haz clic para ordenar por esta columna';
+      
+      const spanIcono = document.createElement('span');
+      spanIcono.className = 'sort-indicator ms-1 text-muted small';
+      spanIcono.textContent = '⇅';
+      th.appendChild(spanIcono);
+
+      let ascendente = true;
+
+      th.addEventListener('click', () => {
+        const tbody = tabla.querySelector('tbody');
+        if (!tbody) return;
+
+        const filas = Array.from(tbody.querySelectorAll('tr'));
+        if (filas.length <= 1) return;
+
+        // Limpiar otros indicadores en la misma tabla
+        cabeceras.forEach((otroTh) => {
+          const otroIcono = otroTh.querySelector('.sort-indicator');
+          if (otroIcono && otroTh !== th) otroIcono.textContent = '⇅';
+        });
+
+        filas.sort((filaA, filaB) => {
+          const celdaA = filaA.children[indiceColumna];
+          const celdaB = filaB.children[indiceColumna];
+          if (!celdaA || !celdaB) return 0;
+
+          const textoA = celdaA.textContent.trim();
+          const textoB = celdaB.textContent.trim();
+
+          // Intentar parsear como número (removiendo $, €, kg, %, etc.)
+          const numA = parseFloat(textoA.replace(/[^\d.-]/g, ''));
+          const numB = parseFloat(textoB.replace(/[^\d.-]/g, ''));
+
+          if (!isNaN(numA) && !isNaN(numB) && !textoA.includes('-') && !textoA.includes('/')) {
+            return ascendente ? numA - numB : numB - numA;
+          }
+
+          // Orden alfabético
+          return ascendente
+            ? textoA.localeCompare(textoB, undefined, { numeric: true, sensitivity: 'base' })
+            : textoB.localeCompare(textoA, undefined, { numeric: true, sensitivity: 'base' });
+        });
+
+        // Alternar dirección y actualizar flecha
+        ascendente = !ascendente;
+        spanIcono.textContent = ascendente ? '▲' : '▼';
+
+        // Reinsertar las filas ordenadas en el DOM
+        filas.forEach((f) => tbody.appendChild(f));
+      });
+    });
+  });
+}
+
 // Inicialización general al cargar el DOM
 document.addEventListener('DOMContentLoaded', () => {
   inicializarReporteDinamico();
   inicializarCalculadoraCompra();
+  inicializarTablasOrdenables();
 });
