@@ -4,19 +4,15 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-  <meta http-equiv="Pragma" content="no-cache">
-  <meta http-equiv="Expires" content="0">
-  <link rel="icon" href="/img/logo.svg" type="image/svg+xml">
+  <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" sizes="any">
   <title><%= t('app_nombre') %> · Veracruz</title>
   <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css">
   <link rel="stylesheet" href="/css/lonja.css">
   <script>
-    // Prevenir que al presionar el botón atrás del navegador se muestre la página en caché tras cerrar sesión
+    // Si el navegador restaura la página desde su caché de historial (botón atrás),
+    // se vuelve a pedir al servidor: sin sesión, redirige al login.
     window.addEventListener('pageshow', function (event) {
-      if (event.persisted || (window.performance && window.performance.navigation && window.performance.navigation.type === 2)) {
-        window.location.reload();
-      }
+      if (event.persisted) window.location.reload();
     });
   </script>
 </head>
@@ -25,99 +21,107 @@
   <%
     let iniciales = "U";
     if (usuario) {
-      const partes = (usuario.nombre_completo || usuario.usuario || "").trim().split(/\s+/);
-      if (partes.length >= 2) {
-        iniciales = (partes[0][0] + partes[1][0]).toUpperCase();
-      } else if (partes.length === 1 && partes[0].length > 0) {
-        iniciales = partes[0].substring(0, 2).toUpperCase();
-      }
+      const partes = (usuario.nombre_completo || usuario.usuario || "").trim().split(/\s+/).filter(Boolean);
+      if (partes.length >= 2) iniciales = (partes[0][0] + partes[1][0]).toUpperCase();
+      else if (partes.length === 1) iniciales = partes[0].substring(0, 2).toUpperCase();
     }
+    const banderas = { es: { src: '/img/flags/mx.svg', nombre: 'Español' }, en: { src: '/img/flags/us.svg', nombre: 'English' } };
+    const activo = (ruta) => (rutaActual || '').startsWith(ruta) ? 'active' : '';
   %>
 
   <nav class="navbar navbar-expand-lg navbar-lonja d-print-none">
     <div class="container-fluid px-lg-4">
-      <!-- El logo ya redirige al inicio -->
-      <a class="navbar-brand" href="/inicio" title="Lonja de Veracruz - Ir al Inicio">
-        <img src="/img/logo.svg" alt="Lonja de Veracruz">
+      <!-- El logo redirige al inicio -->
+      <a class="navbar-brand" href="<%= usuario ? '/inicio' : '/' %>" title="Lonja de Veracruz">
+        <img src="/img/logo.svg" alt="Lonja de Veracruz" width="204" height="42">
       </a>
-      
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal" aria-controls="menuPrincipal"
-        aria-expanded="false" aria-label="Abrir Menú">
-        <span class="navbar-toggler-icon"></span>
-      </button>
 
-      <div class="collapse navbar-collapse" id="menuPrincipal">
-        <% if (usuario) { %>
+      <% if (usuario) { %>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal" aria-controls="menuPrincipal"
+          aria-expanded="false" aria-label="Abrir menú">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="menuPrincipal">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
-            <li class="nav-item"><a class="nav-link" href="/compras"><%= t('compras') %></a></li>
-            <li class="nav-item"><a class="nav-link" href="/lotes"><%= t('lotes') %></a></li>
-            <li class="nav-item"><a class="nav-link" href="/especies"><%= t('especies') %></a></li>
-            <li class="nav-item"><a class="nav-link" href="/compradores"><%= t('compradores') %></a></li>
-            <li class="nav-item"><a class="nav-link" href="/tipos"><%= t('tipos') %></a></li>
-            <li class="nav-item"><a class="nav-link" href="/reportes/diario"><%= t('reporte_diario') %></a></li>
+            <li class="nav-item"><a class="nav-link <%= activo('/compras') %>" href="/compras"><%= t('compras') %></a></li>
+            <li class="nav-item"><a class="nav-link <%= activo('/lotes') %>" href="/lotes"><%= t('lotes') %></a></li>
+            <li class="nav-item"><a class="nav-link <%= activo('/especies') %>" href="/especies"><%= t('especies') %></a></li>
+            <li class="nav-item"><a class="nav-link <%= activo('/compradores') %>" href="/compradores"><%= t('compradores') %></a></li>
+            <li class="nav-item"><a class="nav-link <%= activo('/tipos') %>" href="/tipos"><%= t('tipos') %></a></li>
+            <li class="nav-item"><a class="nav-link <%= activo('/reportes') %>" href="/reportes/diario"><%= t('reportes') %></a></li>
             <% if (usuario.rol === 'admin') { %>
-              <li class="nav-item"><a class="nav-link" href="/usuarios"><%= t('usuarios') %></a></li>
+              <li class="nav-item"><a class="nav-link <%= activo('/usuarios') %>" href="/usuarios"><%= t('usuarios') %></a></li>
             <% } %>
           </ul>
 
           <div class="d-flex align-items-center gap-2 flex-wrap">
-            <!-- Badge de Moneda Rápida -->
+            <!-- Moneda -->
             <div class="dropdown">
-              <button class="btn btn-sm btn-outline-secondary dropdown-toggle rounded-pill py-1 px-2" type="button" data-bs-toggle="dropdown" title="Moneda">
+              <button class="btn btn-sm btn-outline-secondary dropdown-toggle rounded-pill py-1 px-2" type="button" data-bs-toggle="dropdown" title="<%= t('moneda') %>">
                 <%= pref.moneda %>
               </button>
               <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                <li><button class="dropdown-item <%= pref.moneda === 'MXN' ? 'active' : '' %>" onclick="aplicarPreferencia('moneda', 'MXN')">MXN (Pesos Mexicanos)</button></li>
-                <li><button class="dropdown-item <%= pref.moneda === 'USD' ? 'active' : '' %>" onclick="aplicarPreferencia('moneda', 'USD')">USD (Dólares US)</button></li>
-                <li><button class="dropdown-item <%= pref.moneda === 'EUR' ? 'active' : '' %>" onclick="aplicarPreferencia('moneda', 'EUR')">EUR (Euros)</button></li>
+                <li><button class="dropdown-item <%= pref.moneda === 'MXN' ? 'active' : '' %>" data-pref="moneda" data-valor="MXN">MXN (Pesos mexicanos)</button></li>
+                <li><button class="dropdown-item <%= pref.moneda === 'USD' ? 'active' : '' %>" data-pref="moneda" data-valor="USD">USD (Dólares)</button></li>
+                <li><button class="dropdown-item <%= pref.moneda === 'EUR' ? 'active' : '' %>" data-pref="moneda" data-valor="EUR">EUR (Euros)</button></li>
               </ul>
             </div>
 
-            <!-- Idioma con Bandera del País -->
+            <!-- Idioma: bandera del país en lugar de siglas -->
             <div class="dropdown">
-              <button class="btn btn-sm btn-outline-secondary dropdown-toggle rounded-pill py-1 px-2" type="button" data-bs-toggle="dropdown" title="Idioma">
-                <%= pref.idioma === 'es' ? '🇲🇽' : '🇺🇸' %>
+              <button class="btn btn-sm btn-outline-secondary dropdown-toggle rounded-pill py-1 px-2 d-flex align-items-center gap-1" type="button" data-bs-toggle="dropdown" title="<%= t('idioma') %>: <%= banderas[pref.idioma].nombre %>" aria-label="<%= t('idioma') %>: <%= banderas[pref.idioma].nombre %>">
+                <img class="bandera" src="<%= banderas[pref.idioma].src %>" alt="<%= banderas[pref.idioma].nombre %>" width="24" height="18">
               </button>
               <ul class="dropdown-menu dropdown-menu-end shadow-sm">
-                <li><button class="dropdown-item <%= pref.idioma === 'es' ? 'active' : '' %>" onclick="aplicarPreferencia('idioma', 'es')">🇲🇽 Español</button></li>
-                <li><button class="dropdown-item <%= pref.idioma === 'en' ? 'active' : '' %>" onclick="aplicarPreferencia('idioma', 'en')">🇺🇸 English</button></li>
+                <% Object.entries(banderas).forEach(([cod, b]) => { %>
+                  <li><button class="dropdown-item d-flex align-items-center gap-2 <%= pref.idioma === cod ? 'active' : '' %>" data-pref="idioma" data-valor="<%= cod %>">
+                    <img class="bandera" src="<%= b.src %>" alt="" width="24" height="18"> <%= b.nombre %>
+                  </button></li>
+                <% }) %>
               </ul>
             </div>
 
-            <!-- Botones de Administrador y Cerrar Sesión Unificados en Avatar Circular -->
+            <!-- Cuenta: avatar circular con menú rápido (perfil, configuración y cerrar sesión) -->
             <div class="dropdown ms-1">
-              <button class="btn p-0 border-0 bg-transparent dropdown-toggle no-arrow d-flex align-items-center" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="Mi Cuenta (<%= usuario.nombre_completo || usuario.usuario %>)">
-                <div class="user-avatar-circle" style="width: 38px; height: 38px; border-radius: 50%; background: linear-gradient(135deg, #0B3954, #087E8B); color: #ffffff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.85rem; border: 2px solid var(--lonja-border); box-shadow: 0 2px 5px rgba(0,0,0,0.12); cursor: pointer;">
-                  <%= iniciales %>
-                </div>
+              <button class="btn p-0 border-0 bg-transparent" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="<%= usuario.nombre_completo || usuario.usuario %>" aria-label="Menú de cuenta">
+                <% if (usuario.foto) { %>
+                  <img class="avatar-usuario" src="<%= usuario.foto %>" alt="<%= iniciales %>" width="38" height="38">
+                <% } else { %>
+                  <span class="avatar-usuario"><%= iniciales %></span>
+                <% } %>
               </button>
-              <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 py-2 mt-2" style="min-width: 250px; border-radius: 14px;">
+              <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 py-2 mt-2 menu-cuenta">
                 <li class="px-3 py-2 border-bottom">
-                  <div class="fw-bold text-dark text-truncate"><%= usuario.nombre_completo || usuario.usuario %></div>
+                  <div class="fw-bold text-truncate"><%= usuario.nombre_completo || usuario.usuario %></div>
                   <div class="small text-muted">@<%= usuario.usuario %> &bull; <span class="badge bg-secondary text-uppercase"><%= usuario.rol %></span></div>
                   <% if (usuario.correo) { %>
                     <div class="small text-muted text-truncate mt-1"><%= usuario.correo %></div>
                   <% } %>
                 </li>
                 <li>
-                  <a class="dropdown-item py-2 d-flex align-items-center gap-2 mt-1" href="/configuracion">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="text-primary" viewBox="0 0 16 16"><path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"/></svg>
-                    Configuración y Cuenta
+                  <a class="dropdown-item py-2 d-flex align-items-center gap-2 mt-1" href="/configuracion#pane-cuenta">
+                    <%- icono('person') %> <%= t('mi_cuenta') %>
+                  </a>
+                </li>
+                <li>
+                  <a class="dropdown-item py-2 d-flex align-items-center gap-2" href="/configuracion">
+                    <%- icono('gear') %> <%= t('configuracion') %>
                   </a>
                 </li>
                 <li><hr class="dropdown-divider my-1"></li>
                 <li>
-                  <a class="dropdown-item py-2 text-danger d-flex align-items-center gap-2" href="/cerrarsesion">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M10 12.5a.5.5 0 0 1-.5.5h-8a.5.5 0 0 1-.5-.5v-9a.5.5 0 0 1 .5-.5h8a.5.5 0 0 1 .5.5v2a.5.5 0 0 0 1 0v-2A1.5 1.5 0 0 0 9.5 2h-8A1.5 1.5 0 0 0 0 3.5v9A1.5 1.5 0 0 0 1.5 14h8a1.5 1.5 0 0 0 1.5-1.5v-2a.5.5 0 0 0-1 0z"/><path fill-rule="evenodd" d="M15.854 8.354a.5.5 0 0 0 0-.708l-3-3a.5.5 0 0 0-.708.708L14.293 7.5H5.5a.5.5 0 0 0 0 1h8.793l-2.147 2.146a.5.5 0 0 0 .708.708z"/></svg>
-                    <%= t('cerrar_sesion') %>
-                  </a>
+                  <form action="/cerrarsesion" method="POST" class="m-0">
+                    <button class="dropdown-item py-2 text-danger d-flex align-items-center gap-2" type="submit">
+                      <%- icono('box-arrow-right') %> <%= t('cerrar_sesion') %>
+                    </button>
+                  </form>
                 </li>
               </ul>
             </div>
-
           </div>
-        <% } %>
-      </div>
+        </div>
+      <% } %>
     </div>
   </nav>
 

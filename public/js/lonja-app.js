@@ -364,3 +364,9 @@ document.addEventListener('DOMContentLoaded', () => {
   inicializarCalculadoraCompra();
   inicializarTablasOrdenables();
 });
+
+// Botones declarativos de preferencia: <button data-pref="idioma" data-valor="en">
+document.addEventListener('click', (ev) => {
+  const btn = ev.target.closest('[data-pref]');
+  if (btn) aplicarPreferencia(btn.dataset.pref, btn.dataset.valor);
+});
