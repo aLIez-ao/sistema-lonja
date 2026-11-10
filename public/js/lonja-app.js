@@ -299,73 +299,81 @@ function inicializarCalculadoraCompra() {
 }
 
 // ==========================================================================
-// ORDENAMIENTO INTERACTIVO DE TABLAS POR CUALQUIER COLUMNA
+// ORDENAMIENTO DE TABLAS (.table-sortable) POR CUALQUIER COLUMNA
+// - clic en el encabezado: ascendente; segundo clic: descendente
+// - <td data-sort-value="..."> permite ordenar por un valor distinto al texto (fechas)
+// - <th data-no-sort> excluye la columna
 // ==========================================================================
+function valorDeCelda(celda) {
+  if (!celda) return '';
+  return (celda.dataset.sortValue ?? celda.textContent).trim();
+}
+
+// "$1,234.50", "120.00 kg", "#15", "35%" -> número; cualquier otro texto -> NaN
+function comoNumero(texto) {
+  let limpio = texto.replace(/[\s$€#%]|kg|MXN|USD|EUR/gi, '');
+  // Formato europeo "1.234,50" (moneda EUR) o con miles "1,234.50"
+  if (/^-?\d{1,3}(\.\d{3})*,\d+$/.test(limpio)) limpio = limpio.replace(/\./g, '').replace(',', '.');
+  else limpio = limpio.replace(/,/g, '');
+  return /^-?\d+(\.\d+)?$/.test(limpio) ? parseFloat(limpio) : NaN;
+}
+
 function inicializarTablasOrdenables() {
-  const tablas = document.querySelectorAll('.table-sortable, .table');
-  tablas.forEach((tabla) => {
-    const cabeceras = tabla.querySelectorAll('thead th');
-    cabeceras.forEach((th, indiceColumna) => {
-      if (th.hasAttribute('data-no-sort') || th.textContent.trim().toLowerCase().includes('acciones')) {
-        return;
-      }
+  document.querySelectorAll('table.table-sortable').forEach((tabla) => {
+    const tbody = tabla.tBodies[0];
+    if (!tbody) return;
+    const cabeceras = Array.from(tabla.querySelectorAll('thead th'));
 
-      th.style.cursor = 'pointer';
-      th.style.userSelect = 'none';
-      th.title = 'Haz clic para ordenar por esta columna';
-      
-      const spanIcono = document.createElement('span');
-      spanIcono.className = 'sort-indicator ms-1 text-muted small';
-      spanIcono.textContent = '⇅';
-      th.appendChild(spanIcono);
+    cabeceras.forEach((th, indice) => {
+      if (th.hasAttribute('data-no-sort')) return;
 
-      let ascendente = true;
+      th.classList.add('th-ordenable');
+      th.tabIndex = 0;
+      th.setAttribute('role', 'button');
+      th.setAttribute('aria-sort', 'none');
+      th.title = 'Ordenar por ' + th.textContent.trim().toLowerCase();
+      const indicador = document.createElement('span');
+      indicador.className = 'sort-indicator';
+      indicador.setAttribute('aria-hidden', 'true');
+      th.appendChild(indicador);
 
-      th.addEventListener('click', () => {
-        const tbody = tabla.querySelector('tbody');
-        if (!tbody) return;
+      const ordenar = () => {
+        const filas = Array.from(tbody.rows).filter((f) => !f.classList.contains('fila-vacia'));
+        if (filas.length < 2) return;
 
-        const filas = Array.from(tbody.querySelectorAll('tr'));
-        if (filas.length <= 1) return;
+        const asc = th.getAttribute('aria-sort') !== 'ascending';
+        const valores = new Map(filas.map((f) => [f, valorDeCelda(f.cells[indice])]));
+        const conDatos = [...valores.values()].filter((v) => v !== '' && v !== '—');
+        const numerica = conDatos.length > 0 && conDatos.every((v) => !Number.isNaN(comoNumero(v)));
 
-        // Limpiar otros indicadores en la misma tabla
-        cabeceras.forEach((otroTh) => {
-          const otroIcono = otroTh.querySelector('.sort-indicator');
-          if (otroIcono && otroTh !== th) otroIcono.textContent = '⇅';
+        filas.sort((a, b) => {
+          const va = valores.get(a);
+          const vb = valores.get(b);
+          const num = (v) => { const n = comoNumero(v); return Number.isNaN(n) ? -Number.MAX_VALUE : n; };
+          const r = numerica
+            ? num(va) - num(vb)
+            : va.localeCompare(vb, 'es', { numeric: true, sensitivity: 'base' });
+          return asc ? r : -r;
         });
 
-        filas.sort((filaA, filaB) => {
-          const celdaA = filaA.children[indiceColumna];
-          const celdaB = filaB.children[indiceColumna];
-          if (!celdaA || !celdaB) return 0;
-
-          const textoA = celdaA.textContent.trim();
-          const textoB = celdaB.textContent.trim();
-
-          // Intentar parsear como número (removiendo $, €, kg, %, etc.)
-          const numA = parseFloat(textoA.replace(/[^\d.-]/g, ''));
-          const numB = parseFloat(textoB.replace(/[^\d.-]/g, ''));
-
-          if (!isNaN(numA) && !isNaN(numB) && !textoA.includes('-') && !textoA.includes('/')) {
-            return ascendente ? numA - numB : numB - numA;
-          }
-
-          // Orden alfabético
-          return ascendente
-            ? textoA.localeCompare(textoB, undefined, { numeric: true, sensitivity: 'base' })
-            : textoB.localeCompare(textoA, undefined, { numeric: true, sensitivity: 'base' });
-        });
-
-        // Alternar dirección y actualizar flecha
-        ascendente = !ascendente;
-        spanIcono.textContent = ascendente ? '▲' : '▼';
-
-        // Reinsertar las filas ordenadas en el DOM
+        cabeceras.forEach((otro) => { if (otro.hasAttribute('aria-sort')) otro.setAttribute('aria-sort', 'none'); });
+        th.setAttribute('aria-sort', asc ? 'ascending' : 'descending');
         filas.forEach((f) => tbody.appendChild(f));
+      };
+
+      th.addEventListener('click', ordenar);
+      th.addEventListener('keydown', (ev) => {
+        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); ordenar(); }
       });
     });
   });
 }
+
+// Confirmación declarativa: <form data-confirmar="¿Seguro?">
+document.addEventListener('submit', (ev) => {
+  const mensaje = ev.target.dataset && ev.target.dataset.confirmar;
+  if (mensaje && !window.confirm(mensaje)) ev.preventDefault();
+});
 
 // Inicialización general al cargar el DOM
 document.addEventListener('DOMContentLoaded', () => {
