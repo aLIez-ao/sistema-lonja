@@ -76,9 +76,19 @@
 [data-font-family="segoe"] { --font-base: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 [data-font-family="serif"] { --font-base: 'Georgia', Cambria, Times, serif; }
 
-/* ==========================================================================
-   ELEMENTOS GLOBALES
-   ========================================================================== */
+/* Avatar circular de usuario */
+.dropdown-toggle.no-arrow::after {
+  display: none !important;
+}
+
+.user-avatar-circle {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.user-avatar-circle:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 10px rgba(11, 57, 84, 0.25) !important;
+}
 html {
   font-size: var(--font-size-root);
   scroll-behavior: smooth;
