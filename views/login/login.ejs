@@ -1,22 +1,29 @@
 <%- include('../plantillas/header') %>
 <div class="row justify-content-center">
   <div class="col-md-8 col-lg-5 col-xl-4">
-    <div class="card login-card">
-      <div class="card-body p-4">
-        <div class="login-brand"><img src="/img/logo.svg" alt="Lonja de Veracruz"></div>
-        <h1 class="h4 text-center mb-1">Sistema Lonja</h1>
-        <p class="text-center text-muted">Acceso solo para personal autorizado</p>
-        <%- include('../plantillas/mensajes', { mensaje: null }) %>
+    <div class="card login-card p-4">
+      <div class="card-body p-2">
+        <div class="login-brand text-center mb-3">
+          <img src="/img/logo.svg" alt="Lonja de Veracruz" style="max-height: 56px;">
+        </div>
+        <h1 class="h4 text-center mb-1 fw-bold">Sistema Lonja</h1>
+        <p class="text-center text-muted small mb-4">Acceso solo para personal autorizado</p>
+        
+        <%- include('../plantillas/mensajes', { mensaje: typeof mensaje !== 'undefined' ? mensaje : null }) %>
+
         <form action="/credenciales" method="POST">
           <div class="mb-3">
-            <label for="usuario" class="form-label">Usuario</label>
-            <input type="text" class="form-control" id="usuario" name="usuario" value="<%= usuario %>" autocomplete="username" required autofocus>
+            <label for="usuario" class="form-label fw-semibold">Usuario</label>
+            <input type="text" class="form-control" id="usuario" name="usuario" value="<%= usuario %>" autocomplete="username" required autofocus placeholder="Nombre de usuario">
           </div>
           <div class="mb-3">
-            <label for="password" class="form-label">Contraseña</label>
-            <input type="password" class="form-control" id="password" name="password" autocomplete="current-password" required>
+            <div class="d-flex justify-content-between align-items-center">
+              <label for="password" class="form-label fw-semibold mb-0">Contraseña</label>
+              <a href="/olvide-password" class="small text-decoration-none">¿Olvidaste tu contraseña?</a>
+            </div>
+            <input type="password" class="form-control mt-1" id="password" name="password" autocomplete="current-password" required placeholder="••••••••">
           </div>
-          <button class="btn btn-primary w-100" type="submit">Entrar</button>
+          <button class="btn btn-primary w-100 py-2 mt-2" type="submit">Iniciar Sesión</button>
         </form>
       </div>
     </div>
