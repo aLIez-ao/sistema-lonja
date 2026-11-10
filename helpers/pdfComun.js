@@ -61,6 +61,7 @@ export function numerarPaginas(doc, leyenda) {
   const emitido = formatoFechaHora(new Date());
   for (let i = 0; i < rango.count; i++) {
     doc.switchToPage(rango.start + i);
+    doc.page.margins.bottom = 0; // el pie se escribe dentro del margen sin provocar un salto de página
     const y = doc.page.height - 34;
     const ancho = doc.page.width - 80;
     doc.rect(40, y - 6, ancho, 0.75).fill(COLOR.borde);

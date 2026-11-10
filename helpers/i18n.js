@@ -121,7 +121,7 @@ export const traducciones = {
 };
 
 // Tasas de cambio fijas representativas para multi-moneda (Base: MXN)
-const TASAS_CAMBIO = {
+export const TASAS_CAMBIO = {
   MXN: 1,
   USD: 1 / 20.0,
   EUR: 1 / 21.5,
@@ -150,4 +150,10 @@ export function formatearMoneda(montoEnMxn, codigoMoneda = "MXN") {
 export function t(clave, lang = "es") {
   const idioma = traducciones[lang] ? lang : "es";
   return traducciones[idioma][clave] || traducciones.es[clave] || clave;
+}
+
+/** Datos que necesita el navegador para formatear importes igual que el servidor (gráficas). */
+export function infoMoneda(codigoMoneda = "MXN") {
+  const codigo = TASAS_CAMBIO[codigoMoneda] ? codigoMoneda : "MXN";
+  return { codigo, tasa: TASAS_CAMBIO[codigo], locale: codigo === "USD" ? "en-US" : codigo === "EUR" ? "de-DE" : "es-MX" };
 }

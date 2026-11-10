@@ -1,4 +1,4 @@
-import { formatearMoneda, t } from "../helpers/i18n.js";
+import { formatearMoneda, infoMoneda, t } from "../helpers/i18n.js";
 import { CATEGORIAS, COOKIE_CONSENT, COOKIE_DE_PREF, leerConsentimiento } from "../helpers/cookies.js";
 
 export const VALORES_PREF = {
@@ -43,6 +43,9 @@ export function middlewarePreferencias(req, res, next) {
   res.locals.cookiesCatalogo = CATEGORIAS;
   res.locals.t = (clave) => t(clave, pref.idioma);
   res.locals.dinero = (monto) => formatearMoneda(monto, pref.moneda);
+  res.locals.monedaInfo = infoMoneda(pref.moneda);
+  // JSON seguro para incrustar en <script type="application/json">
+  res.locals.jsonSeguro = (dato) => JSON.stringify(dato).replace(/</g, "\\u003c");
   req.pref = pref;
 
   next();
