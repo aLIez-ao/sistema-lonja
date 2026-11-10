@@ -1,21 +1,98 @@
 <%- include('../plantillas/header') %>
-<h1 class="h3 mb-3"><%= us && us.id ? 'Editar' : 'Nuevo' %> usuario</h1>
+<% const editando = !!(us && us.id); const manual = us && us.acceso === 'manual'; %>
+<div class="mb-3">
+  <a href="/usuarios" class="btn btn-sm btn-outline-secondary mb-2"><%- icono('arrow-left', 14, 'me-1') %>Volver a Usuarios</a>
+  <h1 class="h3 mb-0 fw-bold"><%= editando ? 'Editar usuario' : 'Nuevo usuario' %></h1>
+  <p class="text-muted small mb-0"><%= editando ? 'Actualiza los datos, el rol o el acceso de esta cuenta.' : 'Da de alta a una persona autorizada para entrar al sistema.' %></p>
+</div>
 <%- include('../plantillas/mensajes', { mensaje: null }) %>
-<form action="<%= action %>" method="POST" class="col-lg-6">
-  <div class="mb-3"><label class="form-label" for="usuario">Usuario</label>
-    <input class="form-control" id="usuario" name="usuario" maxlength="40" value="<%= us ? us.usuario : '' %>" required></div>
-  <div class="mb-3"><label class="form-label" for="nombre_completo">Nombre completo</label>
-    <input class="form-control" id="nombre_completo" name="nombre_completo" maxlength="80" value="<%= us ? us.nombre_completo : '' %>" required></div>
-  <div class="mb-3"><label class="form-label" for="rol">Rol</label>
-    <select class="form-select" id="rol" name="rol">
-      <% roles.forEach(r => { %><option value="<%= r %>" <%= us && us.rol === r ? 'selected' : '' %>><%= r %></option><% }) %>
-    </select></div>
-  <div class="mb-3"><label class="form-label" for="password">Contraseña<%= us && us.id ? ' (déjala vacía para no cambiarla)' : '' %></label>
-    <input class="form-control" type="password" id="password" name="password" minlength="8" maxlength="72" autocomplete="new-password" <%= us && us.id ? '' : 'required' %>></div>
-  <% if (us && us.id) { %>
-  <div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="activo" name="activo" <%= us.activo ? 'checked' : '' %>><label class="form-check-label" for="activo">Activo</label></div>
-  <% } %>
-  <button class="btn btn-primary" type="submit">Guardar</button>
-  <a class="btn btn-link" href="/usuarios">Cancelar</a>
+
+<form action="<%= action %>" method="POST" class="row g-4" novalidate data-validar>
+  <div class="col-lg-7">
+    <div class="card p-4">
+      <h2 class="h6 fw-bold text-primary mb-3"><%- icono('person', 16, 'me-1') %>Datos de la persona</h2>
+      <div class="mb-3"><%- include('../plantillas/campo-foto', { u: us }) %></div>
+      <div class="row g-3">
+        <div class="col-12">
+          <label class="form-label fw-semibold" for="nombre_completo">Nombre completo</label>
+          <input class="form-control" id="nombre_completo" name="nombre_completo" maxlength="80" value="<%= us ? us.nombre_completo : '' %>" required autocomplete="off">
+        </div>
+        <div class="col-md-7">
+          <label class="form-label fw-semibold" for="correo">Correo electrónico</label>
+          <input class="form-control" type="email" id="correo" name="correo" maxlength="80" value="<%= us ? us.correo || '' : '' %>" required autocomplete="off" placeholder="nombre@ejemplo.com">
+          <div class="form-text">
+            <% if (editando && us.correo) { %>
+              <% if (us.email_verificado) { %><span class="text-success"><%- icono('check-circle', 13, 'me-1') %>Verificado.</span><% } else { %><span class="text-warning-emphasis"><%- icono('exclamation-triangle', 13, 'me-1') %>Sin verificar.</span><% } %>
+              Si lo cambias tendrá que verificarse de nuevo.
+            <% } else { %>
+              Aquí llegan la invitación y los enlaces para recuperar la contraseña.
+            <% } %>
+          </div>
+        </div>
+        <div class="col-md-5">
+          <label class="form-label fw-semibold" for="telefono">Teléfono <span class="text-muted fw-normal">(opcional)</span></label>
+          <input class="form-control" type="tel" id="telefono" name="telefono" maxlength="20" pattern="[0-9+() \-]{7,20}" value="<%= us ? us.telefono || '' : '' %>" placeholder="229 123 4567" autocomplete="off">
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold" for="puesto">Puesto o cargo <span class="text-muted fw-normal">(opcional)</span></label>
+          <input class="form-control" id="puesto" name="puesto" maxlength="60" value="<%= us ? us.puesto || '' : '' %>" placeholder="Ej. Encargado de subasta" autocomplete="off">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card p-4 mb-4">
+      <h2 class="h6 fw-bold text-primary mb-3"><%- icono('shield-lock', 16, 'me-1') %>Cuenta y permisos</h2>
+      <div class="mb-3">
+        <label class="form-label fw-semibold" for="usuario">Nombre de usuario</label>
+        <input class="form-control" id="usuario" name="usuario" minlength="3" maxlength="40" pattern="[\w.\-]+" value="<%= us ? us.usuario : '' %>" required autocomplete="off">
+        <div class="form-text">Con este nombre inicia sesión. Letras, números, punto y guiones.</div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold" for="rol">Rol</label>
+        <select class="form-select" id="rol" name="rol">
+          <% roles.forEach(r => { %><option value="<%= r %>" <%= (us ? us.rol === r : r === 'capturista') ? 'selected' : '' %>><%= nombreRol[r] || r %></option><% }) %>
+        </select>
+        <div class="form-text">El administrador gestiona usuarios y puede eliminar registros; el capturista registra y consulta.</div>
+      </div>
+      <% if (editando) { %>
+        <div class="form-check form-switch">
+          <input class="form-check-input" type="checkbox" role="switch" id="activo" name="activo" <%= us.activo ? 'checked' : '' %>>
+          <label class="form-check-label fw-semibold" for="activo">Cuenta activa</label>
+          <div class="form-text">Al desactivarla pierde el acceso de inmediato, sin borrar su historial.</div>
+        </div>
+      <% } %>
+    </div>
+
+    <div class="card p-4">
+      <h2 class="h6 fw-bold text-primary mb-3"><%- icono('key', 16, 'me-1') %>Contraseña</h2>
+      <% if (!editando) { %>
+        <div class="form-check mb-2">
+          <input class="form-check-input" type="radio" name="acceso" id="accesoInvitacion" value="invitacion" <%= manual ? '' : 'checked' %> data-acceso>
+          <label class="form-check-label" for="accesoInvitacion"><strong>Enviar invitación por correo</strong><br><span class="small text-muted">La persona crea su propia contraseña con un enlace que vence en 72 horas. Nadie más la conoce.</span></label>
+        </div>
+        <div class="form-check mb-3">
+          <input class="form-check-input" type="radio" name="acceso" id="accesoManual" value="manual" <%= manual ? 'checked' : '' %> data-acceso>
+          <label class="form-check-label" for="accesoManual"><strong>Asignar una contraseña inicial</strong><br><span class="small text-muted">Tendrás que entregársela en persona. Podrá cambiarla en Configuración.</span></label>
+        </div>
+        <div data-bloque-password class="<%= manual ? '' : 'd-none' %>">
+          <%- include('../plantillas/campo-password', { nombre: 'password', etiqueta: 'Contraseña inicial', requerido: false }) %>
+        </div>
+      <% } else { %>
+        <p class="small text-muted">Lo recomendable es que la persona la cambie por sí misma: usa <strong>Enviar enlace de restablecimiento</strong> en la lista de usuarios. Solo si no tiene acceso a su correo, asígnale una aquí.</p>
+        <button class="btn btn-sm btn-outline-secondary mb-3" type="button" data-bs-toggle="collapse" data-bs-target="#bloquePasswordManual">Asignar contraseña manualmente</button>
+        <div class="collapse" id="bloquePasswordManual">
+          <%- include('../plantillas/campo-password', { nombre: 'password', etiqueta: 'Contraseña nueva', requerido: false }) %>
+          <div class="form-text">Al guardarla se cierran las sesiones abiertas de este usuario.</div>
+        </div>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="col-12 d-flex gap-2">
+    <button class="btn btn-primary" type="submit"><%= editando ? 'Guardar cambios' : 'Crear usuario' %></button>
+    <a class="btn btn-outline-secondary" href="/usuarios">Cancelar</a>
+  </div>
 </form>
 <%- include('../plantillas/footer') %>

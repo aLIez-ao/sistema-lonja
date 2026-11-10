@@ -75,9 +75,9 @@ test("token falso es rechazado", async () => {
 });
 
 test("admin crea capturista; capturista entra pero no administra usuarios ni borra", async () => {
-  const corto = await admin.post("/usuarios", { usuario: "cap1", nombre_completo: "Capturista Uno", rol: "capturista", password: "123" });
+  const corto = await admin.post("/usuarios", { usuario: "cap1", nombre_completo: "Capturista Uno", correo: "cap1@example.com", rol: "capturista", acceso: "manual", password: "123", password_confirmar: "123" });
   assert.equal(corto.status, 400);
-  const c = await admin.post("/usuarios", { usuario: "cap1", nombre_completo: "Capturista Uno", rol: "capturista", password: "Captura1234" });
+  const c = await admin.post("/usuarios", { usuario: "cap1", nombre_completo: "Capturista Uno", correo: "cap1@example.com", rol: "capturista", acceso: "manual", password: "Captura1234", password_confirmar: "Captura1234" });
   assert.equal(c.status, 302);
 
   await capt.post("/credenciales", { usuario: "cap1", password: "Captura1234" });
@@ -176,7 +176,7 @@ test("XSS: los datos se escapan en las vistas", async () => {
 test("usuario desactivado pierde el acceso aunque tenga token vigente", async () => {
   const { Usuario } = await import("../models/index.js");
   const u = await Usuario.findOne({ where: { usuario: "cap1" } });
-  const r = await admin.post(`/usuarios/${u.id}?_method=PUT`, { usuario: "cap1", nombre_completo: "Capturista Uno", rol: "capturista" }); // sin 'activo' = desactivar
+  const r = await admin.post(`/usuarios/${u.id}?_method=PUT`, { usuario: "cap1", nombre_completo: "Capturista Uno", correo: "cap1@example.com", rol: "capturista" }); // sin 'activo' = desactivar
   assert.equal(r.status, 302);
   assert.equal((await capt.get("/compras")).status, 302);
   const re = await sesion().post("/credenciales", { usuario: "cap1", password: "Captura1234" });

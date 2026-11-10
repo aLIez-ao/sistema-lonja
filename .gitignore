@@ -67,3 +67,6 @@ reports/
 # ==========================================
 .gitattributes
 .gitignore
+# Fotos de perfil subidas por los usuarios
+public/uploads/avatares/*
+!public/uploads/avatares/.gitkeep
