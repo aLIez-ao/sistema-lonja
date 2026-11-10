@@ -1,28 +1,35 @@
 import { Usuario } from "../models/index.js";
-import { JWTVerifica } from "../helpers/tokens.js";
+import { JWTVerifica, opcionesCookieSesion } from "../helpers/tokens.js";
 
-/** Autenticación: exige un JWT válido en la cookie _token y carga req.usuario. */
-const rutaProteger = async (req, res, next) => {
-  const { _token } = req.cookies;
-  if (!_token) return res.redirect("/");
-
+/**
+ * Devuelve el usuario dueño del token o null si el token no sirve: firma inválida o vencida,
+ * usuario borrado o desactivado, o contraseña cambiada después de emitirlo (sesion_version).
+ */
+export async function usuarioDesdeToken(token) {
+  if (!token) return null;
   try {
-    const decoded = JWTVerifica(_token);
+    const decoded = JWTVerifica(token);
     const usuario = await Usuario.scope("sinClave").findByPk(decoded.id);
-    // Un usuario desactivado o borrado pierde el acceso aunque su token no haya vencido
-    if (!usuario || !usuario.activo) return res.clearCookie("_token").redirect("/");
-    req.usuario = usuario;
-    res.locals.usuario = usuario;
-    // Evita que el navegador almacene páginas privadas en bfcache al cerrar sesión
-    res.set({
-      "Cache-Control": "no-store, no-cache, must-revalidate, private",
-      Pragma: "no-cache",
-      Expires: "0",
-    });
-    return next();
+    if (!usuario || !usuario.activo) return null;
+    if ((decoded.v ?? 0) !== (usuario.sesion_version ?? 0)) return null;
+    return usuario;
   } catch {
-    return res.clearCookie("_token").redirect("/");
+    return null;
   }
+}
+
+/** Autenticación: exige una sesión válida (app.js ya resolvió req.usuario a partir de la cookie). */
+const rutaProteger = async (req, res, next) => {
+  const usuario = req.usuario ?? (await usuarioDesdeToken(req.cookies?._token));
+  if (!usuario) {
+    if (req.cookies?._token) res.clearCookie("_token", opcionesCookieSesion());
+    return res.redirect("/");
+  }
+  req.usuario = usuario;
+  res.locals.usuario = usuario;
+  // Las páginas privadas no se guardan en caché: tras cerrar sesión, "atrás" vuelve a pedirlas y redirige al login
+  res.set({ "Cache-Control": "no-store, no-cache, must-revalidate, private", Pragma: "no-cache", Expires: "0" });
+  return next();
 };
 
 /** Autorización: permite solo los roles indicados. Usar después de rutaProteger. */

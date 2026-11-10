@@ -95,6 +95,12 @@
 }
 .avatar-usuario:hover { transform: scale(1.05); box-shadow: 0 4px 10px rgba(11, 57, 84, 0.25); }
 .avatar-usuario.avatar-lg { width: 72px; height: 72px; font-size: 1.5rem; }
+.avatar-usuario.avatar-sm { width: 32px; height: 32px; font-size: 0.72rem; border-width: 1px; box-shadow: none; }
+.avatar-usuario { flex-shrink: 0; }
+.requisitos-password { list-style: none; padding-left: 0; color: var(--lonja-text-muted); }
+.requisitos-password li::before { content: "\25CB"; margin-right: 0.4rem; }
+.requisitos-password li.cumple { color: var(--lonja-teal); }
+.requisitos-password li.cumple::before { content: "\2713"; font-weight: 700; }
 .menu-cuenta { min-width: 250px; border-radius: 14px; }
 .bandera { border-radius: 3px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12); object-fit: cover; display: block; }
 .bi { vertical-align: -0.125em; flex-shrink: 0; }

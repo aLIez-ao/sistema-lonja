@@ -59,69 +59,95 @@ async function enviarCorreo({ para, asunto, html, texto, adjuntos = [] }) {
   }
 }
 
-/**
- * Envía correo para verificar la vinculación del correo del usuario.
- */
-export async function enviarEmailVerificacion({ usuario, correo, token, baseUrl }) {
-  const enlace = `${baseUrl}/verificar-email/${token}`;
+/** Escapa texto que se inserta en el HTML de un correo. */
+const esc = (v) => String(v ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+
+/** Plantilla común de los correos de cuenta. `parrafos` es texto plano; `boton` = { texto, enlace }. */
+function plantillaCuenta({ subtitulo, usuario, parrafos, boton, pie }) {
+  const nombre = usuario.nombre_completo || usuario.usuario;
   const html = `
-    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-      <div style="background: linear-gradient(135deg, #0a2540 0%, #0077b6 100%); padding: 28px 24px; text-align: center; color: white;">
-        <h1 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: 0.5px;">Lonja Pesquera de Veracruz</h1>
-        <p style="margin: 6px 0 0 0; opacity: 0.9; font-size: 14px;">Verificación de cuenta y correo electrónico</p>
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0;">
+      <div style="background: #0B3954; padding: 26px 24px; text-align: center; color: #ffffff;">
+        <h1 style="margin: 0; font-size: 22px; font-weight: 700;">Lonja Pesquera de Veracruz</h1>
+        <p style="margin: 6px 0 0 0; opacity: 0.9; font-size: 14px;">${esc(subtitulo)}</p>
       </div>
       <div style="padding: 28px 24px; color: #1e293b; line-height: 1.6;">
-        <p style="font-size: 16px;">Hola <strong>${usuario.nombre_completo || usuario.usuario}</strong>,</p>
-        <p>Has solicitado vincular o verificar este correo en tu cuenta del <strong>Sistema Lonja</strong>.</p>
-        <p>Por favor confirma tu dirección de correo haciendo clic en el siguiente botón:</p>
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${enlace}" style="background-color: #0284c7; color: #ffffff; text-decoration: none; padding: 13px 28px; border-radius: 8px; font-weight: 600; font-size: 15px; display: inline-block; box-shadow: 0 2px 6px rgba(2, 132, 199, 0.35);">Verificar mi correo</a>
+        <p style="font-size: 16px;">Hola <strong>${esc(nombre)}</strong>,</p>
+        ${parrafos.map((p) => `<p>${esc(p)}</p>`).join("\n        ")}
+        ${boton ? `<div style="text-align: center; margin: 28px 0;">
+          <a href="${esc(boton.enlace)}" style="background-color: #0B3954; color: #ffffff; text-decoration: none; padding: 13px 28px; border-radius: 8px; font-weight: 600; font-size: 15px; display: inline-block;">${esc(boton.texto)}</a>
         </div>
-        <p style="font-size: 13px; color: #64748b;">Si el botón no funciona, copia y pega el siguiente enlace en tu navegador:<br><a href="${enlace}" style="color: #0284c7; word-break: break-all;">${enlace}</a></p>
+        <p style="font-size: 13px; color: #64748b;">Si el botón no funciona, copia este enlace en tu navegador:<br><a href="${esc(boton.enlace)}" style="color: #087E8B; word-break: break-all;">${esc(boton.enlace)}</a></p>` : ""}
         <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
-        <p style="font-size: 12px; color: #94a3b8; margin: 0;">Si tú no solicitaste este cambio, puedes ignorar este mensaje con seguridad.</p>
+        <p style="font-size: 12px; color: #94a3b8; margin: 0;">${esc(pie)}</p>
       </div>
-    </div>
-  `;
+    </div>`;
+  const texto = [`Hola ${nombre},`, ...parrafos, boton ? `${boton.texto}: ${boton.enlace}` : "", pie].filter(Boolean).join("\n\n");
+  return { html, texto };
+}
 
+/** Verificación del correo vinculado a la cuenta (el enlace vence en 24 horas). */
+export async function enviarEmailVerificacion({ usuario, correo, token, baseUrl }) {
+  const enlace = `${baseUrl}/verificar-email/${token}`;
   return enviarCorreo({
     para: correo,
-    asunto: "Verifica tu correo electrónico - Sistema Lonja Veracruz",
-    html,
-    texto: `Verifica tu correo ingresando a: ${enlace}`,
+    asunto: "Confirma tu correo - Lonja de Veracruz",
+    ...plantillaCuenta({
+      subtitulo: "Verificación de correo",
+      usuario,
+      parrafos: ["Para confirmar que este correo te pertenece y poder usarlo para recuperar tu cuenta, verifica tu dirección. El enlace vence en 24 horas."],
+      boton: { texto: "Verificar mi correo", enlace },
+      pie: "Si no solicitaste esta verificación puedes ignorar este mensaje.",
+    }),
   });
 }
 
-/**
- * Envía correo con token para restablecer contraseña olvidada.
- */
+/** Enlace para restablecer la contraseña (vence en 1 hora). */
 export async function enviarEmailRecuperacion({ usuario, correo, token, baseUrl }) {
   const enlace = `${baseUrl}/recuperar-password/${token}`;
-  const html = `
-    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
-      <div style="background: linear-gradient(135deg, #0a2540 0%, #0077b6 100%); padding: 28px 24px; text-align: center; color: white;">
-        <h1 style="margin: 0; font-size: 24px; font-weight: 700;">Lonja Pesquera de Veracruz</h1>
-        <p style="margin: 6px 0 0 0; opacity: 0.9; font-size: 14px;">Recuperación de Contraseña</p>
-      </div>
-      <div style="padding: 28px 24px; color: #1e293b; line-height: 1.6;">
-        <p style="font-size: 16px;">Hola <strong>${usuario.nombre_completo || usuario.usuario}</strong>,</p>
-        <p>Recibimos una solicitud para restablecer la contraseña de acceso a tu cuenta.</p>
-        <p>Haz clic en el siguiente botón para generar una nueva contraseña (este enlace vence en 1 hora):</p>
-        <div style="text-align: center; margin: 30px 0;">
-          <a href="${enlace}" style="background-color: #0f172a; color: #ffffff; text-decoration: none; padding: 13px 28px; border-radius: 8px; font-weight: 600; font-size: 15px; display: inline-block;">Restablecer contraseña</a>
-        </div>
-        <p style="font-size: 13px; color: #64748b;">Enlace directo:<br><a href="${enlace}" style="color: #0284c7; word-break: break-all;">${enlace}</a></p>
-        <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
-        <p style="font-size: 12px; color: #94a3b8; margin: 0;">Si no solicitaste restablecer tu contraseña, haz caso omiso de este correo. Tu cuenta sigue protegida.</p>
-      </div>
-    </div>
-  `;
-
   return enviarCorreo({
     para: correo,
     asunto: "Recuperación de contraseña - Lonja de Veracruz",
-    html,
-    texto: `Restablece tu contraseña aquí: ${enlace}`,
+    ...plantillaCuenta({
+      subtitulo: "Recuperación de contraseña",
+      usuario,
+      parrafos: [`Recibimos una solicitud para restablecer la contraseña de la cuenta "${usuario.usuario}". El enlace vence en 1 hora y solo puede usarse una vez.`],
+      boton: { texto: "Restablecer contraseña", enlace },
+      pie: "Si no fuiste tú, ignora este correo: tu contraseña actual sigue funcionando.",
+    }),
+  });
+}
+
+/** Invitación a una cuenta nueva: el usuario crea su propia contraseña (vence en 72 horas). */
+export async function enviarEmailInvitacion({ usuario, correo, token, baseUrl, invitadoPor }) {
+  const enlace = `${baseUrl}/recuperar-password/${token}`;
+  return enviarCorreo({
+    para: correo,
+    asunto: "Tu cuenta en el Sistema Lonja de Veracruz",
+    ...plantillaCuenta({
+      subtitulo: "Bienvenida al sistema",
+      usuario,
+      parrafos: [
+        `${invitadoPor || "La administración"} creó una cuenta para ti en el Sistema Lonja de Veracruz.`,
+        `Tu nombre de usuario es "${usuario.usuario}". Para entrar por primera vez crea tu contraseña con el siguiente enlace, que vence en 72 horas.`,
+      ],
+      boton: { texto: "Crear mi contraseña", enlace },
+      pie: "Si no esperabas este correo puedes ignorarlo; la cuenta no se podrá usar sin crear la contraseña.",
+    }),
+  });
+}
+
+/** Aviso de seguridad: la contraseña de la cuenta cambió. */
+export async function enviarEmailPasswordCambiada({ usuario, correo }) {
+  return enviarCorreo({
+    para: correo,
+    asunto: "Tu contraseña fue cambiada - Lonja de Veracruz",
+    ...plantillaCuenta({
+      subtitulo: "Aviso de seguridad",
+      usuario,
+      parrafos: [`La contraseña de la cuenta "${usuario.usuario}" se cambió hace un momento y se cerraron las demás sesiones abiertas.`],
+      pie: "Si no fuiste tú, avisa de inmediato a la administración de la lonja para que restablezca tu acceso.",
+    }),
   });
 }
 
@@ -147,7 +173,7 @@ export async function enviarEmailComprobanteCompra({ compra, comprador, pdfBuffe
         <p style="margin: 4px 0 0 0; opacity: 0.85; font-size: 13px;">Folio Factura: <strong>#FAC-${folio || compra.id_cmp}</strong></p>
       </div>
       <div style="padding: 26px 25px; color: #1e293b;">
-        <p style="font-size: 16px; margin-top: 0;">Estimado(a) <strong>${nombreComprador}</strong>,</p>
+        <p style="font-size: 16px; margin-top: 0;">Estimado(a) <strong>${esc(nombreComprador)}</strong>,</p>
         <p>Agradecemos su compra en la subasta de la lonja. A continuación se presentan los detalles de su transacción:</p>
 
         <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin: 20px 0;">
@@ -158,7 +184,7 @@ export async function enviarEmailComprobanteCompra({ compra, comprador, pdfBuffe
             </tr>
             <tr>
               <td style="padding: 6px 0; color: #64748b;">Especies:</td>
-              <td style="padding: 6px 0; font-weight: 600; text-align: right;">${especies}</td>
+              <td style="padding: 6px 0; font-weight: 600; text-align: right;">${esc(especies)}</td>
             </tr>
             <tr>
               <td style="padding: 6px 0; color: #64748b;">Cantidad / Cajas:</td>
@@ -219,9 +245,9 @@ export async function enviarBoletinClientes({ asunto, titulo, mensaje, tipo = "e
           <h1 style="margin: 10px 0 0 0; font-size: 22px; font-weight: 700;">Lonja de Veracruz</h1>
         </div>
         <div style="padding: 26px 24px; color: #1e293b; line-height: 1.6;">
-          <p style="font-size: 15px; margin-top: 0;">Estimado(a) <strong>${c.nombre} ${c.apellido_paterno}</strong>,</p>
-          <h3 style="color: #0f172a; margin-top: 15px;">${titulo || asunto}</h3>
-          <div style="background: #f8fafc; border-left: 4px solid ${badgeColor}; padding: 14px 18px; border-radius: 0 8px 8px 0; font-size: 15px; margin: 20px 0; white-space: pre-line;">${mensaje}</div>
+          <p style="font-size: 15px; margin-top: 0;">Estimado(a) <strong>${esc(c.nombre)} ${esc(c.apellido_paterno)}</strong>,</p>
+          <h3 style="color: #0f172a; margin-top: 15px;">${esc(titulo || asunto)}</h3>
+          <div style="background: #f8fafc; border-left: 4px solid ${badgeColor}; padding: 14px 18px; border-radius: 0 8px 8px 0; font-size: 15px; margin: 20px 0; white-space: pre-line;">${esc(mensaje)}</div>
           <p style="font-size: 13px; color: #64748b;">Si tiene dudas o requiere apoyo, por favor comuníquese a la oficina de administración de la Lonja.</p>
           <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
           <p style="font-size: 12px; color: #94a3b8; margin: 0;">Lonja Pesquera de Veracruz · Aviso enviado a clientes registrados.</p>

@@ -8,10 +8,13 @@ const secreto = () => {
 };
 
 const JWTGenera = (usuario) =>
-  jwt.sign({ id: usuario.id, rol: usuario.rol }, secreto(), {
+  jwt.sign({ id: usuario.id, rol: usuario.rol, v: usuario.sesion_version || 0 }, secreto(), {
     expiresIn: process.env.JWT_DURACION || "8h",
   });
 
 const JWTVerifica = (token) => jwt.verify(token, secreto());
 
-export { JWTGenera, JWTVerifica };
+/** Opciones de la cookie de sesión (las mismas al crearla y al borrarla). */
+const opcionesCookieSesion = () => ({ httpOnly: true, sameSite: "strict", secure: process.env.NODE_ENV === "production", path: "/" });
+
+export { JWTGenera, JWTVerifica, opcionesCookieSesion };

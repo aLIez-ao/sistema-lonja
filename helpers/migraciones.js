@@ -1,59 +1,30 @@
 import db from "../config/db.js";
 import { DataTypes } from "sequelize";
 
+// Columnas agregadas a "usuario" después de la primera versión. Con BD_SYNC=safe, sync() no
+// altera tablas existentes, así que aquí se crean las que falten.
+const COLUMNAS_USUARIO = {
+  correo: { type: DataTypes.STRING(80), allowNull: true, unique: true },
+  email_verificado: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+  token_verificacion: { type: DataTypes.STRING(100), allowNull: true },
+  token_verificacion_expira: { type: DataTypes.DATE, allowNull: true },
+  token_recuperacion: { type: DataTypes.STRING(100), allowNull: true },
+  token_recuperacion_expira: { type: DataTypes.DATE, allowNull: true },
+  preferencias: { type: DataTypes.TEXT, allowNull: true },
+  telefono: { type: DataTypes.STRING(20), allowNull: true },
+  puesto: { type: DataTypes.STRING(60), allowNull: true },
+  foto: { type: DataTypes.STRING(120), allowNull: true },
+  sesion_version: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+};
+
 export async function asegurarColumnasUsuario() {
   try {
     const qi = db.getQueryInterface();
-    const descripcion = await qi.describeTable("usuario");
-
-    if (!descripcion.correo) {
-      await qi.addColumn("usuario", "correo", {
-        type: DataTypes.STRING(80),
-        allowNull: true,
-        unique: true,
-      });
-      console.log("Columna 'correo' agregada a tabla usuario");
-    }
-
-    if (!descripcion.email_verificado) {
-      await qi.addColumn("usuario", "email_verificado", {
-        type: DataTypes.BOOLEAN,
-        allowNull: false,
-        defaultValue: false,
-      });
-      console.log("Columna 'email_verificado' agregada a tabla usuario");
-    }
-
-    if (!descripcion.token_verificacion) {
-      await qi.addColumn("usuario", "token_verificacion", {
-        type: DataTypes.STRING(100),
-        allowNull: true,
-      });
-      console.log("Columna 'token_verificacion' agregada a tabla usuario");
-    }
-
-    if (!descripcion.token_recuperacion) {
-      await qi.addColumn("usuario", "token_recuperacion", {
-        type: DataTypes.STRING(100),
-        allowNull: true,
-      });
-      console.log("Columna 'token_recuperacion' agregada a tabla usuario");
-    }
-
-    if (!descripcion.token_recuperacion_expira) {
-      await qi.addColumn("usuario", "token_recuperacion_expira", {
-        type: DataTypes.DATE,
-        allowNull: true,
-      });
-      console.log("Columna 'token_recuperacion_expira' agregada a tabla usuario");
-    }
-
-    if (!descripcion.preferencias) {
-      await qi.addColumn("usuario", "preferencias", {
-        type: DataTypes.TEXT,
-        allowNull: true,
-      });
-      console.log("Columna 'preferencias' agregada a tabla usuario");
+    const actuales = await qi.describeTable("usuario");
+    for (const [nombre, definicion] of Object.entries(COLUMNAS_USUARIO)) {
+      if (actuales[nombre]) continue;
+      await qi.addColumn("usuario", nombre, definicion);
+      console.log(`Columna '${nombre}' agregada a la tabla usuario`);
     }
   } catch (err) {
     console.warn("Aviso en asegurarColumnasUsuario:", err.message);

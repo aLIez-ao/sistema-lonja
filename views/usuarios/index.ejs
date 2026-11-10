@@ -1,24 +1,21 @@
 <%- include('../plantillas/header') %>
-<div class="d-flex justify-content-between align-items-center mb-3">
+<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
   <div>
-    <h1 class="h3 mb-0 fw-bold"><%= t('usuarios') %> del Sistema</h1>
-    <p class="text-muted small mb-0">Cuentas de personal autorizado (Administradores y Capturistas)</p>
+    <h1 class="h3 mb-0 fw-bold"><%= t('usuarios') %> del sistema</h1>
+    <p class="text-muted small mb-0">Personal autorizado: administradores y capturistas</p>
   </div>
-  <a class="btn btn-primary" href="/usuarios/crear">
-    <%- icono('plus-lg', 16, 'me-1') %>
-    Nuevo usuario
-  </a>
+  <a class="btn btn-primary" href="/usuarios/crear"><%- icono('person-plus', 16, 'me-1') %>Nuevo usuario</a>
 </div>
-<%- include('../plantillas/mensajes', { errores: [] }) %>
+<%- include('../plantillas/mensajes', { errores: (typeof error !== 'undefined' && error) ? [error] : [] }) %>
 <div class="card overflow-hidden">
   <div class="table-responsive">
     <table class="table table-hover table-striped align-middle mb-0 table-sortable">
       <thead>
         <tr>
-          <th>ID</th>
           <th>Usuario</th>
-          <th>Nombre</th>
           <th>Correo</th>
+          <th>Teléfono</th>
+          <th>Puesto</th>
           <th>Rol</th>
           <th>Estado</th>
           <th class="text-end" data-no-sort>Acciones</th>
@@ -27,35 +24,42 @@
       <tbody>
       <% usuarios.forEach(u => { %>
         <tr>
-          <td><span class="badge bg-secondary">#<%= u.id %></span></td>
-          <td><strong><%= u.usuario %></strong></td>
-          <td><%= u.nombre_completo %></td>
+          <td data-sort-value="<%= u.nombre_completo %>">
+            <div class="d-flex align-items-center gap-2">
+              <%- include('../plantillas/avatar', { u, clase: 'avatar-sm' }) %>
+              <div>
+                <div class="fw-semibold"><%= u.nombre_completo %></div>
+                <div class="small text-muted">@<%= u.usuario %></div>
+              </div>
+            </div>
+          </td>
           <td>
             <% if (u.correo) { %>
               <%= u.correo %>
-              <% if (u.email_verificado) { %><span class="badge bg-success ms-1">✓</span><% } %>
+              <% if (u.email_verificado) { %>
+                <span class="text-success ms-1" title="Correo verificado"><%- icono('check-circle', 14) %><span class="visually-hidden">Verificado</span></span>
+              <% } else { %>
+                <span class="badge bg-warning text-dark ms-1">Sin verificar</span>
+              <% } %>
             <% } else { %>
-              <span class="text-muted">—</span>
+              <span class="badge bg-secondary">Sin correo</span>
             <% } %>
           </td>
-          <td><span class="badge bg-light text-dark border text-uppercase"><%= u.rol %></span></td>
-          <td>
-            <% if (u.activo) { %>
-              <span class="badge bg-success">Activo</span>
-            <% } else { %>
-              <span class="badge bg-danger">Inactivo</span>
-            <% } %>
-          </td>
+          <td><%= u.telefono || '—' %></td>
+          <td><%= u.puesto || '—' %></td>
+          <td><span class="badge bg-light text-dark border"><%= nombreRol[u.rol] || u.rol %></span></td>
+          <td><span class="badge <%= u.activo ? 'bg-success' : 'bg-danger' %>"><%= u.activo ? 'Activo' : 'Inactivo' %></span></td>
           <td class="text-end text-nowrap">
-            <a class="btn btn-sm btn-outline-secondary" href="/usuarios/<%= u.id %>/editar" title="Editar usuario">
-              <%- icono('pencil', 14) %>
-            </a>
+            <% if (u.correo && u.activo) { %>
+              <form action="/usuarios/<%= u.id %>/restablecer" method="POST" class="d-inline" data-confirmar="¿Enviar a <%= u.correo %> un enlace para que cree una contraseña nueva?">
+                <button class="btn btn-sm btn-outline-primary" type="submit" title="Enviar enlace de restablecimiento de contraseña" aria-label="Enviar enlace de restablecimiento de contraseña"><%- icono('key', 14) %></button>
+              </form>
+            <% } %>
+            <a class="btn btn-sm btn-outline-secondary" href="/usuarios/<%= u.id %>/editar" title="Editar usuario" aria-label="Editar usuario"><%- icono('pencil', 14) %></a>
             <% if (u.id !== usuario.id) { %>
-            <form action="/usuarios/<%= u.id %>?_method=DELETE" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este usuario?')">
-              <button class="btn btn-sm btn-outline-danger" type="submit" title="Eliminar usuario" aria-label="Eliminar usuario">
-                <%- icono('trash', 14) %>
-              </button>
-            </form>
+              <form action="/usuarios/<%= u.id %>?_method=DELETE" method="POST" class="d-inline" data-confirmar="¿Eliminar al usuario <%= u.usuario %>? Esta acción no se puede deshacer.">
+                <button class="btn btn-sm btn-outline-danger" type="submit" title="Eliminar usuario" aria-label="Eliminar usuario"><%- icono('trash', 14) %></button>
+              </form>
             <% } %>
           </td>
         </tr>

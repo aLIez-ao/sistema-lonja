@@ -19,12 +19,6 @@
 
 <body>
   <%
-    let iniciales = "U";
-    if (usuario) {
-      const partes = (usuario.nombre_completo || usuario.usuario || "").trim().split(/\s+/).filter(Boolean);
-      if (partes.length >= 2) iniciales = (partes[0][0] + partes[1][0]).toUpperCase();
-      else if (partes.length === 1) iniciales = partes[0].substring(0, 2).toUpperCase();
-    }
     const banderas = { es: { src: '/img/flags/mx.svg', nombre: 'Español' }, en: { src: '/img/flags/us.svg', nombre: 'English' } };
     const activo = (ruta) => (rutaActual || '').startsWith(ruta) ? 'active' : '';
   %>
@@ -85,11 +79,7 @@
             <!-- Cuenta: avatar circular con menú rápido (perfil, configuración y cerrar sesión) -->
             <div class="dropdown ms-1">
               <button class="btn p-0 border-0 bg-transparent" type="button" data-bs-toggle="dropdown" aria-expanded="false" title="<%= usuario.nombre_completo || usuario.usuario %>" aria-label="Menú de cuenta">
-                <% if (usuario.foto) { %>
-                  <img class="avatar-usuario" src="<%= usuario.foto %>" alt="<%= iniciales %>" width="38" height="38">
-                <% } else { %>
-                  <span class="avatar-usuario"><%= iniciales %></span>
-                <% } %>
+                <%- include('avatar', { u: usuario }) %>
               </button>
               <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 py-2 mt-2 menu-cuenta">
                 <li class="px-3 py-2 border-bottom">

@@ -3,7 +3,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
   <div>
     <h1 class="h3 mb-1"><%= t('configuracion') %> del Sistema</h1>
-    <p class="text-muted small mb-0">Personaliza tu experiencia, gestiona tu cuenta y emite comunicados a clientes</p>
+    <p class="text-muted small mb-0">Apariencia, cookies, datos de tu cuenta y seguridad</p>
   </div>
 </div>
 
@@ -35,12 +35,18 @@
       </a>
       <a class="list-group-item list-group-item-action py-3 fw-semibold" id="tab-cuenta" data-bs-toggle="list" href="#pane-cuenta" role="tab">
         <%- icono('person', 16, 'me-2') %>
-        Detalles de Mi Cuenta
+        Mi cuenta
       </a>
+      <a class="list-group-item list-group-item-action py-3 fw-semibold" id="tab-seguridad" data-bs-toggle="list" href="#pane-seguridad" role="tab">
+        <%- icono('shield-lock', 16, 'me-2') %>
+        Seguridad
+      </a>
+      <% if (usuario.rol === 'admin') { %>
       <a class="list-group-item list-group-item-action py-3 fw-semibold" id="tab-avisos" data-bs-toggle="list" href="#pane-avisos" role="tab">
-        <%- icono('envelope', 16, 'me-2') %>
-        Avisos a Compradores
+        <%- icono('megaphone', 16, 'me-2') %>
+        Avisos a compradores
       </a>
+      <% } %>
     </div>
   </div>
 
@@ -166,92 +172,89 @@
         </div>
       </div>
 
-      <!-- PESTAÑA 2: DETALLES DE MI CUENTA -->
+      <!-- PESTAÑA: MI CUENTA -->
       <div class="tab-pane fade" id="pane-cuenta" role="tabpanel">
         <div class="card p-4 mb-4">
-          <h4 class="h5 fw-bold mb-3 text-primary">Información del Perfil</h4>
-
-          <div class="row align-items-center mb-4">
-            <div class="col-auto">
-              <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold fs-3" style="width: 64px; height: 64px;">
-                <%= (us.nombre_completo || us.usuario).substring(0, 2).toUpperCase() %>
-              </div>
-            </div>
-            <div class="col">
-              <h5 class="mb-0 fw-bold"><%= us.nombre_completo %></h5>
-              <div class="text-muted small">@<%= us.usuario %> &bull; Rol: <span class="badge bg-secondary"><%= us.rol %></span></div>
+          <div class="d-flex align-items-center gap-3 mb-4">
+            <%- include('../plantillas/avatar', { u: us, clase: 'avatar-lg' }) %>
+            <div>
+              <h4 class="h5 fw-bold mb-0"><%= us.nombre_completo %></h4>
+              <div class="text-muted small">@<%= us.usuario %> &bull; <%= us.rol === 'admin' ? 'Administrador' : 'Capturista' %><% if (us.puesto) { %> &bull; <%= us.puesto %><% } %></div>
             </div>
           </div>
 
-          <form action="/configuracion/actualizar-cuenta" method="POST">
+          <form action="/configuracion/actualizar-cuenta" method="POST" novalidate data-validar>
+            <div class="mb-3"><%- include('../plantillas/campo-foto', { u: us }) %></div>
             <div class="row g-3">
               <div class="col-md-6">
-                <label class="form-label fw-semibold">Nombre Completo</label>
-                <input type="text" class="form-control" name="nombre_completo" value="<%= us.nombre_completo %>" required>
+                <label class="form-label fw-semibold" for="cuentaNombre">Nombre completo</label>
+                <input type="text" class="form-control" id="cuentaNombre" name="nombre_completo" maxlength="80" value="<%= us.nombre_completo %>" required>
               </div>
               <div class="col-md-6">
-                <label class="form-label fw-semibold">Usuario de Acceso</label>
-                <input type="text" class="form-control" value="<%= us.usuario %>" disabled>
-                <div class="form-text">El nombre de usuario no puede modificarse por seguridad.</div>
+                <label class="form-label fw-semibold" for="cuentaUsuario">Nombre de usuario</label>
+                <input type="text" class="form-control" id="cuentaUsuario" value="<%= us.usuario %>" disabled>
+                <div class="form-text">Solo un administrador puede cambiarlo.</div>
               </div>
-              <div class="col-md-8">
-                <label class="form-label fw-semibold">Correo Electrónico Vinculado</label>
-                <div class="input-group">
-                  <input type="email" class="form-control" name="correo" value="<%= us.correo || '' %>" placeholder="ejemplo@correo.com" required>
-                  <button class="btn btn-outline-primary" type="submit">Actualizar Correo</button>
-                </div>
+              <div class="col-md-7">
+                <label class="form-label fw-semibold" for="cuentaCorreo">Correo electrónico</label>
+                <input type="email" class="form-control" id="cuentaCorreo" name="correo" maxlength="80" value="<%= us.correo || '' %>" placeholder="nombre@ejemplo.com" required>
+                <div class="form-text">Se usa para recuperar tu contraseña y para avisos de seguridad. Si lo cambias, hay que verificarlo otra vez.</div>
+              </div>
+              <div class="col-md-5">
+                <label class="form-label fw-semibold" for="cuentaTelefono">Teléfono <span class="text-muted fw-normal">(opcional)</span></label>
+                <input type="tel" class="form-control" id="cuentaTelefono" name="telefono" maxlength="20" pattern="[0-9+() \-]{7,20}" value="<%= us.telefono || '' %>">
               </div>
             </div>
+            <button class="btn btn-primary mt-3" type="submit">Guardar datos</button>
           </form>
 
-          <!-- Estado de Verificación de Correo -->
-          <div class="mt-4 p-3 rounded border <%= us.email_verificado ? 'bg-light border-success' : 'bg-light border-warning' %>">
+          <!-- Estado del correo -->
+          <div class="mt-4 p-3 rounded border">
             <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
               <div>
-                <% if (us.email_verificado) { %>
-                  <span class="badge bg-success me-2">✓ Verificado</span>
-                  <strong>Tu correo está vinculado y verificado.</strong>
-                  <div class="small text-muted">Recibirás alertas de seguridad y confirmaciones en esta dirección.</div>
+                <% if (us.correo && us.email_verificado) { %>
+                  <span class="badge bg-success me-2"><%- icono('check-circle', 12, 'me-1') %>Verificado</span>
+                  <strong><%= us.correo %></strong>
+                  <div class="small text-muted">Podrás recuperar tu contraseña con este correo.</div>
                 <% } else if (us.correo) { %>
-                  <span class="badge bg-warning text-dark me-2">Pendiente</span>
-                  <strong>Tu correo no ha sido verificado aún.</strong>
-                  <div class="small text-muted">Verifícalo para asegurar la recuperación de cuenta en caso de olvido de clave.</div>
+                  <span class="badge bg-warning text-dark me-2">Sin verificar</span>
+                  <strong><%= us.correo %></strong>
+                  <div class="small text-muted">Confirma que el correo es tuyo con el enlace que te enviamos (vence en 24 horas).</div>
                 <% } else { %>
-                  <span class="badge bg-secondary me-2">Sin vincular</span>
-                  <strong>No has vinculado un correo electrónico a tu cuenta.</strong>
+                  <span class="badge bg-secondary me-2">Sin correo</span>
+                  <strong>Tu cuenta no tiene correo.</strong>
+                  <div class="small text-muted">Sin correo no podrás recuperar la contraseña por tu cuenta.</div>
                 <% } %>
               </div>
-
               <% if (us.correo && !us.email_verificado) { %>
                 <form action="/configuracion/solicitar-verificacion" method="POST" class="m-0">
-                  <button type="submit" class="btn btn-sm btn-warning">Enviar enlace de verificación</button>
+                  <button type="submit" class="btn btn-sm btn-outline-primary"><%- icono('envelope', 14, 'me-1') %>Enviar enlace de verificación</button>
                 </form>
               <% } %>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Cambiar Contraseña -->
+      <!-- PESTAÑA: SEGURIDAD -->
+      <div class="tab-pane fade" id="pane-seguridad" role="tabpanel">
         <div class="card p-4">
-          <h4 class="h5 fw-bold mb-3 text-primary">Seguridad y Cambio de Contraseña</h4>
-          <form action="/configuracion/cambiar-password" method="POST" class="col-lg-8">
+          <h4 class="h5 fw-bold mb-1 text-primary">Cambiar contraseña</h4>
+          <p class="text-muted small mb-4">Al cambiarla se cierran las sesiones abiertas en otros dispositivos<%= us.correo ? ' y te avisamos por correo' : '' %>.</p>
+          <form action="/configuracion/cambiar-password" method="POST" class="col-lg-8" novalidate data-validar>
             <div class="mb-3">
-              <label class="form-label fw-semibold">Contraseña Actual</label>
-              <input type="password" class="form-control" name="password_actual" required>
+              <label class="form-label fw-semibold" for="password_actual">Contraseña actual</label>
+              <input type="password" class="form-control" id="password_actual" name="password_actual" autocomplete="current-password" required>
             </div>
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Nueva Contraseña (mínimo 8 caracteres)</label>
-              <input type="password" class="form-control" name="password_nuevo" minlength="8" required>
-            </div>
-            <div class="mb-3">
-              <label class="form-label fw-semibold">Confirmar Nueva Contraseña</label>
-              <input type="password" class="form-control" name="password_confirmar" minlength="8" required>
-            </div>
-            <button type="submit" class="btn btn-outline-primary">Actualizar Contraseña</button>
+            <%- include('../plantillas/campo-password', { nombre: 'password_nuevo', etiqueta: 'Contraseña nueva', requerido: true }) %>
+            <button type="submit" class="btn btn-primary">Cambiar contraseña</button>
           </form>
+          <hr class="my-4">
+          <p class="small text-muted mb-0">¿No recuerdas la actual? Cierra sesión y usa <strong>¿Olvidaste tu contraseña?</strong> en la pantalla de acceso<%= us.correo ? '' : ' (necesitas registrar un correo primero)' %>.</p>
         </div>
       </div>
 
+      <% if (usuario.rol === 'admin') { %>
       <!-- PESTAÑA 3: AVISOS A CLIENTES (POLÍTICAS / EVENTOS) -->
       <div class="tab-pane fade" id="pane-avisos" role="tabpanel">
         <div class="card p-4">
@@ -263,7 +266,7 @@
             <span class="badge bg-info text-dark"><%= totalCompradores %> compradores en catálogo</span>
           </div>
 
-          <form action="/configuracion/enviar-aviso-clientes" method="POST" onsubmit="return confirm('¿Confirmas el envío de este correo a todos los compradores registrados?')">
+          <form action="/configuracion/enviar-aviso-clientes" method="POST" data-confirmar="¿Confirmas el envío de este correo a todos los compradores registrados?">
             <div class="row g-3">
               <div class="col-md-4">
                 <label class="form-label fw-semibold">Tipo de Comunicado</label>
@@ -295,6 +298,8 @@
           </form>
         </div>
       </div>
+
+      <% } %>
 
     </div>
   </div>

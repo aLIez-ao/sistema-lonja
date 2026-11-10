@@ -10,6 +10,8 @@ import {
   enviarAvisoClientes,
 } from "../controllers/configuracionController.js";
 
+import { permitir } from "../middleware/protegerRutas.js";
+
 const router = express.Router();
 
 router.get("/", verConfiguracion);
@@ -19,6 +21,7 @@ router.post("/cookies", guardarCookies);
 router.post("/actualizar-cuenta", actualizarCuenta);
 router.post("/solicitar-verificacion", solicitarVerificacionEmail);
 router.post("/cambiar-password", cambiarPasswordCuenta);
-router.post("/enviar-aviso-clientes", enviarAvisoClientes);
+// El correo masivo a compradores es solo para administradores
+router.post("/enviar-aviso-clientes", permitir("admin"), enviarAvisoClientes);
 
 export default router;

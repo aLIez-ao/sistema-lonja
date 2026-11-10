@@ -4,7 +4,7 @@ import methodOverride from "method-override";
 import path from "path";
 import { fileURLToPath } from "url";
 import dotenv from "dotenv";
-import rutaProteger, { permitir } from "./middleware/protegerRutas.js";
+import rutaProteger, { permitir, usuarioDesdeToken } from "./middleware/protegerRutas.js";
 import { middlewarePreferencias } from "./middleware/preferencias.js";
 import router_login from "./routes/login_router.js";
 import router_tipo from "./routes/tipo_router.js";
@@ -16,8 +16,6 @@ import router_reporte from "./routes/reporte_router.js";
 import router_usuario from "./routes/usuario_router.js";
 import router_configuracion from "./routes/configuracion_router.js";
 import { dinero, formatoFechaHora } from "./helpers/fechas.js";
-import { Usuario } from "./models/index.js";
-import { JWTVerifica } from "./helpers/tokens.js";
 import { icono } from "./helpers/iconos.js";
 
 dotenv.config({ path: ".env" });
@@ -26,8 +24,9 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 app.disable("x-powered-by");
 
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+// 400 kb: los formularios de usuario pueden llevar la foto de perfil (ya reducida) como data URL
+app.use(express.urlencoded({ extended: true, limit: "400kb" }));
+app.use(express.json({ limit: "100kb" }));
 app.use(cookieParser());
 app.use(methodOverride("_method"));
 
@@ -51,18 +50,10 @@ app.use(async (req, res, next) => {
   res.locals.usuario = null;
   req.usuario = null;
 
-  const { _token } = req.cookies;
-  if (_token) {
-    try {
-      const decoded = JWTVerifica(_token);
-      const us = await Usuario.scope("sinClave").findByPk(decoded.id);
-      if (us && us.activo) {
-        req.usuario = us;
-        res.locals.usuario = us;
-      }
-    } catch {
-      // Token inválido o expirado
-    }
+  const usuario = await usuarioDesdeToken(req.cookies._token);
+  if (usuario) {
+    req.usuario = usuario;
+    res.locals.usuario = usuario;
   }
   next();
 });
