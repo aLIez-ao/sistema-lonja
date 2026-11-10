@@ -116,6 +116,88 @@
               <button type="submit" class="btn btn-primary"><%= t('guardar') %> Cambios</button>
             </div>
           </form>
+
+          <!-- Panel de Transparencia y Gestión Detallada de Cookies -->
+          <div class="mt-5 pt-4 border-top">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div>
+                <h5 class="fw-bold mb-1 text-primary">🍪 Detalle y Comportamiento de las Cookies</h5>
+                <p class="text-muted small mb-0">Conoce qué información almacena el sistema y administra tus permisos de privacidad.</p>
+              </div>
+              <span class="badge <%= pref.cookiesConsentidas ? 'bg-success' : 'bg-secondary' %>">
+                <%= pref.cookiesConsentidas ? 'Cookies Personalizadas Activas' : 'Modo Esencial' %>
+              </span>
+            </div>
+
+            <div class="table-responsive">
+              <table class="table table-bordered table-sm align-middle mb-3" style="font-size: 0.88rem;">
+                <thead class="table-light">
+                  <tr>
+                    <th>Nombre</th>
+                    <th>Categoría</th>
+                    <th>Propósito</th>
+                    <th>Duración</th>
+                    <th>Estado</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>_token</code></td>
+                    <td><span class="badge bg-danger">Esencial</span></td>
+                    <td>Autenticación de sesión (JWT) protegida contra CSRF y ataques XSS (HttpOnly).</td>
+                    <td>8 horas / Sesión</td>
+                    <td><span class="badge bg-success">Activa siempre</span></td>
+                  </tr>
+                  <tr>
+                    <td><code>lonja_theme</code></td>
+                    <td><span class="badge bg-primary">Personalización</span></td>
+                    <td>Recuerda tu tema visual preferido (Océano, Claro u Oscuro).</td>
+                    <td>1 año</td>
+                    <td><span class="badge <%= pref.cookiesConsentidas ? 'bg-success' : 'bg-secondary' %>"><%= pref.cookiesConsentidas ? 'Habilitada' : 'Deshabilitada' %></span></td>
+                  </tr>
+                  <tr>
+                    <td><code>lonja_currency</code></td>
+                    <td><span class="badge bg-info text-dark">Funcional</span></td>
+                    <td>Conserva la divisa elegida para mostrar precios (MXN, USD, EUR).</td>
+                    <td>1 año</td>
+                    <td><span class="badge <%= pref.cookiesConsentidas ? 'bg-success' : 'bg-secondary' %>"><%= pref.cookiesConsentidas ? 'Habilitada' : 'Deshabilitada' %></span></td>
+                  </tr>
+                  <tr>
+                    <td><code>lonja_lang</code></td>
+                    <td><span class="badge bg-primary">Personalización</span></td>
+                    <td>Guarda el idioma de la interfaz (Español o English).</td>
+                    <td>1 año</td>
+                    <td><span class="badge <%= pref.cookiesConsentidas ? 'bg-success' : 'bg-secondary' %>"><%= pref.cookiesConsentidas ? 'Habilitada' : 'Deshabilitada' %></span></td>
+                  </tr>
+                  <tr>
+                    <td><code>lonja_font_size</code></td>
+                    <td><span class="badge bg-secondary">Accesibilidad</span></td>
+                    <td>Recuerda tu escala de texto (Pequeña, Normal, Grande).</td>
+                    <td>1 año</td>
+                    <td><span class="badge <%= pref.cookiesConsentidas ? 'bg-success' : 'bg-secondary' %>"><%= pref.cookiesConsentidas ? 'Habilitada' : 'Deshabilitada' %></span></td>
+                  </tr>
+                  <tr>
+                    <td><code>lonja_cookies_consent</code></td>
+                    <td><span class="badge bg-danger">Esencial</span></td>
+                    <td>Registra tu decisión de cookies para no volver a preguntarte.</td>
+                    <td>1 año</td>
+                    <td><span class="badge bg-success">Registrado</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="d-flex gap-2 flex-wrap">
+              <form action="/configuracion/guardar" method="POST" class="d-inline">
+                <input type="hidden" name="cookiesConsent" value="all">
+                <button type="submit" class="btn btn-sm btn-outline-primary">Permitir Todas las Cookies</button>
+              </form>
+              <form action="/configuracion/guardar" method="POST" class="d-inline">
+                <input type="hidden" name="cookiesConsent" value="essential">
+                <button type="submit" class="btn btn-sm btn-outline-secondary">Limitar a Solo Esenciales</button>
+              </form>
+            </div>
+          </div>
         </div>
       </div>
 
