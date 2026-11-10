@@ -13,6 +13,12 @@ const rutaProteger = async (req, res, next) => {
     if (!usuario || !usuario.activo) return res.clearCookie("_token").redirect("/");
     req.usuario = usuario;
     res.locals.usuario = usuario;
+    // Evita que el navegador almacene páginas privadas en bfcache al cerrar sesión
+    res.set({
+      "Cache-Control": "no-store, no-cache, must-revalidate, private",
+      Pragma: "no-cache",
+      Expires: "0",
+    });
     return next();
   } catch {
     return res.clearCookie("_token").redirect("/");
