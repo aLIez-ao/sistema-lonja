@@ -3,6 +3,8 @@ import { Op } from "sequelize";
 import { Compra, Lote, Comprador, Especie, Tipo } from "../models/index.js";
 import { mensajesError, mensajeBD, aMensaje } from "../helpers/utiles.js";
 import { redondea } from "../helpers/fechas.js";
+import { generarFacturaPDF } from "../helpers/facturaPdf.js";
+import { enviarEmailComprobanteCompra } from "../helpers/email.js";
 
 const reglas = [
   body("precio_kilo_final").isFloat({ gt: 0, max: 99999999 }).withMessage("El precio final por kilo debe ser un número mayor a 0"),
@@ -19,7 +21,7 @@ const incluye = [
 const lotesDisponibles = async (incluirId) => {
   const vendidos = (await Compra.findAll({ attributes: ["id_cmp"] })).map((c) => c.id_cmp).filter((id) => String(id) !== String(incluirId));
   const where = vendidos.length ? { id_lte: { [Op.notIn]: vendidos } } : {};
-  return Lote.findAll({ where, order: [["id_lte", "DESC"]], include: [{ model: Especie, as: "especies" }] });
+  return Lote.findAll({ where, order: [["id_lte", "DESC"]], include: [{ model: Especie, as: "especies", include: [{ model: Tipo, as: "tipo" }] }] });
 };
 
 const catalogos = async (incluirId) => ({
@@ -29,7 +31,7 @@ const catalogos = async (incluirId) => ({
 
 const lista = async (req, res) => {
   const compras = await Compra.findAll({ order: [["fecha", "DESC"]], limit: 200, include: incluye });
-  res.render("compras/index", { compras, mensaje: req.query.mensaje });
+  res.render("compras/index", { compras, mensaje: req.query.mensaje, error: req.query.error });
 };
 
 const verCrear = async (req, res) => {
@@ -41,20 +43,43 @@ const registrar = async (req, res) => {
   const errs = mensajesError(req);
   if (!errs.length) {
     try {
-      const lote = await Lote.findByPk(req.body.id_cmp);
+      const lote = await Lote.findByPk(req.body.id_cmp, {
+        include: [{ model: Especie, as: "especies", include: [{ model: Tipo, as: "tipo" }] }],
+      });
       if (!lote) errs.push("El lote no existe");
       else if (await Compra.findOne({ where: { id_cmp: lote.id_lte } })) errs.push("Ese lote ya fue comprado");
-      else if (!(await Comprador.findByPk(req.body.codigo_cpr))) errs.push("El comprador no existe");
       else {
-        const precio = Number(req.body.precio_kilo_final);
-        // El total SIEMPRE se calcula en el servidor: kilos del lote x precio final por kilo
-        await Compra.create({
-          id_cmp: lote.id_lte,
-          codigo_cpr: req.body.codigo_cpr,
-          precio_kilo_final: precio,
-          precio_total: redondea(Number(lote.kilos) * precio),
-        });
-        return res.redirect(`/compras?${aMensaje("Compra registrada")}`);
+        const comprador = await Comprador.findByPk(req.body.codigo_cpr);
+        if (!comprador) errs.push("El comprador no existe");
+        else {
+          const precio = Number(req.body.precio_kilo_final);
+          const total = redondea(Number(lote.kilos) * precio);
+
+          const nuevaCompra = await Compra.create({
+            id_cmp: lote.id_lte,
+            codigo_cpr: req.body.codigo_cpr,
+            precio_kilo_final: precio,
+            precio_total: total,
+          });
+
+          // Si el comprador tiene correo, enviar comprobante / factura opcional o automáticamente
+          if (comprador.correo) {
+            try {
+              nuevaCompra.lote = lote;
+              const pdfBuffer = await generarFacturaPDF(nuevaCompra);
+              await enviarEmailComprobanteCompra({
+                compra: nuevaCompra,
+                comprador,
+                pdfBuffer,
+                folio: nuevaCompra.id_cmp,
+              });
+            } catch (errEmail) {
+              console.warn("Aviso: no se pudo enviar correo de compra:", errEmail.message);
+            }
+          }
+
+          return res.redirect(`/compras/${nuevaCompra.id_cmp}/factura?${aMensaje("Compra registrada y factura generada con éxito")}`);
+        }
       }
     } catch (e) { errs.push(mensajeBD(e)); }
   }
@@ -76,7 +101,6 @@ const actualizar = async (req, res) => {
       if (!(await Comprador.findByPk(req.body.codigo_cpr))) errs.push("El comprador no existe");
       else {
         const precio = Number(req.body.precio_kilo_final);
-        // Update por consulta porque codigo_cpr forma parte de la llave primaria compuesta
         await Compra.update(
           { codigo_cpr: req.body.codigo_cpr, precio_kilo_final: precio, precio_total: redondea(Number(compra.lote.kilos) * precio) },
           { where: { id_cmp: compra.id_cmp } },
@@ -93,4 +117,93 @@ const eliminar = async (req, res) => {
   res.redirect(`/compras?${aMensaje("Compra eliminada")}`);
 };
 
-export { reglas, reglasAlta, lista, verCrear, registrar, editar, actualizar, eliminar };
+/**
+ * Vista de presentación oficial de Factura
+ */
+const verFactura = async (req, res) => {
+  const compra = await Compra.findOne({
+    where: { id_cmp: req.params.id },
+    include: incluye,
+  });
+
+  if (!compra) return res.redirect("/compras");
+
+  res.render("compras/factura", {
+    compra,
+    mensaje: req.query.mensaje,
+    error: req.query.error,
+  });
+};
+
+/**
+ * Descarga de factura en PDF oficial
+ */
+const descargarFacturaPdf = async (req, res) => {
+  const compra = await Compra.findOne({
+    where: { id_cmp: req.params.id },
+    include: incluye,
+  });
+
+  if (!compra) return res.status(404).send("Compra no encontrada");
+
+  try {
+    const pdfBuffer = await generarFacturaPDF(compra);
+    res.set({
+      "Content-Type": "application/pdf",
+      "Content-Disposition": `attachment; filename="Factura-Lonja-Lote-${compra.id_cmp}.pdf"`,
+      "Content-Length": pdfBuffer.length,
+    });
+    res.send(pdfBuffer);
+  } catch (err) {
+    console.error("Error al generar PDF de factura:", err);
+    res.status(500).send("Error interno al generar factura PDF");
+  }
+};
+
+/**
+ * Envío de factura por correo electrónico al comprador
+ */
+const enviarFacturaPorCorreo = async (req, res) => {
+  const compra = await Compra.findOne({
+    where: { id_cmp: req.params.id },
+    include: incluye,
+  });
+
+  if (!compra) return res.redirect("/compras");
+
+  if (!compra.comprador?.correo) {
+    return res.redirect(`/compras/${compra.id_cmp}/factura?error=${encodeURIComponent("El comprador no tiene un correo registrado en el sistema")}`);
+  }
+
+  try {
+    const pdfBuffer = await generarFacturaPDF(compra);
+    const resultado = await enviarEmailComprobanteCompra({
+      compra,
+      comprador: compra.comprador,
+      pdfBuffer,
+      folio: compra.id_cmp,
+    });
+
+    if (resultado.ok || resultado.simulado) {
+      return res.redirect(`/compras/${compra.id_cmp}/factura?${aMensaje(`Factura enviada exitosamente a ${compra.comprador.correo}`)}`);
+    } else {
+      return res.redirect(`/compras/${compra.id_cmp}/factura?error=${encodeURIComponent("Error al enviar correo: " + (resultado.error || "Desconocido"))}`);
+    }
+  } catch (err) {
+    return res.redirect(`/compras/${compra.id_cmp}/factura?error=${encodeURIComponent("Error al procesar envío de correo")}`);
+  }
+};
+
+export {
+  reglas,
+  reglasAlta,
+  lista,
+  verCrear,
+  registrar,
+  editar,
+  actualizar,
+  eliminar,
+  verFactura,
+  descargarFacturaPdf,
+  enviarFacturaPorCorreo,
+};
