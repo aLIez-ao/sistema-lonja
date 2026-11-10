@@ -31,7 +31,11 @@ Carga configuración, asociaciones y aplicación; valida que exista el secreto J
 
 Construye y exporta la aplicación Express, sin abrir el puerto. Esta separación permite importar la app desde las pruebas sin iniciar un servidor por sí sola.
 
+> no se entiende el propósito
+
 Configura lectura de formularios/JSON, cookies, `method-override`, EJS, Bootstrap local, archivos públicos, funciones auxiliares en las vistas y rutas. Las rutas privadas se montan bajo su prefijo; `/usuarios` añade el permiso de administrador. Al final configura respuestas 404 y errores 500.
+
+> cuales json? no hay bootstrap local.
 
 **Para trabajo técnico:** el orden de middlewares importa. `rutaProteger` debe ejecutarse antes de rutas que necesiten identidad; el router de usuarios se monta además con `permitir("admin")`.
 
@@ -44,6 +48,8 @@ No abre la conexión aquí; `index.js` hace `authenticate()` y la prueba prepara
 ## `app.js` e `index.js`: por qué son archivos distintos
 
 `app.js` describe cómo atender solicitudes; `index.js` se ocupa de preparar recursos y arrancar el proceso. Así se puede probar la aplicación contra una base temporal sin ejecutar el arranque de producción.
+
+> como se diferencia la prueba de produccion. como hace hace cada uno?
 
 ## Archivos generados o externos
 
