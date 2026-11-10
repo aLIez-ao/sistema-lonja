@@ -1,0 +1,256 @@
+<%- include('../plantillas/header') %>
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h1 class="h3 mb-1"><%= t('configuracion') %> del Sistema</h1>
+    <p class="text-muted small mb-0">Personaliza tu experiencia, gestiona tu cuenta y emite comunicados a clientes</p>
+  </div>
+</div>
+
+<% if (typeof mensaje !== 'undefined' && mensaje) { %>
+  <div class="alert alert-success alert-dismissible fade show" role="alert">
+    <%= mensaje %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+<% } %>
+
+<% if (typeof error !== 'undefined' && error) { %>
+  <div class="alert alert-danger alert-dismissible fade show" role="alert">
+    <%= error %>
+    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+  </div>
+<% } %>
+
+<div class="row g-4">
+  <!-- Menú lateral de pestañas -->
+  <div class="col-lg-3">
+    <div class="list-group shadow-sm" id="configTabs" role="tablist" style="border-radius: 12px; overflow: hidden;">
+      <a class="list-group-item list-group-item-action active py-3 fw-semibold" id="tab-sitio" data-bs-toggle="list" href="#pane-sitio" role="tab">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-2" viewBox="0 0 16 16"><path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"/></svg>
+        Apariencia y Cookies
+      </a>
+      <a class="list-group-item list-group-item-action py-3 fw-semibold" id="tab-cuenta" data-bs-toggle="list" href="#pane-cuenta" role="tab">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-2" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/></svg>
+        Detalles de Mi Cuenta
+      </a>
+      <a class="list-group-item list-group-item-action py-3 fw-semibold" id="tab-avisos" data-bs-toggle="list" href="#pane-avisos" role="tab">
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-2" viewBox="0 0 16 16"><path d="M0 4a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2zm2-1a1 1 0 0 0-1 1v.217l7 4.2 7-4.2V4a1 1 0 0 0-1-1zm13 2.383-4.708 2.825L15 11.105zm-.034 6.876-5.64-3.471L8 9.583l-1.326-.795-5.64 3.47A1 1 0 0 0 2 13h12a1 1 0 0 0 .966-.741M1 11.105l4.708-2.897L1 5.383z"/></svg>
+        Avisos a Compradores
+      </a>
+    </div>
+  </div>
+
+  <!-- Contenido de las pestañas -->
+  <div class="col-lg-9">
+    <div class="tab-content">
+      
+      <!-- PESTAÑA 1: APARIENCIA Y COOKIES -->
+      <div class="tab-pane fade show active" id="pane-sitio" role="tabpanel">
+        <div class="card p-4">
+          <h4 class="h5 fw-bold mb-3 text-primary">Preferencias del Sitio y Cookies</h4>
+          <p class="text-muted small mb-4">Estos ajustes se almacenan en tus cookies de navegación y se recuerdan en cada visita.</p>
+
+          <form action="/configuracion/guardar" method="POST">
+            <div class="row g-3">
+              <!-- Tema -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold"><%= t('tema') %></label>
+                <select name="tema" class="form-select" onchange="aplicarPreferencia('tema', this.value)">
+                  <option value="ocean" <%= pref.tema === 'ocean' ? 'selected' : '' %>>🌊 Océano Profundo (Azul Marino)</option>
+                  <option value="light" <%= pref.tema === 'light' ? 'selected' : '' %>>☀️ Google Clean (Claro)</option>
+                  <option value="dark" <%= pref.tema === 'dark' ? 'selected' : '' %>>🌙 Noche Marina (Oscuro)</option>
+                </select>
+              </div>
+
+              <!-- Moneda -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold"><%= t('moneda') %></label>
+                <select name="moneda" class="form-select" onchange="aplicarPreferencia('moneda', this.value)">
+                  <option value="MXN" <%= pref.moneda === 'MXN' ? 'selected' : '' %>>MXN - Peso Mexicano ($)</option>
+                  <option value="USD" <%= pref.moneda === 'USD' ? 'selected' : '' %>>USD - Dólar Estadounidense ($)</option>
+                  <option value="EUR" <%= pref.moneda === 'EUR' ? 'selected' : '' %>>EUR - Euro (€)</option>
+                </select>
+              </div>
+
+              <!-- Idioma -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold"><%= t('idioma') %></label>
+                <select name="idioma" class="form-select" onchange="aplicarPreferencia('idioma', this.value)">
+                  <option value="es" <%= pref.idioma === 'es' ? 'selected' : '' %>>🇲🇽 Español</option>
+                  <option value="en" <%= pref.idioma === 'en' ? 'selected' : '' %>>🇺🇸 English</option>
+                </select>
+              </div>
+
+              <!-- Tamaño de Fuente -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold"><%= t('tamano_fuente') %></label>
+                <select name="tamanoFuente" class="form-select" onchange="aplicarPreferencia('tamanoFuente', this.value)">
+                  <option value="sm" <%= pref.tamanoFuente === 'sm' ? 'selected' : '' %>>Pequeña (13.5px)</option>
+                  <option value="md" <%= pref.tamanoFuente === 'md' ? 'selected' : '' %>>Normal (15px)</option>
+                  <option value="lg" <%= pref.tamanoFuente === 'lg' ? 'selected' : '' %>>Grande (16.5px)</option>
+                </select>
+              </div>
+
+              <!-- Tipo de Fuente -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold"><%= t('tipo_fuente') %></label>
+                <select name="tipoFuente" class="form-select" onchange="aplicarPreferencia('tipoFuente', this.value)">
+                  <option value="sans" <%= pref.tipoFuente === 'sans' ? 'selected' : '' %>>Inter / Sans Moderna</option>
+                  <option value="roboto" <%= pref.tipoFuente === 'roboto' ? 'selected' : '' %>>Roboto Google</option>
+                  <option value="segoe" <%= pref.tipoFuente === 'segoe' ? 'selected' : '' %>>Segoe UI</option>
+                  <option value="serif" <%= pref.tipoFuente === 'serif' ? 'selected' : '' %>>Serif Clásica</option>
+                </select>
+              </div>
+
+              <!-- Consentimiento Cookies -->
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Nivel de Cookies Permitido</label>
+                <select name="cookiesConsent" class="form-select">
+                  <option value="all" <%= pref.consentNivel === 'all' || pref.cookiesConsentidas ? 'selected' : '' %>>Aceptar todas (Sesión + Personalización)</option>
+                  <option value="essential" <%= pref.consentNivel === 'essential' ? 'selected' : '' %>>Solo esenciales (Sesión y seguridad)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="mt-4">
+              <button type="submit" class="btn btn-primary"><%= t('guardar') %> Cambios</button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+      <!-- PESTAÑA 2: DETALLES DE MI CUENTA -->
+      <div class="tab-pane fade" id="pane-cuenta" role="tabpanel">
+        <div class="card p-4 mb-4">
+          <h4 class="h5 fw-bold mb-3 text-primary">Información del Perfil</h4>
+
+          <div class="row align-items-center mb-4">
+            <div class="col-auto">
+              <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center fw-bold fs-3" style="width: 64px; height: 64px;">
+                <%= (us.nombre_completo || us.usuario).substring(0, 2).toUpperCase() %>
+              </div>
+            </div>
+            <div class="col">
+              <h5 class="mb-0 fw-bold"><%= us.nombre_completo %></h5>
+              <div class="text-muted small">@<%= us.usuario %> &bull; Rol: <span class="badge bg-secondary"><%= us.rol %></span></div>
+            </div>
+          </div>
+
+          <form action="/configuracion/actualizar-cuenta" method="POST">
+            <div class="row g-3">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Nombre Completo</label>
+                <input type="text" class="form-control" name="nombre_completo" value="<%= us.nombre_completo %>" required>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Usuario de Acceso</label>
+                <input type="text" class="form-control" value="<%= us.usuario %>" disabled>
+                <div class="form-text">El nombre de usuario no puede modificarse por seguridad.</div>
+              </div>
+              <div class="col-md-8">
+                <label class="form-label fw-semibold">Correo Electrónico Vinculado</label>
+                <div class="input-group">
+                  <input type="email" class="form-control" name="correo" value="<%= us.correo || '' %>" placeholder="ejemplo@correo.com" required>
+                  <button class="btn btn-outline-primary" type="submit">Actualizar Correo</button>
+                </div>
+              </div>
+            </div>
+          </form>
+
+          <!-- Estado de Verificación de Correo -->
+          <div class="mt-4 p-3 rounded border <%= us.email_verificado ? 'bg-light border-success' : 'bg-light border-warning' %>">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+              <div>
+                <% if (us.email_verificado) { %>
+                  <span class="badge bg-success me-2">✓ Verificado</span>
+                  <strong>Tu correo está vinculado y verificado.</strong>
+                  <div class="small text-muted">Recibirás alertas de seguridad y confirmaciones en esta dirección.</div>
+                <% } else if (us.correo) { %>
+                  <span class="badge bg-warning text-dark me-2">Pendiente</span>
+                  <strong>Tu correo no ha sido verificado aún.</strong>
+                  <div class="small text-muted">Verifícalo para asegurar la recuperación de cuenta en caso de olvido de clave.</div>
+                <% } else { %>
+                  <span class="badge bg-secondary me-2">Sin vincular</span>
+                  <strong>No has vinculado un correo electrónico a tu cuenta.</strong>
+                <% } %>
+              </div>
+
+              <% if (us.correo && !us.email_verificado) { %>
+                <form action="/configuracion/solicitar-verificacion" method="POST" class="m-0">
+                  <button type="submit" class="btn btn-sm btn-warning">Enviar enlace de verificación</button>
+                </form>
+              <% } %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Cambiar Contraseña -->
+        <div class="card p-4">
+          <h4 class="h5 fw-bold mb-3 text-primary">Seguridad y Cambio de Contraseña</h4>
+          <form action="/configuracion/cambiar-password" method="POST" class="col-lg-8">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Contraseña Actual</label>
+              <input type="password" class="form-control" name="password_actual" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Nueva Contraseña (mínimo 8 caracteres)</label>
+              <input type="password" class="form-control" name="password_nuevo" minlength="8" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Confirmar Nueva Contraseña</label>
+              <input type="password" class="form-control" name="password_confirmar" minlength="8" required>
+            </div>
+            <button type="submit" class="btn btn-outline-primary">Actualizar Contraseña</button>
+          </form>
+        </div>
+      </div>
+
+      <!-- PESTAÑA 3: AVISOS A CLIENTES (POLÍTICAS / EVENTOS) -->
+      <div class="tab-pane fade" id="pane-avisos" role="tabpanel">
+        <div class="card p-4">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h4 class="h5 fw-bold mb-0 text-primary">Enviar Comunicado a Clientes Registrados</h4>
+              <p class="text-muted small mb-0">Envía correos sobre eventos, cambios de políticas, vedas y horarios de subasta.</p>
+            </div>
+            <span class="badge bg-info text-dark"><%= totalCompradores %> compradores en catálogo</span>
+          </div>
+
+          <form action="/configuracion/enviar-aviso-clientes" method="POST" onsubmit="return confirm('¿Confirmas el envío de este correo a todos los compradores registrados?')">
+            <div class="row g-3">
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Tipo de Comunicado</label>
+                <select name="tipo" class="form-select">
+                  <option value="evento">🎉 Evento / Nueva Llegada de Pescado</option>
+                  <option value="politica">📋 Actualización de Políticas y Términos</option>
+                  <option value="urgente">⚠️ Aviso Urgente / Cierre de Muelle</option>
+                </select>
+              </div>
+              <div class="col-md-8">
+                <label class="form-label fw-semibold">Asunto del Correo</label>
+                <input type="text" name="asunto" class="form-control" placeholder="Ej. Gran arribo de Huachinango fresco y Robalo de altura" required>
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold">Título Encabezado (dentro del correo)</label>
+                <input type="text" name="titulo" class="form-control" placeholder="Ej. Invitación a la Subasta Extraordinaria del Puerto">
+              </div>
+              <div class="col-12">
+                <label class="form-label fw-semibold">Mensaje para los Compradores</label>
+                <textarea name="mensaje" rows="6" class="form-control" placeholder="Escribe aquí los detalles del evento, los precios base esperados, las políticas de cobro o la información relevante..." required></textarea>
+              </div>
+            </div>
+            <div class="mt-4">
+              <button type="submit" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-1" viewBox="0 0 16 16"><path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576zm6.787-8.201L1.591 6.602l4.339 2.76z"/></svg>
+                Enviar Correo a Todos los Compradores
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<%- include('../plantillas/footer') %>
