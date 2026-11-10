@@ -1,32 +1,90 @@
 <%- include('../plantillas/header') %>
-<h1 class="h3 mb-3"><%= editando ? 'Editar compra del lote ' + compra.id_cmp : 'Registrar compra' %></h1>
-<%- include('../plantillas/mensajes', { mensaje: null }) %>
-<form action="<%= action %>" method="POST" class="col-lg-6">
-  <div class="mb-3"><label class="form-label" for="id_cmp">Lote</label>
-    <% if (editando) { %>
-      <input type="text" class="form-control" value="Lote <%= compra.id_cmp %>" disabled>
-    <% } else { %>
-    <select class="form-select" id="id_cmp" name="id_cmp" required>
-      <option value="">Selecciona un lote disponible…</option>
-      <% lotes.forEach(l => { %>
-      <option value="<%= l.id_lte %>" <%= compra && String(compra.id_cmp) === String(l.id_lte) ? 'selected' : '' %>>
-        Lote <%= l.id_lte %> · <%= l.especies.map(e => e.nombre).join(', ') || 'sin especies' %> · <%= Number(l.kilos).toFixed(2) %> kg · salida <%= dinero(l.precio_kilo_salida) %>/kg
-      </option>
-      <% }) %>
-    </select>
-    <% } %>
+
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <div class="card p-4">
+      <h1 class="h3 mb-3 fw-bold"><%= editando ? 'Editar compra del lote ' + compra.id_cmp : 'Registrar Compra en Subasta' %></h1>
+      <p class="text-muted small mb-4">Selecciona el lote adjudicado y el precio final pactado en la subasta. El total se calcula automáticamente en tiempo real.</p>
+      
+      <%- include('../plantillas/mensajes', { mensaje: null }) %>
+
+      <form action="<%= action %>" method="POST">
+        <div class="row g-3">
+          
+          <!-- Selección de Lote -->
+          <div class="col-12">
+            <label class="form-label fw-semibold" for="id_cmp">Lote Adjudicado</label>
+            <% if (editando) { %>
+              <input type="text" class="form-control" value="Lote #<%= compra.id_cmp %>" disabled>
+              <input type="hidden" name="id_cmp" value="<%= compra.id_cmp %>">
+            <% } else { %>
+              <select class="form-select" id="id_cmp" name="id_cmp" required>
+                <option value="">Selecciona un lote disponible…</option>
+                <% lotes.forEach(l => { %>
+                  <option 
+                    value="<%= l.id_lte %>" 
+                    data-kilos="<%= l.kilos %>" 
+                    data-salida="<%= l.precio_kilo_salida %>"
+                    <%= compra && String(compra.id_cmp) === String(l.id_lte) ? 'selected' : '' %>>
+                    Lote #<%= l.id_lte %> · <%= l.especies.map(e => e.nombre).join(', ') || 'Sin especies' %> · <%= Number(l.kilos).toFixed(2) %> kg · <%= l.numero_cajas %> cajas · salida <%= dinero(l.precio_kilo_salida) %>/kg
+                  </option>
+                <% }) %>
+              </select>
+            <% } %>
+          </div>
+
+          <!-- Selección de Comprador -->
+          <div class="col-12">
+            <label class="form-label fw-semibold" for="codigo_cpr">Comprador Adjudicatario</label>
+            <select class="form-select" id="codigo_cpr" name="codigo_cpr" required>
+              <option value="">Selecciona al comprador…</option>
+              <% compradores.forEach(c => { %>
+                <option value="<%= c.codigo_cpr %>" <%= compra && String(compra.codigo_cpr) === String(c.codigo_cpr) ? 'selected' : '' %>>
+                  #<%= c.codigo_cpr %> &bull; <%= c.nombre %> <%= c.apellido_paterno %> <%= c.apellido_materno || '' %> <%= c.correo ? '(' + c.correo + ')' : '' %>
+                </option>
+              <% }) %>
+            </select>
+          </div>
+
+          <!-- Precio Final por Kilo -->
+          <div class="col-md-6">
+            <label class="form-label fw-semibold" for="precio_kilo_final">Precio Final por Kilo (<%= pref.moneda %>)</label>
+            <div class="input-group">
+              <span class="input-group-text fw-bold">$</span>
+              <input class="form-control" type="number" step="0.01" min="0.01" id="precio_kilo_final" name="precio_kilo_final" value="<%= compra ? (compra.precio_kilo_final || '') : '' %>" placeholder="0.00" required>
+            </div>
+            <div class="form-text">Ingresa el precio acordado al caer el martillo.</div>
+          </div>
+
+          <!-- Tarjeta de Cálculo Dinámico en Tiempo Real -->
+          <div class="col-md-6">
+            <div id="cajaCalculoEnVivo" class="border rounded p-3 bg-light h-100 d-flex flex-column justify-content-center">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="small text-muted">Kilos a procesar:</span>
+                <span id="kilosLoteInfo" class="fw-semibold">0.00 kg</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <span class="small text-muted">Comparativa salida:</span>
+                <span id="diferenciaSalida" class="small">—</span>
+              </div>
+              <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+                <span class="fw-bold text-primary">TOTAL ESTIMADO:</span>
+                <span id="totalCalculado" class="h5 mb-0 fw-bold text-primary">$0.00</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="mt-4 d-flex gap-2">
+          <button class="btn btn-primary" type="submit">
+            <%= editando ? 'Actualizar Compra' : 'Confirmar Compra y Generar Factura' %>
+          </button>
+          <a class="btn btn-outline-secondary" href="/compras">Cancelar</a>
+        </div>
+      </form>
+    </div>
   </div>
-  <div class="mb-3"><label class="form-label" for="codigo_cpr">Comprador</label>
-    <select class="form-select" id="codigo_cpr" name="codigo_cpr" required>
-      <option value="">Selecciona…</option>
-      <% compradores.forEach(c => { %>
-      <option value="<%= c.codigo_cpr %>" <%= compra && String(compra.codigo_cpr) === String(c.codigo_cpr) ? 'selected' : '' %>><%= c.codigo_cpr %> · <%= c.nombre %> <%= c.apellido_paterno %> <%= c.apellido_materno || '' %></option>
-      <% }) %>
-    </select></div>
-  <div class="mb-3"><label class="form-label" for="precio_kilo_final">Precio final por kilo (MXN)</label>
-    <input class="form-control" type="number" step="0.01" min="0.01" id="precio_kilo_final" name="precio_kilo_final" value="<%= compra ? (compra.precio_kilo_final || '') : '' %>" required>
-    <div class="form-text">El total se calcula automáticamente: kilos del lote × precio final por kilo.</div></div>
-  <button class="btn btn-primary" type="submit">Guardar</button>
-  <a class="btn btn-link" href="/compras">Cancelar</a>
-</form>
+</div>
+
 <%- include('../plantillas/footer') %>

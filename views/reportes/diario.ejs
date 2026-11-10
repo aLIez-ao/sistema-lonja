@@ -1,48 +1,159 @@
 <%- include('../plantillas/header') %>
+
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
-  <h1 class="h3 mb-0">Reporte diario de compras · <%= fecha %></h1>
-  <form class="d-flex gap-2 d-print-none" method="GET" action="/reportes/diario">
-    <input class="form-control" type="date" name="fecha" value="<%= fecha %>" required>
-    <button class="btn btn-primary" type="submit">Ver</button>
-    <a class="btn btn-outline-secondary" href="/reportes/diario.csv?fecha=<%= fecha %>">CSV</a>
-    <button class="btn btn-outline-secondary" type="button" onclick="window.print()">Imprimir</button>
-  </form>
+  <div>
+    <h1 class="h3 mb-0 fw-bold">Reporte Diario de Compras</h1>
+    <p class="text-muted small mb-0">Fecha seleccionada: <span id="txtTituloFecha" class="fw-semibold text-primary"><%= fecha %></span></p>
+  </div>
+  
+  <div class="d-flex flex-wrap gap-2 d-print-none align-items-center">
+    <form class="d-flex gap-2" method="GET" action="/reportes/diario" id="formFiltroFecha">
+      <input class="form-control" type="date" id="reporteFechaInput" name="fecha" value="<%= fecha %>" required title="Selecciona una fecha">
+      <noscript>
+        <button class="btn btn-primary" type="submit">Ver</button>
+      </noscript>
+    </form>
+
+    <a id="linkExportarCsv" class="btn btn-outline-secondary" href="/reportes/diario.csv?fecha=<%= fecha %>" title="Descargar como archivo CSV">
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" class="me-1" viewBox="0 0 16 16"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 11.854a.5.5 0 0 0 .708 0l3-3a.5.5 0 0 0-.708-.708L8.5 10.293V1.5a.5.5 0 0 0-1 0v8.793L5.354 8.146a.5.5 0 1 0-.708.708l3 3z"/></svg>
+      CSV
+    </a>
+
+    <button class="btn btn-outline-secondary" type="button" onclick="compartirEnlace('Reporte Lonja <%= fecha %>', 'Reporte diario de compras de la Lonja de Veracruz para la fecha <%= fecha %>')" title="Compartir este reporte">
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" class="me-1" viewBox="0 0 16 16"><path d="M13.5 1a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3M11 2.5a2.5 2.5 0 1 1 .603 1.628l-6.718 3.12a2.5 2.5 0 0 1 0 1.504l6.718 3.12a2.5 2.5 0 1 1-.488.876l-6.718-3.12a2.5 2.5 0 1 1 0-3.256l6.718-3.12A2.5 2.5 0 0 1 11 2.5m-8.5 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3m11 5.5a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3"/></svg>
+      <%= t('compartir') %>
+    </button>
+
+    <button class="btn btn-primary" type="button" onclick="window.print()" title="Imprimir o guardar como PDF">
+      <svg xmlns="http://www.w3.org/2000/svg" width="15" height="15" fill="currentColor" class="me-1" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1"/></svg>
+      <%= t('descargar_pdf') %>
+    </button>
+  </div>
 </div>
 
-<div class="row g-3 mb-4">
-  <div class="col-6 col-md-3"><div class="card text-center"><div class="card-body"><div class="h3"><%= totales.compras %></div><div class="text-muted">Compras</div></div></div></div>
-  <div class="col-6 col-md-3"><div class="card text-center"><div class="card-body"><div class="h3"><%= totales.cajas %></div><div class="text-muted">Cajas</div></div></div></div>
-  <div class="col-6 col-md-3"><div class="card text-center"><div class="card-body"><div class="h3"><%= totales.kilos.toFixed(2) %></div><div class="text-muted">Kilos</div></div></div></div>
-  <div class="col-6 col-md-3"><div class="card text-center"><div class="card-body"><div class="h3"><%= dinero(totales.total) %></div><div class="text-muted">Importe total</div></div></div></div>
+<!-- Barra de Días con Compras Registradas en el Historial -->
+<div id="fechasConActividad" class="d-print-none"></div>
+
+<div id="reporteContenedorResultados" style="transition: opacity 0.2s ease;">
+  <!-- Métricas Rápidas -->
+  <div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+      <div class="metric-card">
+        <div class="metric-label">Compras</div>
+        <div class="metric-value" id="metricaCompras"><%= totales.compras %></div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="metric-card">
+        <div class="metric-label">Cajas Subastadas</div>
+        <div class="metric-value" id="metricaCajas"><%= totales.cajas %></div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="metric-card">
+        <div class="metric-label">Kilos Totales</div>
+        <div class="metric-value" id="metricaKilos"><%= totales.kilos.toFixed(2) %></div>
+      </div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div class="metric-card">
+        <div class="metric-label">Importe Total</div>
+        <div class="metric-value text-primary" id="metricaTotal"><%= dinero(totales.total) %></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Alerta sin compras (visible si no hay filas) -->
+  <div id="alertaSinCompras" class="alert alert-info <%= !filas.length ? '' : 'd-none' %>" role="alert">
+    <div class="d-flex align-items-center">
+      <span class="fs-4 me-2">🐟</span>
+      <div>
+        <strong>No hay compras registradas para este día.</strong>
+        <div class="small">Selecciona otra fecha en el calendario o en los botones superiores para consultar actividad.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Sección de Tablas de Detalle y Resumen -->
+  <div id="seccionTablasDetalle" class="<%= !filas.length ? 'd-none' : '' %>">
+    <div class="card mb-4 overflow-hidden">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h2 class="h6 mb-0 fw-bold">Detalle de Compras del Día</h2>
+        <span class="badge bg-light text-dark border">Transacciones de subasta</span>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover table-striped align-middle">
+          <thead>
+            <tr>
+              <th>Hora</th>
+              <th>Lote</th>
+              <th>Especies</th>
+              <th>Comprador</th>
+              <th class="text-end">Cajas</th>
+              <th class="text-end">Kilos</th>
+              <th class="text-end">Salida/kg</th>
+              <th class="text-end">Final/kg</th>
+              <th class="text-end">Total</th>
+            </tr>
+          </thead>
+          <tbody id="reporteTablaCuerpo">
+            <% filas.forEach(f => { %>
+              <tr>
+                <td><%= f.hora %></td>
+                <td><span class="badge bg-secondary">#<%= f.lote %></span></td>
+                <td><strong><%= f.especies %></strong></td>
+                <td><%= f.comprador %></td>
+                <td class="text-end"><%= f.cajas %></td>
+                <td class="text-end"><%= f.kilos.toFixed(2) %></td>
+                <td class="text-end text-muted"><%= dinero(f.precio_salida) %></td>
+                <td class="text-end fw-bold"><%= dinero(f.precio_final) %></td>
+                <td class="text-end text-primary fw-bold"><%= dinero(f.total) %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+          <tfoot>
+            <tr class="table-secondary fw-bold">
+              <th colspan="4">TOTAL DEL DÍA</th>
+              <th class="text-end" id="pieTotalCajas"><%= totales.cajas %></th>
+              <th class="text-end" id="pieTotalKilos"><%= totales.kilos.toFixed(2) %></th>
+              <th></th>
+              <th></th>
+              <th class="text-end text-primary" id="pieTotalDinero"><%= dinero(totales.total) %></th>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+    </div>
+
+    <!-- Resumen por Comprador -->
+    <div class="card overflow-hidden">
+      <div class="card-header">
+        <h2 class="h6 mb-0 fw-bold">Resumen de Compras por Cliente</h2>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>Comprador</th>
+              <th class="text-end">Total Compras</th>
+              <th class="text-end">Kilos Acumulados</th>
+              <th class="text-end">Importe Total Facturado</th>
+            </tr>
+          </thead>
+          <tbody id="reporteResumenCompradores">
+            <% resumen.forEach(r => { %>
+              <tr>
+                <td><strong><%= r.comprador %></strong></td>
+                <td class="text-end"><%= r.compras %></td>
+                <td class="text-end"><%= r.kilos.toFixed(2) %></td>
+                <td class="text-end fw-bold text-primary"><%= dinero(r.total) %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
-<% if (!filas.length) { %>
-  <div class="alert alert-info">No hay compras registradas en esta fecha.</div>
-<% } else { %>
-<h2 class="h5">Detalle</h2>
-<div class="table-responsive">
-<table class="table table-striped table-sm align-middle">
-  <thead><tr><th>Hora</th><th>Lote</th><th>Especies</th><th>Comprador</th><th class="text-end">Cajas</th><th class="text-end">Kilos</th><th class="text-end">Salida/kg</th><th class="text-end">Final/kg</th><th class="text-end">Total</th></tr></thead>
-  <tbody>
-  <% filas.forEach(f => { %>
-    <tr><td><%= f.hora %></td><td><%= f.lote %></td><td><%= f.especies %></td><td><%= f.comprador %></td>
-      <td class="text-end"><%= f.cajas %></td><td class="text-end"><%= f.kilos.toFixed(2) %></td>
-      <td class="text-end"><%= dinero(f.precio_salida) %></td><td class="text-end"><%= dinero(f.precio_final) %></td>
-      <td class="text-end"><strong><%= dinero(f.total) %></strong></td></tr>
-  <% }) %>
-  </tbody>
-  <tfoot><tr class="table-secondary"><th colspan="4">TOTAL</th><th class="text-end"><%= totales.cajas %></th><th class="text-end"><%= totales.kilos.toFixed(2) %></th><th></th><th></th><th class="text-end"><%= dinero(totales.total) %></th></tr></tfoot>
-</table>
-</div>
-
-<h2 class="h5 mt-4">Resumen por comprador</h2>
-<table class="table table-sm w-auto">
-  <thead><tr><th>Comprador</th><th class="text-end">Compras</th><th class="text-end">Kilos</th><th class="text-end">Importe</th></tr></thead>
-  <tbody>
-  <% resumen.forEach(r => { %>
-    <tr><td><%= r.comprador %></td><td class="text-end"><%= r.compras %></td><td class="text-end"><%= r.kilos.toFixed(2) %></td><td class="text-end"><%= dinero(r.total) %></td></tr>
-  <% }) %>
-  </tbody>
-</table>
-<% } %>
 <%- include('../plantillas/footer') %>
