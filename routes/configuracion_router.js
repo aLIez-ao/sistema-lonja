@@ -5,7 +5,7 @@ import {
   guardarRapido,
   actualizarCuenta,
   solicitarVerificacionEmail,
-  verificarEmailToken,
+  guardarCookies,
   cambiarPasswordCuenta,
   enviarAvisoClientes,
 } from "../controllers/configuracionController.js";
@@ -15,6 +15,7 @@ const router = express.Router();
 router.get("/", verConfiguracion);
 router.post("/guardar", guardarPreferencias);
 router.post("/guardar-rapido", guardarRapido);
+router.post("/cookies", guardarCookies);
 router.post("/actualizar-cuenta", actualizarCuenta);
 router.post("/solicitar-verificacion", solicitarVerificacionEmail);
 router.post("/cambiar-password", cambiarPasswordCuenta);

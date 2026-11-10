@@ -27,7 +27,11 @@
     <div class="list-group shadow-sm" id="configTabs" role="tablist" style="border-radius: 12px; overflow: hidden;">
       <a class="list-group-item list-group-item-action active py-3 fw-semibold" id="tab-sitio" data-bs-toggle="list" href="#pane-sitio" role="tab">
         <%- icono('gear', 16, 'me-2') %>
-        Apariencia y Cookies
+        Apariencia
+      </a>
+      <a class="list-group-item list-group-item-action py-3 fw-semibold" id="tab-cookies" data-bs-toggle="list" href="#pane-cookies" role="tab">
+        <%- icono('cookie', 16, 'me-2') %>
+        Cookies y privacidad
       </a>
       <a class="list-group-item list-group-item-action py-3 fw-semibold" id="tab-cuenta" data-bs-toggle="list" href="#pane-cuenta" role="tab">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-2" viewBox="0 0 16 16"><path d="M8 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6m2-3a2 2 0 1 1-4 0 2 2 0 0 1 4 0m4 8c0 1-1 1-1 1H3s-1 0-1-1 1-4 6-4 6 3 6 4m-1-.004c-.001-.246-.154-.986-.832-1.664C11.516 10.68 10.289 10 8 10s-3.516.68-4.168 1.332c-.678.678-.83 1.418-.832 1.664z"/></svg>
@@ -44,11 +48,11 @@
   <div class="col-lg-9">
     <div class="tab-content">
       
-      <!-- PESTAÑA 1: APARIENCIA Y COOKIES -->
+      <!-- PESTAÑA 1: APARIENCIA -->
       <div class="tab-pane fade show active" id="pane-sitio" role="tabpanel">
         <div class="card p-4">
-          <h4 class="h5 fw-bold mb-3 text-primary">Preferencias del Sitio y Cookies</h4>
-          <p class="text-muted small mb-4">Estos ajustes se almacenan en tus cookies de navegación y se recuerdan en cada visita.</p>
+          <h4 class="h5 fw-bold mb-3 text-primary">Apariencia del sitio</h4>
+          <p class="text-muted small mb-4">Los cambios se aplican al instante y se guardan en tu cuenta. Además se recuerdan en este navegador si aceptaste la categoría de cookies correspondiente.</p>
 
           <form action="/configuracion/guardar" method="POST">
             <div class="row g-3">
@@ -102,14 +106,6 @@
                 </select>
               </div>
 
-              <!-- Consentimiento Cookies -->
-              <div class="col-md-6">
-                <label class="form-label fw-semibold">Nivel de Cookies Permitido</label>
-                <select name="cookiesConsent" class="form-select">
-                  <option value="all" <%= pref.consentNivel === 'all' || pref.cookiesConsentidas ? 'selected' : '' %>>Aceptar todas (Sesión + Personalización)</option>
-                  <option value="essential" <%= pref.consentNivel === 'essential' ? 'selected' : '' %>>Solo esenciales (Sesión y seguridad)</option>
-                </select>
-              </div>
             </div>
 
             <div class="mt-4">
@@ -117,87 +113,56 @@
             </div>
           </form>
 
-          <!-- Panel de Transparencia y Gestión Detallada de Cookies -->
-          <div class="mt-5 pt-4 border-top">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <div>
-                <h5 class="fw-bold mb-1 text-primary">🍪 Detalle y Comportamiento de las Cookies</h5>
-                <p class="text-muted small mb-0">Conoce qué información almacena el sistema y administra tus permisos de privacidad.</p>
-              </div>
-              <span class="badge <%= pref.cookiesConsentidas ? 'bg-success' : 'bg-secondary' %>">
-                <%= pref.cookiesConsentidas ? 'Cookies Personalizadas Activas' : 'Modo Esencial' %>
-              </span>
-            </div>
+        </div>
+      </div>
 
-            <div class="table-responsive">
-              <table class="table table-bordered table-sm align-middle mb-3" style="font-size: 0.88rem;">
-                <thead class="table-light">
-                  <tr>
-                    <th>Nombre</th>
-                    <th>Categoría</th>
-                    <th>Propósito</th>
-                    <th>Duración</th>
-                    <th>Estado</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td><code>_token</code></td>
-                    <td><span class="badge bg-danger">Esencial</span></td>
-                    <td>Autenticación de sesión (JWT) protegida contra CSRF y ataques XSS (HttpOnly).</td>
-                    <td>8 horas / Sesión</td>
-                    <td><span class="badge bg-success">Activa siempre</span></td>
-                  </tr>
-                  <tr>
-                    <td><code>lonja_theme</code></td>
-                    <td><span class="badge bg-primary">Personalización</span></td>
-                    <td>Recuerda tu tema visual preferido (Océano, Claro u Oscuro).</td>
-                    <td>1 año</td>
-                    <td><span class="badge <%= pref.cookiesConsentidas ? 'bg-success' : 'bg-secondary' %>"><%= pref.cookiesConsentidas ? 'Habilitada' : 'Deshabilitada' %></span></td>
-                  </tr>
-                  <tr>
-                    <td><code>lonja_currency</code></td>
-                    <td><span class="badge bg-info text-dark">Funcional</span></td>
-                    <td>Conserva la divisa elegida para mostrar precios (MXN, USD, EUR).</td>
-                    <td>1 año</td>
-                    <td><span class="badge <%= pref.cookiesConsentidas ? 'bg-success' : 'bg-secondary' %>"><%= pref.cookiesConsentidas ? 'Habilitada' : 'Deshabilitada' %></span></td>
-                  </tr>
-                  <tr>
-                    <td><code>lonja_lang</code></td>
-                    <td><span class="badge bg-primary">Personalización</span></td>
-                    <td>Guarda el idioma de la interfaz (Español o English).</td>
-                    <td>1 año</td>
-                    <td><span class="badge <%= pref.cookiesConsentidas ? 'bg-success' : 'bg-secondary' %>"><%= pref.cookiesConsentidas ? 'Habilitada' : 'Deshabilitada' %></span></td>
-                  </tr>
-                  <tr>
-                    <td><code>lonja_font_size</code></td>
-                    <td><span class="badge bg-secondary">Accesibilidad</span></td>
-                    <td>Recuerda tu escala de texto (Pequeña, Normal, Grande).</td>
-                    <td>1 año</td>
-                    <td><span class="badge <%= pref.cookiesConsentidas ? 'bg-success' : 'bg-secondary' %>"><%= pref.cookiesConsentidas ? 'Habilitada' : 'Deshabilitada' %></span></td>
-                  </tr>
-                  <tr>
-                    <td><code>lonja_cookies_consent</code></td>
-                    <td><span class="badge bg-danger">Esencial</span></td>
-                    <td>Registra tu decisión de cookies para no volver a preguntarte.</td>
-                    <td>1 año</td>
-                    <td><span class="badge bg-success">Registrado</span></td>
-                  </tr>
-                </tbody>
-              </table>
+      <!-- PESTAÑA: COOKIES Y PRIVACIDAD -->
+      <div class="tab-pane fade" id="pane-cookies" role="tabpanel">
+        <div class="card p-4">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+            <div>
+              <h4 class="h5 fw-bold mb-1 text-primary">Cookies y privacidad</h4>
+              <p class="text-muted small mb-0">Qué guarda el sistema en tu navegador, para qué sirve y qué pasa si lo desactivas.</p>
             </div>
+            <span class="badge <%= pref.cookiesConsentidas ? 'bg-success' : 'bg-secondary' %>">
+              <%= !pref.cookiesRespondidas ? 'Sin responder: solo esenciales' : pref.cookiesConsentidas ? 'Todas aceptadas' : pref.cookiesPermitidas.length ? 'Selección personalizada' : 'Solo esenciales' %>
+            </span>
+          </div>
+
+          <form action="/configuracion/cookies" method="POST">
+            <% cookiesCatalogo.forEach(cat => { const activa = pref.permiteCookies(cat.id); %>
+              <div class="cookies-categoria mb-3">
+                <div class="d-flex justify-content-between align-items-start gap-3">
+                  <div>
+                    <label class="fw-bold" for="cat-<%= cat.id %>"><%= cat.nombre %></label>
+                    <div class="small text-muted"><%= cat.descripcion %></div>
+                  </div>
+                  <div class="form-check form-switch m-0">
+                    <input class="form-check-input" type="checkbox" role="switch" name="categorias" value="<%= cat.id %>" id="cat-<%= cat.id %>" <%= activa ? 'checked' : '' %> <%= cat.obligatoria ? 'disabled' : '' %>>
+                  </div>
+                </div>
+                <div class="table-responsive mt-2">
+                  <table class="table table-sm align-middle mb-0 small">
+                    <thead><tr><th style="width: 24%">Cookie</th><th>Para qué sirve</th><th style="width: 22%">Duración</th></tr></thead>
+                    <tbody>
+                      <% cat.cookies.forEach(c => { %>
+                        <tr><td><code><%= c.nombre %></code></td><td><%= c.proposito %></td><td><%= c.duracion %></td></tr>
+                      <% }) %>
+                    </tbody>
+                  </table>
+                </div>
+                <% if (cat.siDesactivas) { %>
+                  <div class="small text-muted mt-2"><%- icono('info-circle', 14, 'me-1') %><strong>Si la desactivas:</strong> <%= cat.siDesactivas %> Las cookies de esta categoría se borran de inmediato.</div>
+                <% } %>
+              </div>
+            <% }) %>
 
             <div class="d-flex gap-2 flex-wrap">
-              <form action="/configuracion/guardar" method="POST" class="d-inline">
-                <input type="hidden" name="cookiesConsent" value="all">
-                <button type="submit" class="btn btn-sm btn-outline-primary">Permitir Todas las Cookies</button>
-              </form>
-              <form action="/configuracion/guardar" method="POST" class="d-inline">
-                <input type="hidden" name="cookiesConsent" value="essential">
-                <button type="submit" class="btn btn-sm btn-outline-secondary">Limitar a Solo Esenciales</button>
-              </form>
+              <button type="submit" class="btn btn-primary">Guardar selección</button>
+              <button type="submit" name="nivel" value="all" class="btn btn-outline-primary">Aceptar todas</button>
+              <button type="submit" name="nivel" value="essential" class="btn btn-outline-secondary">Solo esenciales</button>
             </div>
-          </div>
+          </form>
         </div>
       </div>
 

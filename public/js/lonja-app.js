@@ -3,54 +3,66 @@
  * Cookies, Configuración en Vivo, Cálculos en Tiempo Real y Compartir
  */
 
-// Utilidades de Cookies
-function getCookie(name) {
-  const match = document.cookie.match(new RegExp('(^| )' + name + '=([^;]+)'));
-  return match ? decodeURIComponent(match[2]) : null;
-}
-
-function setCookie(name, value, days = 365) {
-  const date = new Date();
-  date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-  const secure = location.protocol === 'https:' ? ';Secure' : '';
-  document.cookie = `${name}=${encodeURIComponent(value)};expires=${date.toUTCString()};path=/;SameSite=Lax${secure}`;
-}
-
-// Aplicar preferencias al documento HTML inmediatamente
-function aplicarPreferencia(clave, valor) {
-  if (clave === 'tema') {
-    document.documentElement.setAttribute('data-theme', valor);
-    setCookie('lonja_theme', valor);
-  } else if (clave === 'tamanoFuente') {
-    document.documentElement.setAttribute('data-font-size', valor);
-    setCookie('lonja_font_size', valor);
-  } else if (clave === 'tipoFuente') {
-    document.documentElement.setAttribute('data-font-family', valor);
-    setCookie('lonja_font_family', valor);
-  } else if (clave === 'moneda') {
-    setCookie('lonja_currency', valor);
-    // Recargar suavemente para que los formateadores del servidor apliquen o actualizar vista
-    location.reload();
-    return;
-  } else if (clave === 'idioma') {
-    setCookie('lonja_lang', valor);
-    location.reload();
-    return;
-  }
-
-  // Notificar al servidor en segundo plano si está logueado
-  fetch('/configuracion/guardar-rapido', {
+// --------------------------------------------------------------------------
+// PREFERENCIAS: el servidor decide si se guardan en cookie (según el
+// consentimiento) y siempre las guarda en la cuenta del usuario.
+// --------------------------------------------------------------------------
+function postJSON(url, datos) {
+  return fetch(url, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ clave, valor }),
-  }).catch(() => {});
+    credentials: 'same-origin',
+    body: JSON.stringify(datos),
+  });
 }
 
-// Inicialización de Consentimiento de Cookies
-function aceptarCookies(nivel) {
-  setCookie('lonja_cookies_consent', nivel, 365);
+function aplicarPreferencia(clave, valor) {
+  const atributos = { tema: 'data-theme', tamanoFuente: 'data-font-size', tipoFuente: 'data-font-family' };
+  if (atributos[clave]) document.documentElement.setAttribute(atributos[clave], valor);
+
+  const recargar = clave === 'moneda' || clave === 'idioma'; // el servidor vuelve a formatear/traducir
+  postJSON('/configuracion/guardar-rapido', { clave, valor })
+    .catch(() => {})
+    .finally(() => { if (recargar) location.reload(); });
+}
+
+// --------------------------------------------------------------------------
+// CONSENTIMIENTO DE COOKIES (banner)
+// --------------------------------------------------------------------------
+function inicializarBannerCookies() {
   const banner = document.getElementById('cookieConsentBanner');
-  if (banner) banner.remove();
+  if (!banner) return;
+
+  const enviar = (datos) =>
+    postJSON('/configuracion/cookies', datos)
+      .then((r) => { if (r.ok) banner.remove(); })
+      .catch(() => {});
+
+  banner.querySelectorAll('[data-cookies-nivel]').forEach((btn) => {
+    btn.addEventListener('click', () => enviar({ nivel: btn.dataset.cookiesNivel }));
+  });
+
+  const guardarSeleccion = banner.querySelector('[data-cookies-guardar]');
+  if (guardarSeleccion) {
+    guardarSeleccion.addEventListener('click', () => {
+      const categorias = Array.from(banner.querySelectorAll('input[name="categorias"]:checked')).map((i) => i.value);
+      enviar({ categorias });
+    });
+  }
+}
+
+// Abre la pestaña indicada en el hash (p. ej. /configuracion#pane-cookies)
+function inicializarPestanasPorHash() {
+  const abrir = () => {
+    if (!location.hash || !window.bootstrap) return;
+    const disparador = document.querySelector(`[data-bs-toggle="list"][href="${CSS.escape ? '#' + CSS.escape(location.hash.slice(1)) : location.hash}"]`);
+    if (disparador) bootstrap.Tab.getOrCreateInstance(disparador).show();
+  };
+  abrir();
+  window.addEventListener('hashchange', abrir);
+  document.querySelectorAll('[data-bs-toggle="list"]').forEach((el) => {
+    el.addEventListener('shown.bs.tab', () => history.replaceState(null, '', el.getAttribute('href')));
+  });
 }
 
 // Compartir Factura / Enlace
@@ -134,9 +146,6 @@ function cargarReportePorFecha(fecha) {
 
   if (linkCsv) linkCsv.href = `/reportes/diario.csv?fecha=${fecha}`;
   if (txtTituloFecha) txtTituloFecha.textContent = fecha;
-
-  // Recordar última fecha consultada en cookie
-  setCookie('lonja_last_report_date', fecha, 30);
 
   if (contenedor) {
     contenedor.style.opacity = '0.4';
@@ -360,6 +369,8 @@ function inicializarTablasOrdenables() {
 
 // Inicialización general al cargar el DOM
 document.addEventListener('DOMContentLoaded', () => {
+  inicializarBannerCookies();
+  inicializarPestanasPorHash();
   inicializarReporteDinamico();
   inicializarCalculadoraCompra();
   inicializarTablasOrdenables();
