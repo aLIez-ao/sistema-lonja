@@ -1,51 +1,49 @@
 import { formatearMoneda, t } from "../helpers/i18n.js";
+import { CATEGORIAS, COOKIE_CONSENT, COOKIE_DE_PREF, leerConsentimiento } from "../helpers/cookies.js";
 
+export const VALORES_PREF = {
+  tema: ["ocean", "light", "dark"],
+  idioma: ["es", "en"],
+  moneda: ["MXN", "USD", "EUR"],
+  tamanoFuente: ["sm", "md", "lg"],
+  tipoFuente: ["sans", "roboto", "segoe", "serif"],
+};
+
+/** Devuelve el valor si es válido para esa preferencia; si no, undefined. */
+export const prefValida = (clave, valor) => (VALORES_PREF[clave]?.includes(valor) ? valor : undefined);
+
+/**
+ * Resuelve las preferencias de la petición. Orden de prioridad:
+ *   1. cookie del navegador (solo si su categoría fue aceptada)
+ *   2. preferencias guardadas en la cuenta del usuario
+ *   3. valor por defecto
+ */
 export function middlewarePreferencias(req, res, next) {
-  // 1. Leer preferencias desde cookies
   const cookies = req.cookies || {};
+  const consentimiento = leerConsentimiento(cookies[COOKIE_CONSENT]);
 
-  let tema = cookies.lonja_theme || "ocean";
-  let idioma = cookies.lonja_lang || "es";
-  let moneda = cookies.lonja_currency || "MXN";
-  let tamanoFuente = cookies.lonja_font_size || "md";
-  let tipoFuente = cookies.lonja_font_family || "sans";
-  const cookiesConsent = cookies.lonja_cookies_consent;
-
-  // 2. Si el usuario está autenticado y tiene preferencias en BD, sincronizarlas si la cookie no estaba definida
-  if (req.usuario && req.usuario.preferencias) {
-    try {
-      const prefsBD = JSON.parse(req.usuario.preferencias);
-      if (!cookies.lonja_theme && prefsBD.tema) tema = prefsBD.tema;
-      if (!cookies.lonja_lang && prefsBD.idioma) idioma = prefsBD.idioma;
-      if (!cookies.lonja_currency && prefsBD.moneda) moneda = prefsBD.moneda;
-      if (!cookies.lonja_font_size && prefsBD.tamanoFuente) tamanoFuente = prefsBD.tamanoFuente;
-      if (!cookies.lonja_font_family && prefsBD.tipoFuente) tipoFuente = prefsBD.tipoFuente;
-    } catch {
-      // Ignorar error de parseo
-    }
+  let deCuenta = {};
+  if (req.usuario?.preferencias) {
+    try { deCuenta = JSON.parse(req.usuario.preferencias) || {}; } catch { /* preferencias corruptas: se ignoran */ }
   }
 
-  // Validaciones
-  if (!["ocean", "light", "dark"].includes(tema)) tema = "ocean";
-  if (!["es", "en"].includes(idioma)) idioma = "es";
-  if (!["MXN", "USD", "EUR"].includes(moneda)) moneda = "MXN";
-  if (!["sm", "md", "lg"].includes(tamanoFuente)) tamanoFuente = "md";
-  if (!["sans", "roboto", "segoe", "serif"].includes(tipoFuente)) tipoFuente = "sans";
+  const pref = {};
+  for (const [clave, validos] of Object.entries(VALORES_PREF)) {
+    const { cookie, categoria } = COOKIE_DE_PREF[clave];
+    const deCookie = consentimiento.permite(categoria) ? prefValida(clave, cookies[cookie]) : undefined;
+    pref[clave] = deCookie ?? prefValida(clave, deCuenta[clave]) ?? validos[0];
+  }
 
-  const preferencias = {
-    tema,
-    idioma,
-    moneda,
-    tamanoFuente,
-    tipoFuente,
-    cookiesConsentidas: cookiesConsent === "all" || cookiesConsent === "true",
-    cookiesRespondidas: typeof cookiesConsent !== "undefined",
-    consentNivel: cookiesConsent || "none",
-  };
+  pref.cookiesRespondidas = consentimiento.respondido;
+  pref.cookiesConsentidas = consentimiento.todas;
+  pref.cookiesPermitidas = consentimiento.permitidas;
+  pref.permiteCookies = consentimiento.permite;
 
-  res.locals.pref = preferencias;
-  res.locals.t = (clave) => t(clave, idioma);
-  res.locals.dinero = (monto) => formatearMoneda(monto, moneda);
+  res.locals.pref = pref;
+  res.locals.cookiesCatalogo = CATEGORIAS;
+  res.locals.t = (clave) => t(clave, pref.idioma);
+  res.locals.dinero = (monto) => formatearMoneda(monto, pref.moneda);
+  req.pref = pref;
 
   next();
 }

@@ -3,6 +3,8 @@ import bcrypt from "bcryptjs";
 import { Usuario, Comprador } from "../models/index.js";
 import { enviarEmailVerificacion, enviarBoletinClientes } from "../helpers/email.js";
 import { aMensaje } from "../helpers/utiles.js";
+import { prefValida } from "../middleware/preferencias.js";
+import { CATEGORIAS, COOKIE_DE_PREF, aplicarConsentimiento, guardarCookiePreferencia } from "../helpers/cookies.js";
 
 export const verConfiguracion = async (req, res) => {
   const us = await Usuario.findByPk(req.usuario.id);
@@ -15,78 +17,56 @@ export const verConfiguracion = async (req, res) => {
   });
 };
 
+/** Guarda en la cuenta (siempre) y en cookies (solo las categorías aceptadas). */
+async function persistirPreferencias(req, res, cambios) {
+  const validas = {};
+  for (const [clave, valor] of Object.entries(cambios)) {
+    const v = prefValida(clave, valor);
+    if (v) validas[clave] = v;
+  }
+  for (const [clave, valor] of Object.entries(validas)) guardarCookiePreferencia(req, res, clave, valor);
+
+  if (req.usuario && Object.keys(validas).length) {
+    const us = await Usuario.findByPk(req.usuario.id);
+    let prefs = {};
+    try { prefs = JSON.parse(us.preferencias || "{}") || {}; } catch { /* se reemplaza */ }
+    us.preferencias = JSON.stringify({ ...prefs, ...validas });
+    await us.save();
+  }
+  return validas;
+}
+
 export const guardarPreferencias = async (req, res) => {
-  const { tema, idioma, moneda, tamanoFuente, tipoFuente, cookiesConsent } = req.body;
-
-  const prefs = {
-    tema: tema || "ocean",
-    idioma: idioma || "es",
-    moneda: moneda || "MXN",
-    tamanoFuente: tamanoFuente || "md",
-    tipoFuente: tipoFuente || "sans",
-  };
-
-  const dias = 365;
-  const maxAge = dias * 24 * 60 * 60 * 1000;
-
-  res.cookie("lonja_theme", prefs.tema, { maxAge, path: "/" });
-  res.cookie("lonja_lang", prefs.idioma, { maxAge, path: "/" });
-  res.cookie("lonja_currency", prefs.moneda, { maxAge, path: "/" });
-  res.cookie("lonja_font_size", prefs.tamanoFuente, { maxAge, path: "/" });
-  res.cookie("lonja_font_family", prefs.tipoFuente, { maxAge, path: "/" });
-
-  if (cookiesConsent) {
-    res.cookie("lonja_cookies_consent", cookiesConsent, { maxAge, path: "/" });
-  }
-
-  // Guardar en base de datos si el usuario está autenticado
-  if (req.usuario) {
-    try {
-      const us = await Usuario.findByPk(req.usuario.id);
-      if (us) {
-        us.preferencias = JSON.stringify(prefs);
-        await us.save();
-      }
-    } catch (e) {
-      console.warn("No se pudo persistir preferencias en usuario:", e.message);
-    }
-  }
-
+  const { tema, idioma, moneda, tamanoFuente, tipoFuente } = req.body;
+  await persistirPreferencias(req, res, { tema, idioma, moneda, tamanoFuente, tipoFuente });
   res.redirect(`/configuracion?${aMensaje("Preferencias guardadas correctamente")}`);
 };
 
 export const guardarRapido = async (req, res) => {
   const { clave, valor } = req.body;
-  if (!clave || !valor) return res.status(400).json({ ok: false });
-
-  const maxAge = 365 * 24 * 60 * 60 * 1000;
-  const mapaCookies = {
-    tema: "lonja_theme",
-    idioma: "lonja_lang",
-    moneda: "lonja_currency",
-    tamanoFuente: "lonja_font_size",
-    tipoFuente: "lonja_font_family",
-  };
-
-  const nombreCookie = mapaCookies[clave];
-  if (nombreCookie) {
-    res.cookie(nombreCookie, valor, { maxAge, path: "/" });
-  }
-
-  if (req.usuario) {
-    try {
-      const us = await Usuario.findByPk(req.usuario.id);
-      if (us) {
-        let prefs = {};
-        try { prefs = JSON.parse(us.preferencias || "{}"); } catch {}
-        prefs[clave] = valor;
-        us.preferencias = JSON.stringify(prefs);
-        await us.save();
-      }
-    } catch {}
-  }
-
+  const guardadas = await persistirPreferencias(req, res, { [clave]: valor });
+  if (!Object.keys(guardadas).length) return res.status(400).json({ ok: false });
   return res.json({ ok: true });
+};
+
+/** Consentimiento de cookies: desde el banner (JSON) o desde Configuración (formulario). */
+export const guardarCookies = async (req, res) => {
+  let categorias = req.body.categorias ?? [];
+  if (req.body.nivel === "all") categorias = CATEGORIAS.map((c) => c.id);
+  else if (req.body.nivel === "essential") categorias = [];
+  if (!Array.isArray(categorias)) categorias = [categorias];
+
+  const consentimiento = aplicarConsentimiento(req, res, categorias);
+
+  // Las preferencias actuales se copian a las cookies recién permitidas
+  for (const [clave, { cookie, categoria }] of Object.entries(COOKIE_DE_PREF)) {
+    if (consentimiento.permite(categoria) && req.pref?.[clave]) {
+      res.cookie(cookie, req.pref[clave], { maxAge: 365 * 24 * 60 * 60 * 1000, path: "/", sameSite: "lax" });
+    }
+  }
+
+  if (req.is("json")) return res.json({ ok: true, permitidas: consentimiento.permitidas });
+  res.redirect(`/configuracion?${aMensaje("Preferencias de cookies actualizadas")}#pane-cookies`);
 };
 
 export const actualizarCuenta = async (req, res) => {
@@ -128,24 +108,6 @@ export const solicitarVerificacionEmail = async (req, res) => {
   await enviarEmailVerificacion({ usuario: us, correo: us.correo, token, baseUrl });
 
   res.redirect(`/configuracion?${aMensaje("Se ha enviado un enlace de confirmación a tu correo")}`);
-};
-
-export const verificarEmailToken = async (req, res) => {
-  const { token } = req.params;
-  const us = await Usuario.findOne({ where: { token_verificacion: token } });
-
-  if (!us) {
-    return res.render("error", {
-      codigo: 400,
-      mensaje: "El enlace de verificación no es válido o ya ha expirado.",
-    });
-  }
-
-  us.email_verificado = true;
-  us.token_verificacion = null;
-  await us.save();
-
-  res.redirect(`/configuracion?${aMensaje("¡Tu correo electrónico ha sido verificado exitosamente!")}`);
 };
 
 export const cambiarPasswordCuenta = async (req, res) => {
