@@ -76,19 +76,29 @@
 [data-font-family="segoe"] { --font-base: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
 [data-font-family="serif"] { --font-base: 'Georgia', Cambria, Times, serif; }
 
-/* Avatar circular de usuario */
-.dropdown-toggle.no-arrow::after {
-  display: none !important;
-}
-
-.user-avatar-circle {
+/* Avatar circular de usuario (iniciales o foto) */
+.avatar-usuario {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #0B3954, #087E8B);
+  color: #FFFFFF;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.85rem;
+  border: 2px solid var(--lonja-border);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
+  object-fit: cover;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
+.avatar-usuario:hover { transform: scale(1.05); box-shadow: 0 4px 10px rgba(11, 57, 84, 0.25); }
+.avatar-usuario.avatar-lg { width: 72px; height: 72px; font-size: 1.5rem; }
+.menu-cuenta { min-width: 250px; border-radius: 14px; }
+.bandera { border-radius: 3px; box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.12); object-fit: cover; display: block; }
+.bi { vertical-align: -0.125em; flex-shrink: 0; }
 
-.user-avatar-circle:hover {
-  transform: scale(1.05);
-  box-shadow: 0 4px 10px rgba(11, 57, 84, 0.25) !important;
-}
 html {
   font-size: var(--font-size-root);
   scroll-behavior: smooth;
@@ -171,29 +181,6 @@ main.container {
   color: var(--lonja-navy);
   background-color: var(--lonja-teal-light);
   font-weight: 600;
-}
-
-/* Botón visible de Cerrar Sesión (Fix requerido) */
-.btn-lonja-logout {
-  color: #DC2626 !important;
-  background-color: #FEE2E2 !important;
-  border: 1px solid #FCA5A5 !important;
-  font-weight: 600;
-  font-size: 0.85rem;
-  padding: 0.4rem 0.85rem;
-  border-radius: 20px;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-.btn-lonja-logout:hover {
-  background-color: #DC2626 !important;
-  color: #FFFFFF !important;
-  border-color: #DC2626 !important;
-  box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3);
 }
 
 /* ==========================================================================
@@ -367,31 +354,6 @@ main.container {
   to { transform: translateY(0); opacity: 1; }
 }
 
-/* Botón flotante para Configuración Rápida */
-.btn-quick-settings {
-  position: fixed;
-  bottom: 1.5rem;
-  right: 1.5rem;
-  width: 48px;
-  height: 48px;
-  border-radius: 50%;
-  background: var(--lonja-navy);
-  color: #FFFFFF;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 4px 14px rgba(11, 57, 84, 0.35);
-  cursor: pointer;
-  z-index: 1040;
-  border: none;
-  transition: transform 0.2s ease, background 0.2s ease;
-}
-
-.btn-quick-settings:hover {
-  transform: scale(1.08) rotate(30deg);
-  background: var(--lonja-teal);
-}
-
 /* ==========================================================================
    FACTURA VIRTUAL / COMPROBANTE EN PANTALLA
    ========================================================================== */
@@ -455,17 +417,11 @@ main.container {
     padding: 1rem;
   }
 
-  .btn-quick-settings {
-    bottom: 1rem;
-    right: 1rem;
-    width: 44px;
-    height: 44px;
-  }
 }
 
 /* Modo Impresión */
 @media print {
-  .navbar-lonja, .btn-quick-settings, .cookie-consent-bar, footer, .d-print-none {
+  .navbar-lonja, .cookie-consent-bar, footer, .d-print-none {
     display: none !important;
   }
   body {

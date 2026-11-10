@@ -18,6 +18,7 @@ import router_configuracion from "./routes/configuracion_router.js";
 import { dinero, formatoFechaHora } from "./helpers/fechas.js";
 import { Usuario } from "./models/index.js";
 import { JWTVerifica } from "./helpers/tokens.js";
+import { icono } from "./helpers/iconos.js";
 
 dotenv.config({ path: ".env" });
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -35,12 +36,18 @@ app.set("views", path.join(__dirname, "views"));
 
 // Bootstrap local
 app.use("/bootstrap", express.static(path.join(__dirname, "node_modules/bootstrap/dist")));
+// Chart.js local (gráficas de inicio y reportes)
+app.use("/vendor/chartjs", express.static(path.join(__dirname, "node_modules/chart.js/dist")));
 app.use(express.static(path.join(__dirname, "public")));
+// Los navegadores piden /favicon.ico por su cuenta
+app.get("/favicon.ico", (req, res) => res.redirect(301, "/img/favicon.svg"));
 
 // Identificación pasiva de usuario para navbar si tiene sesión
 app.use(async (req, res, next) => {
   res.locals.dinero = dinero;
   res.locals.fechaHora = formatoFechaHora;
+  res.locals.icono = icono;
+  res.locals.rutaActual = req.path;
   res.locals.usuario = null;
   req.usuario = null;
 

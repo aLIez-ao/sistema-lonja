@@ -19,6 +19,8 @@ const vistaLogin = (res, errores = [], usuario = "", mensaje = null) =>
   res.status(errores.length ? 401 : 200).render("login/login", { errores, usuario, mensaje });
 
 const login = (req, res) => {
+  // Con sesión vigente no tiene sentido mostrar el formulario
+  if (req.usuario) return res.redirect("/inicio");
   vistaLogin(res, [], "", req.query.mensaje);
 };
 
