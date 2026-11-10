@@ -4,6 +4,7 @@ import { Compra, Lote, Comprador, Especie, Tipo } from "../models/index.js";
 import { mensajesError, mensajeBD, aMensaje } from "../helpers/utiles.js";
 import { redondea } from "../helpers/fechas.js";
 import { generarFacturaPDF } from "../helpers/facturaPdf.js";
+import { datosFactura } from "../helpers/factura.js";
 import { enviarEmailComprobanteCompra } from "../helpers/email.js";
 
 const reglas = [
@@ -66,6 +67,7 @@ const registrar = async (req, res) => {
           if (comprador.correo) {
             try {
               nuevaCompra.lote = lote;
+              nuevaCompra.comprador = comprador;
               const pdfBuffer = await generarFacturaPDF(nuevaCompra);
               await enviarEmailComprobanteCompra({
                 compra: nuevaCompra,
@@ -130,6 +132,7 @@ const verFactura = async (req, res) => {
 
   res.render("compras/factura", {
     compra,
+    f: datosFactura(compra),
     mensaje: req.query.mensaje,
     error: req.query.error,
   });
@@ -150,7 +153,7 @@ const descargarFacturaPdf = async (req, res) => {
     const pdfBuffer = await generarFacturaPDF(compra);
     res.set({
       "Content-Type": "application/pdf",
-      "Content-Disposition": `attachment; filename="Factura-Lonja-Lote-${compra.id_cmp}.pdf"`,
+      "Content-Disposition": `${req.query.ver ? "inline" : "attachment"}; filename="Factura-Lonja-FAC-${String(compra.id_cmp).padStart(6, "0")}.pdf"`,
       "Content-Length": pdfBuffer.length,
     });
     res.send(pdfBuffer);

@@ -2,34 +2,23 @@
 
 <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 gap-2 d-print-none">
   <div>
-    <a href="/compras" class="btn btn-sm btn-outline-secondary mb-1">&larr; Volver a Compras</a>
-    <h1 class="h3 mb-0 fw-bold">Factura de Compra #FAC-<%= String(compra.id_cmp).padStart(6, '0') %></h1>
+    <a href="/compras" class="btn btn-sm btn-outline-secondary mb-1"><%- icono('arrow-left', 14, 'me-1') %>Volver a Compras</a>
+    <h1 class="h3 mb-0 fw-bold">Factura <%= f.folio %></h1>
   </div>
 
   <div class="d-flex gap-2 flex-wrap">
-    <!-- Descargar PDF -->
     <a class="btn btn-primary" href="/compras/<%= compra.id_cmp %>/factura.pdf">
-      <%- icono('download', 16, 'me-1') %>
-      <%= t('descargar_pdf') %>
+      <%- icono('download', 16, 'me-1') %><%= t('descargar_pdf') %>
     </a>
-
-    <!-- Compartir -->
-    <button class="btn btn-outline-secondary" type="button" onclick="compartirEnlace('Factura Lonja Veracruz #<%= compra.id_cmp %>', 'Factura oficial de compra lote #<%= compra.id_cmp %> por <%= dinero(compra.precio_total) %>')">
-      <%- icono('share', 16, 'me-1') %>
-      <%= t('compartir') %>
+    <button class="btn btn-outline-secondary" type="button" data-compartir data-titulo="Factura <%= f.folio %> · Lonja de Veracruz" data-texto="Factura de compra del lote #<%= compra.id_cmp %> por <%= f.total %>">
+      <%- icono('share', 16, 'me-1') %><%= t('compartir') %>
     </button>
-
-    <!-- Enviar por correo al comprador -->
     <% if (compra.comprador && compra.comprador.correo) { %>
-      <form action="/compras/<%= compra.id_cmp %>/enviar-correo" method="POST" class="d-inline" onsubmit="return confirm('¿Enviar factura PDF a <%= compra.comprador.correo %>?')">
-        <button class="btn btn-outline-primary" type="submit">
-          <%- icono('envelope', 16, 'me-1') %>
-          <%= t('enviar_correo') %>
-        </button>
+      <form action="/compras/<%= compra.id_cmp %>/enviar-correo" method="POST" class="d-inline" data-confirmar="¿Enviar la factura en PDF a <%= compra.comprador.correo %>?">
+        <button class="btn btn-outline-primary" type="submit"><%- icono('envelope', 16, 'me-1') %><%= t('enviar_correo') %></button>
       </form>
     <% } %>
-
-    <button class="btn btn-outline-secondary" type="button" onclick="window.print()">Imprimir</button>
+    <button class="btn btn-outline-secondary" type="button" onclick="window.print()"><%- icono('printer', 16, 'me-1') %>Imprimir</button>
   </div>
 </div>
 
@@ -39,7 +28,6 @@
     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
   </div>
 <% } %>
-
 <% if (typeof error !== 'undefined' && error) { %>
   <div class="alert alert-danger alert-dismissible fade show d-print-none" role="alert">
     <%= error %>
@@ -47,147 +35,86 @@
   </div>
 <% } %>
 
-<!-- DOCUMENTO OFICIAL DE FACTURA (Visualmente idéntico al PDF de descarga) -->
-<div class="invoice-box p-0 overflow-hidden" style="background: #ffffff; border: 1px solid #CBD5E1; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); max-width: 860px; margin: 0 auto; color: #1E293B;">
-  
-  <!-- Franja superior azul marino institucional -->
-  <div style="background-color: #0B3954; height: 8px; width: 100%;"></div>
+<!-- Hoja carta con la misma distribución, medidas (pt) y tipografía que helpers/facturaPdf.js -->
+<div class="hoja-visor">
+  <article class="hoja-carta factura">
+    <div class="hoja-franja"></div>
 
-  <div class="p-4 p-md-5">
-    <!-- Encabezado: Datos del Emisor y Folio -->
-    <div class="row align-items-start mb-4 gy-3">
-      <div class="col-sm-7">
-        <div class="mb-2">
-          <img src="/img/logo.svg" alt="Lonja de Veracruz" style="height: 52px; width: auto; display: block;" onerror="this.outerHTML='<h3 class=\'fw-bold text-primary\'>LONJA PESQUERA DE VERACRUZ</h3>'">
-        </div>
-        <div class="text-uppercase fw-bold" style="color: #087E8B; font-size: 0.85rem; letter-spacing: 0.5px;">
-          SISTEMA DE SUBASTA Y CONTROL DE CAPTURA
-        </div>
-        <div class="small text-muted mt-1" style="font-size: 0.8rem; line-height: 1.45;">
-          <strong>RFC:</strong> LPV-890412-M98 &bull; Régimen de Actividades Agrícolas, Ganaderas y Pesqueras<br>
-          Muelle Fiscal de Pescadores S/N, Malecón del Puerto, C.P. 91700, Veracruz, Ver.<br>
-          Tel: (229) 900-1234 &bull; contacto@lonjaveracruz.mx &bull; www.lonjaveracruz.mx
+    <header class="factura-encabezado">
+      <div>
+        <img class="factura-logo" src="/img/logo.svg" alt="Lonja de Veracruz" width="223" height="46">
+        <div class="factura-lema"><%= f.emisor.lema %></div>
+        <div class="factura-emisor">
+          RFC: <%= f.emisor.rfc %> &nbsp;·&nbsp; <%= f.emisor.regimen %><br>
+          <%= f.emisor.direccion %><br>
+          <%= f.emisor.contacto %>
         </div>
       </div>
+      <div class="factura-folio">
+        <div class="factura-folio-titulo">FACTURA COMERCIAL</div>
+        <div class="factura-folio-fila borde"><span>FOLIO:</span><strong><%= f.folio %></strong></div>
+        <div class="factura-folio-fila"><span>FECHA:</span><em><%= f.fecha %></em></div>
+      </div>
+    </header>
 
-      <div class="col-sm-5">
-        <!-- Recuadro oficial de Folio idéntico al PDF -->
-        <div style="border: 1px solid #CBD5E1; border-radius: 8px; overflow: hidden; background: #ffffff;">
-          <div style="background-color: #0B3954; color: #ffffff; text-align: center; padding: 6px 10px; font-weight: 700; font-size: 0.85rem; letter-spacing: 0.8px;">
-            FACTURA COMERCIAL
-          </div>
-          <div class="p-2 px-3 small">
-            <div class="d-flex justify-content-between py-1 border-bottom">
-              <span class="text-muted fw-bold">FOLIO:</span>
-              <span class="fw-bold" style="color: #0B3954;">FAC-<%= String(compra.id_cmp).padStart(6, '0') %></span>
-            </div>
-            <div class="d-flex justify-content-between py-1">
-              <span class="text-muted fw-bold">FECHA:</span>
-              <span class="fw-semibold"><%= fechaHora(compra.fecha) %></span>
-            </div>
-          </div>
+    <section class="hoja-caja factura-receptor">
+      <div class="hoja-caja-titulo">DATOS DEL RECEPTOR / COMPRADOR</div>
+      <div class="factura-receptor-cols">
+        <div>
+          <div><span>Cliente: </span><%= f.cliente.nombre %></div>
+          <div><span>Código de comprador: </span>#<%= f.cliente.codigo %></div>
+          <div><span>Correo: </span><%= f.cliente.correo %></div>
+        </div>
+        <div>
+          <div><span>Dirección: </span><%= f.cliente.direccion %></div>
+          <div><span>Uso CFDI: </span><%= f.cliente.usoCfdi %></div>
+          <div><span>Método de pago: </span><%= f.cliente.metodoPago %></div>
         </div>
       </div>
-    </div>
+    </section>
 
-    <!-- Recuadro Receptor / Comprador idéntico al PDF -->
-    <div class="mb-4" style="background-color: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 8px; padding: 14px 18px;">
-      <div class="fw-bold text-uppercase mb-2" style="color: #0B3954; font-size: 0.82rem; letter-spacing: 0.5px;">
-        DATOS DEL RECEPTOR / COMPRADOR
+    <table class="hoja-tabla factura-tabla">
+      <colgroup>
+        <col style="width:55pt"><col style="width:165pt"><col style="width:50pt"><col style="width:65pt"><col style="width:65pt"><col style="width:65pt"><col style="width:67pt">
+      </colgroup>
+      <thead>
+        <tr>
+          <th>LOTE</th><th>ESPECIES / DESCRIPCIÓN</th><th class="der">CAJAS</th><th class="der">PESO (KG)</th><th class="der">SALIDA/KG</th><th class="der">FINAL/KG</th><th class="der">TOTAL</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="fuerte marino"><%= f.concepto.lote %></td>
+          <td><div class="fuerte"><%= f.concepto.especies %></div><div class="nota"><%= f.concepto.nota %></div></td>
+          <td class="der"><%= f.concepto.cajas %></td>
+          <td class="der"><%= f.concepto.kilos %></td>
+          <td class="der tenue"><%= f.concepto.salida %></td>
+          <td class="der fuerte"><%= f.concepto.final %></td>
+          <td class="der fuerte marino"><%= f.concepto.total %></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <section class="factura-resumen">
+      <div class="hoja-caja factura-notas">
+        <div class="hoja-caja-titulo">INFORMACIÓN FISCAL Y GARANTÍA:</div>
+        <% f.notasFiscales.forEach(n => { %><div>•&nbsp; <%= n %></div><% }) %>
       </div>
-      <div class="row g-2" style="font-size: 0.85rem;">
-        <div class="col-md-6">
-          <div><span class="text-muted">Cliente:</span> <strong><%= compra.comprador.nombre %> <%= compra.comprador.apellido_paterno %> <%= compra.comprador.apellido_materno || '' %></strong></div>
-          <div><span class="text-muted">Código de Comprador:</span> <strong>#<%= compra.comprador.codigo_cpr %></strong></div>
-          <div><span class="text-muted">Correo:</span> <%= compra.comprador.correo || 'No registrado' %></div>
-        </div>
-        <div class="col-md-6">
-          <div><span class="text-muted">Dirección:</span> <%= compra.comprador.direccion || 'Veracruz, Ver.' %></div>
-          <div><span class="text-muted">Uso CFDI:</span> G01 - Adquisición de mercancías</div>
-          <div><span class="text-muted">Método de Pago:</span> PUE - Pago en una sola exhibición</div>
-        </div>
+      <div class="hoja-caja factura-totales">
+        <div class="fila"><span>Subtotal:</span><b><%= f.subtotal %></b></div>
+        <div class="fila borde"><span>IVA (0%):</span><b><%= f.iva %></b></div>
+        <div class="fila total"><span>TOTAL:</span><strong><%= f.total %></strong></div>
       </div>
-    </div>
+    </section>
 
-    <!-- Tabla de Detalle idéntica a la del PDF -->
-    <div class="table-responsive mb-4">
-      <table class="table table-bordered align-middle mb-0" style="border-color: #CBD5E1; font-size: 0.86rem;">
-        <thead style="background-color: #0B3954; color: #FFFFFF;">
-          <tr>
-            <th style="background-color: #0B3954; color: #ffffff; padding: 10px;">LOTE</th>
-            <th style="background-color: #0B3954; color: #ffffff; padding: 10px;">ESPECIES / DESCRIPCIÓN</th>
-            <th class="text-end" style="background-color: #0B3954; color: #ffffff; padding: 10px;">CAJAS</th>
-            <th class="text-end" style="background-color: #0B3954; color: #ffffff; padding: 10px;">PESO (KG)</th>
-            <th class="text-end" style="background-color: #0B3954; color: #ffffff; padding: 10px;">SALIDA/KG</th>
-            <th class="text-end" style="background-color: #0B3954; color: #ffffff; padding: 10px;">FINAL/KG</th>
-            <th class="text-end" style="background-color: #0B3954; color: #ffffff; padding: 10px;">TOTAL</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr style="background-color: #FFFFFF;">
-            <td class="fw-bold" style="color: #0B3954;">Lote #<%= compra.id_cmp %></td>
-            <td>
-              <strong>
-                <%= compra.lote.especies.map(e => e.nombre + (e.tipo ? ' (' + e.tipo.nombre + ')' : '')).join(', ') || 'Especies varias del Golfo' %>
-              </strong>
-              <div class="text-muted" style="font-size: 0.78rem;">Captura ribereña certificada</div>
-            </td>
-            <td class="text-end"><%= compra.lote.numero_cajas %></td>
-            <td class="text-end fw-semibold"><%= Number(compra.lote.kilos).toFixed(2) %> kg</td>
-            <td class="text-end text-muted"><%= dinero(compra.lote.precio_kilo_salida) %></td>
-            <td class="text-end fw-bold"><%= dinero(compra.precio_kilo_final) %></td>
-            <td class="text-end fw-bold fs-6" style="color: #0B3954;"><%= dinero(compra.precio_total) %></td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Totales y Resumen Fiscal idéntico al PDF -->
-    <div class="row align-items-start mb-4 gy-3">
-      <div class="col-md-7">
-        <div style="background-color: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 8px; padding: 14px 16px; font-size: 0.78rem; color: #475569; line-height: 1.5;">
-          <div class="fw-bold mb-1" style="color: #0B3954;">INFORMACIÓN FISCAL Y GARANTÍA:</div>
-          <div>&bull; Tasa IVA 0% de conformidad con el Art. 2o.-A Fracc. I inciso b) de la LIVA (productos marinos no industrializados).</div>
-          <div>&bull; Producto fresco del día desembarcado bajo normas sanitarias de pesca ribereña y de altura.</div>
-        </div>
-      </div>
-
-      <div class="col-md-5">
-        <div style="background-color: #F1F5F9; border: 1px solid #CBD5E1; border-radius: 8px; padding: 14px 16px; font-size: 0.88rem;">
-          <div class="d-flex justify-content-between py-1">
-            <span class="text-muted">Subtotal:</span>
-            <span class="fw-semibold"><%= dinero(compra.precio_total) %></span>
-          </div>
-          <div class="d-flex justify-content-between py-1 border-bottom">
-            <span class="text-muted">IVA (0%):</span>
-            <span>$0.00 MXN</span>
-          </div>
-          <div class="d-flex justify-content-between pt-2">
-            <span class="h6 fw-bold mb-0" style="color: #0B3954;">TOTAL:</span>
-            <span class="h5 fw-bold mb-0" style="color: #0B3954;"><%= dinero(compra.precio_total) %></span>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Sello y Cadena Digital -->
-    <div class="pt-3 border-top" style="border-color: #CBD5E1 !important; font-size: 0.75rem; color: #64748B;">
-      <div class="fw-bold text-dark mb-1">CADENA ORIGINAL DEL COMPROBANTE DE SUBASTA:</div>
-      <code class="d-block p-1 bg-light rounded text-break" style="font-size: 0.7rem; color: #475569;">
-        ||1.1|FAC-<%= compra.id_cmp %>|<%= new Date(compra.fecha).toISOString() %>|<%= compra.precio_total %>|MXN|<%= compra.codigo_cpr %>|LPV890412M98||
-      </code>
-
-      <div class="fw-bold text-dark mt-2 mb-1">SELLO DIGITAL DE LA LONJA:</div>
-      <code class="d-block p-1 bg-light rounded text-break" style="font-size: 0.7rem; color: #475569;">
-        <%= Buffer.from(`LONJA-VERACRUZ-SELLO-${compra.id_cmp}-${compra.precio_total}`).toString('base64').padEnd(100, 'X0A9Bc=') %>
-      </code>
-
-      <div class="text-center mt-3 text-muted" style="font-size: 0.74rem;">
-        Este documento es un comprobante digital oficial de compra-venta expedido por el Sistema de la Lonja Pesquera de Veracruz.
-      </div>
-    </div>
-
-  </div>
+    <footer class="factura-sello">
+      <div class="etiqueta">CADENA ORIGINAL DEL COMPROBANTE DE SUBASTA:</div>
+      <div class="mono"><%= f.cadena %></div>
+      <div class="etiqueta">SELLO DIGITAL DE LA LONJA:</div>
+      <div class="mono"><%= f.sello %></div>
+      <div class="leyenda"><%= f.leyenda %></div>
+    </footer>
+  </article>
 </div>
 
 <%- include('../plantillas/footer') %>
