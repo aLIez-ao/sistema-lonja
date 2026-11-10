@@ -1,13 +1,62 @@
 <%- include('plantillas/header') %>
-<h1 class="h3 mb-4">Resumen del día (<%= fecha %>)</h1>
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+  <div>
+    <h1 class="h3 mb-1 fw-bold"><%= t('resumen_del_dia') %></h1>
+    <p class="text-muted small mb-0">Fecha operativa del puerto: <span class="fw-semibold text-primary"><%= fecha %></span></p>
+  </div>
+  <div class="d-flex gap-2">
+    <a class="btn btn-primary" href="/compras/crear">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-1" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+      <%= t('registrar_compra') %>
+    </a>
+  </div>
+</div>
+
 <div class="row g-3 mb-4">
-  <div class="col-md-4"><div class="card text-center"><div class="card-body"><div class="display-6"><%= numCompras %></div><div class="text-muted">Compras de hoy</div></div></div></div>
-  <div class="col-md-4"><div class="card text-center"><div class="card-body"><div class="display-6"><%= dinero(total) %></div><div class="text-muted">Importe de hoy</div></div></div></div>
-  <div class="col-md-4"><div class="card text-center"><div class="card-body"><div class="display-6"><%= lotesLibres %></div><div class="text-muted">Lotes sin comprar</div></div></div></div>
+  <div class="col-md-4">
+    <div class="metric-card">
+      <div class="metric-label"><%= t('compras_hoy') %></div>
+      <div class="metric-value"><%= numCompras %></div>
+      <div class="small text-muted mt-2">Transacciones formalizadas</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="metric-card">
+      <div class="metric-label"><%= t('importe_hoy') %></div>
+      <div class="metric-value text-primary"><%= dinero(total) %></div>
+      <div class="small text-muted mt-2">Ingreso bruto en subasta</div>
+    </div>
+  </div>
+  <div class="col-md-4">
+    <div class="metric-card">
+      <div class="metric-label"><%= t('lotes_libres') %></div>
+      <div class="metric-value"><%= lotesLibres %></div>
+      <div class="small text-muted mt-2">Disponibles en el muelle</div>
+    </div>
+  </div>
 </div>
-<div class="d-flex flex-wrap gap-2">
-  <a class="btn btn-primary" href="/compras/crear">Registrar compra</a>
-  <a class="btn btn-outline-primary" href="/lotes/crear">Registrar lote</a>
-  <a class="btn btn-outline-primary" href="/reportes/diario">Ver reporte diario</a>
+
+<div class="card p-4">
+  <h5 class="fw-bold mb-3 text-primary">Acciones Rápidas del Día</h5>
+  <div class="d-flex flex-wrap gap-2">
+    <a class="btn btn-primary" href="/compras/crear">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-1" viewBox="0 0 16 16"><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4z"/></svg>
+      <%= t('registrar_compra') %>
+    </a>
+    <a class="btn btn-outline-primary" href="/lotes/crear">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-1" viewBox="0 0 16 16"><path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/><path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/></svg>
+      <%= t('registrar_lote') %>
+    </a>
+    <a class="btn btn-outline-secondary" href="/reportes/diario">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-1" viewBox="0 0 16 16"><path d="M14 0H2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2M1 3.857C1 3.384 1.448 3 2 3h12c.552 0 1 .384 1 .857v10.286c0 .473-.448.857-1 .857H2c-.552 0-1-.384-1-.857z"/><path d="M6.5 7a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m-9 3a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2m3 0a1 1 0 1 0 0-2 1 1 0 0 0 0 2"/></svg>
+      <%= t('ver_reporte_diario') %>
+    </a>
+    <a class="btn btn-outline-secondary" href="/configuracion">
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="me-1" viewBox="0 0 16 16"><path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"/></svg>
+      <%= t('configuracion') %>
+    </a>
+  </div>
 </div>
+
 <%- include('plantillas/footer') %>

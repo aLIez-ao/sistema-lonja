@@ -17,6 +17,8 @@ Genera y verifica los JWT. El token contiene id y rol, se firma con `SC_JWT` y e
 
 El token se crea desde `controllers/loginController.js`; la cookie se guarda allí; el middleware lo verifica en páginas protegidas. La consulta del usuario en cada petición permite revocar acceso desactivando la cuenta.
 
+> cuales son paginas protegidas?
+
 ## Fechas, moneda y errores
 
 ### `helpers/fechas.js`
