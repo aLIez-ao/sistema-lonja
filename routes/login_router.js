@@ -18,7 +18,8 @@ const router = express.Router();
 router.get("/", login);
 router.post("/credenciales", reglasLogin, credenciales);
 router.get("/inicio", rutaProteger, principal);
-router.get("/cerrarsesion", cerrarsesion);
+router.post("/cerrarsesion", cerrarsesion);
+router.get("/cerrarsesion", (req, res) => res.redirect(req.usuario ? "/inicio" : "/"));
 
 // Recuperación de Contraseña y Verificación de Email
 router.get("/olvide-password", verOlvidePassword);

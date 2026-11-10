@@ -191,7 +191,7 @@ test("todas las pantallas del administrador renderizan (200)", async () => {
 });
 
 test("cerrar sesión borra la cookie", async () => {
-  const r = await admin.get("/cerrarsesion");
+  const r = await admin.post("/cerrarsesion", {});
   assert.equal(r.status, 302);
   assert.equal((await admin.get("/inicio")).status, 302);
 });
