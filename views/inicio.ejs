@@ -1,58 +1,151 @@
 <%- include('plantillas/header') %>
+<%
+  // Etiqueta de variación: la flecha y el texto dicen el sentido, no solo el color
+  const variacion = (v, contra) => v === null
+    ? `<span class="text-muted">Sin datos de ${contra} para comparar</span>`
+    : `<span class="${v >= 0 ? 'variacion-sube' : 'variacion-baja'}">${v >= 0 ? '▲' : '▼'} ${Math.abs(v).toLocaleString('es-MX', { maximumFractionDigits: 1 })}%</span> <span class="text-muted">vs. ${contra}</span>`;
+%>
 
 <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
   <div>
     <h1 class="h3 mb-1 fw-bold"><%= t('resumen_del_dia') %></h1>
-    <p class="text-muted small mb-0">Fecha operativa del puerto: <span class="fw-semibold text-primary"><%= fecha %></span></p>
+    <p class="text-muted small mb-0">Hola, <%= (usuario.nombre_completo || usuario.usuario).split(' ')[0] %>. Fecha operativa: <span class="fw-semibold"><%= fecha %></span></p>
   </div>
-  <div class="d-flex gap-2">
-    <a class="btn btn-primary" href="/compras/crear">
-      <%- icono('plus-lg', 16, 'me-1') %>
-      <%= t('registrar_compra') %>
-    </a>
+  <div class="d-flex gap-2 flex-wrap">
+    <a class="btn btn-primary" href="/compras/crear"><%- icono('plus-lg', 16, 'me-1') %><%= t('registrar_compra') %></a>
+    <a class="btn btn-outline-primary" href="/lotes/crear"><%- icono('box-seam', 16, 'me-1') %><%= t('registrar_lote') %></a>
+    <a class="btn btn-outline-secondary" href="/reportes/diario"><%- icono('bar-chart-line', 16, 'me-1') %><%= t('reportes') %></a>
+  </div>
+</div>
+
+<!-- Hoy -->
+<div class="row g-3 mb-3">
+  <div class="col-6 col-xl-3">
+    <div class="metric-card">
+      <div class="metric-label"><%= t('compras_hoy') %></div>
+      <div class="metric-value"><%= hoy.compras %></div>
+      <div class="small text-muted"><%= hoy.kilos.toLocaleString('es-MX', { maximumFractionDigits: 1 }) %> kg vendidos</div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="metric-card">
+      <div class="metric-label"><%= t('importe_hoy') %></div>
+      <div class="metric-value"><%= dinero(hoy.total) %></div>
+      <div class="small"><%- variacion(hoy.variacionImporte, 'ayer') %></div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="metric-card">
+      <div class="metric-label">Importe de <%= nombreMes.toLowerCase() %></div>
+      <div class="metric-value"><%= dinero(mes.total) %></div>
+      <div class="small"><%- variacion(mes.variacionImporte, 'el mes anterior') %></div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="metric-card">
+      <div class="metric-label"><%= t('lotes_libres') %></div>
+      <div class="metric-value"><%= lotes.disponibles %></div>
+      <div class="small text-muted">de <%= lotes.total %> registrados</div>
+    </div>
+  </div>
+</div>
+
+<!-- Indicadores secundarios -->
+<div class="row g-3 mb-4">
+  <div class="col-6 col-xl-3">
+    <div class="indicador"><%- icono('cash-coin', 20) %><div><div class="indicador-valor"><%= mes.compras ? dinero(mes.precioMedio) : '—' %></div><div class="indicador-rotulo">Precio medio por kg este mes</div></div></div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="indicador"><%- icono('graph-up-arrow', 20) %><div><div class="indicador-valor"><%= sobreprecioMedio === null ? '—' : (sobreprecioMedio >= 0 ? '+' : '') + sobreprecioMedio.toLocaleString('es-MX', { maximumFractionDigits: 1 }) + '%' %></div><div class="indicador-rotulo">Precio final sobre el de salida (30 días)</div></div></div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="indicador"><%- icono('people', 20) %><div><div class="indicador-valor"><%= catalogo.compradores %></div><div class="indicador-rotulo">Compradores registrados</div></div></div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="indicador"><%- icono('tags', 20) %><div><div class="indicador-valor"><%= catalogo.especies %></div><div class="indicador-rotulo">Especies distintas</div></div></div>
+  </div>
+</div>
+
+<script type="application/json" id="datosInicio"><%- jsonSeguro({ ...graficas, moneda: monedaInfo }) %></script>
+
+<div class="row g-3 mb-4">
+  <div class="col-lg-8">
+    <div class="card p-3 h-100">
+      <h2 class="h6 fw-bold mb-3">Importe diario, últimos 30 días</h2>
+      <% if (hayActividad30) { %>
+        <div class="grafica"><canvas data-grafica="linea" data-fuente="datosInicio" data-etiquetas="dias" data-serie="importesDia" data-formato="dinero" role="img" aria-label="Importe de compras por día en los últimos 30 días"></canvas></div>
+      <% } else { %>
+        <div class="grafica-vacia">Aún no hay compras en los últimos 30 días. <a href="/compras/crear">Registra la primera</a>.</div>
+      <% } %>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card p-3 h-100">
+      <h2 class="h6 fw-bold mb-3">Lotes vendidos</h2>
+      <div class="d-flex align-items-baseline gap-2">
+        <span class="metric-value m-0"><%= lotes.porcentajeVendido %>%</span>
+        <span class="text-muted small"><%= lotes.vendidos %> de <%= lotes.total %> lotes</span>
+      </div>
+      <div class="medidor mt-2" role="img" aria-label="<%= lotes.porcentajeVendido %>% de los lotes vendidos">
+        <div class="medidor-relleno" style="width: <%= lotes.porcentajeVendido %>%"></div>
+      </div>
+      <div class="d-flex justify-content-between small text-muted mt-2">
+        <span>Vendidos: <strong><%= lotes.vendidos %></strong></span>
+        <span>Disponibles: <strong><%= lotes.disponibles %></strong></span>
+      </div>
+      <% if (lotes.disponibles > 0) { %>
+        <a class="btn btn-sm btn-outline-primary mt-3 align-self-start" href="/lotes">Ver lotes disponibles</a>
+      <% } %>
+    </div>
   </div>
 </div>
 
 <div class="row g-3 mb-4">
-  <div class="col-md-4">
-    <div class="metric-card">
-      <div class="metric-label"><%= t('compras_hoy') %></div>
-      <div class="metric-value"><%= numCompras %></div>
-      <div class="small text-muted mt-2">Transacciones formalizadas</div>
+  <div class="col-lg-6">
+    <div class="card p-3 h-100">
+      <h2 class="h6 fw-bold mb-3">Especies con más kilos, últimos 30 días</h2>
+      <% if (graficas.nombresEspecies.length) { %>
+        <div class="grafica grafica-baja"><canvas data-grafica="barras-h" data-color="secundario" data-fuente="datosInicio" data-etiquetas="nombresEspecies" data-serie="kilosEspecies" data-formato="kg" role="img" aria-label="Especies con más kilos vendidos en los últimos 30 días"></canvas></div>
+      <% } else { %><div class="grafica-vacia">Sin ventas en el periodo.</div><% } %>
     </div>
   </div>
-  <div class="col-md-4">
-    <div class="metric-card">
-      <div class="metric-label"><%= t('importe_hoy') %></div>
-      <div class="metric-value text-primary"><%= dinero(total) %></div>
-      <div class="small text-muted mt-2">Ingreso bruto en subasta</div>
-    </div>
-  </div>
-  <div class="col-md-4">
-    <div class="metric-card">
-      <div class="metric-label"><%= t('lotes_libres') %></div>
-      <div class="metric-value"><%= lotesLibres %></div>
-      <div class="small text-muted mt-2">Disponibles en el muelle</div>
+  <div class="col-lg-6">
+    <div class="card p-3 h-100">
+      <h2 class="h6 fw-bold mb-3">Compradores con mayor importe en <%= nombreMes.toLowerCase() %></h2>
+      <% if (graficas.nombresCompradores.length) { %>
+        <div class="grafica grafica-baja"><canvas data-grafica="barras-h" data-fuente="datosInicio" data-etiquetas="nombresCompradores" data-serie="totalesCompradores" data-formato="dinero" role="img" aria-label="Compradores con mayor importe este mes"></canvas></div>
+      <% } else { %><div class="grafica-vacia">Sin compras este mes.</div><% } %>
     </div>
   </div>
 </div>
 
-<div class="card p-4">
-  <h5 class="fw-bold mb-3 text-primary">Acciones Rápidas del Día</h5>
-  <div class="d-flex flex-wrap gap-2">
-    <a class="btn btn-primary" href="/compras/crear">
-      <%- icono('plus-lg', 16, 'me-1') %>
-      <%= t('registrar_compra') %>
-    </a>
-    <a class="btn btn-outline-primary" href="/lotes/crear">
-      <%- icono('plus-lg', 16, 'me-1') %>
-      <%= t('registrar_lote') %>
-    </a>
-    <a class="btn btn-outline-secondary" href="/reportes/diario">
-      <%- icono('bar-chart-line', 16, 'me-1') %>
-      <%= t('ver_reporte_diario') %>
-    </a>
+<div class="card overflow-hidden">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h2 class="h6 mb-0 fw-bold">Últimas compras</h2>
+    <a class="small text-decoration-none" href="/compras">Ver todas</a>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead><tr><th>Fecha</th><th>Compra</th><th>Especies</th><th>Comprador</th><th class="text-end">Kilos</th><th class="text-end">Total</th></tr></thead>
+      <tbody>
+        <% if (!ultimasCompras.length) { %>
+          <tr><td colspan="6" class="text-center text-muted py-4">Todavía no hay compras recientes.</td></tr>
+        <% } %>
+        <% ultimasCompras.forEach(c => { %>
+          <tr>
+            <td class="text-nowrap"><%= c.fecha %> <span class="text-muted small"><%= c.hora %></span></td>
+            <td><a class="fw-semibold text-decoration-none" href="/compras/<%= c.id %>/factura">Lote #<%= c.id %></a></td>
+            <td><%= c.especies %></td>
+            <td><%= c.comprador %></td>
+            <td class="text-end"><%= c.kilos.toFixed(2) %></td>
+            <td class="text-end fw-semibold"><%= dinero(c.total) %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
   </div>
 </div>
 
+<script src="/vendor/chartjs/chart.umd.min.js"></script>
+<script src="/js/lonja-graficas.js"></script>
 <%- include('plantillas/footer') %>

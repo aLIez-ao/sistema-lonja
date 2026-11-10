@@ -1,10 +1,10 @@
 import { body } from "express-validator";
 import bcrypt from "bcryptjs";
 import { Op } from "sequelize";
-import { Usuario, Compra, Lote } from "../models/index.js";
+import { Usuario } from "../models/index.js";
+import { estadisticasInicio } from "../helpers/estadisticas.js";
 import { JWTGenera, opcionesCookieSesion } from "../helpers/tokens.js";
 import { mensajesError, aMensaje } from "../helpers/utiles.js";
-import { hoy, rangoDelDia } from "../helpers/fechas.js";
 import { enviarEmailPasswordCambiada } from "../helpers/email.js";
 import { crearLimite, hashToken, problemasPassword } from "../helpers/seguridad.js";
 import { enviarEnlacePassword } from "../helpers/cuentas.js";
@@ -52,12 +52,7 @@ const credenciales = async (req, res) => {
 };
 
 const principal = async (req, res) => {
-  const fecha = hoy();
-  const { inicio, fin } = rangoDelDia(fecha);
-  const compras = await Compra.findAll({ where: { fecha: { [Op.gte]: inicio, [Op.lt]: fin } } });
-  const total = compras.reduce((s, c) => s + Number(c.precio_total), 0);
-  const lotesLibres = (await Lote.count()) - (await Compra.count());
-  res.render("inicio", { fecha, numCompras: compras.length, total, lotesLibres });
+  res.render("inicio", await estadisticasInicio());
 };
 
 const cerrarsesion = (req, res) => {
