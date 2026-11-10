@@ -369,6 +369,26 @@ function inicializarTablasOrdenables() {
   });
 }
 
+// Las hojas carta (factura, reportes) se reducen para caber en pantallas angostas
+function ajustarHojas() {
+  document.querySelectorAll('.hoja-visor').forEach((visor) => {
+    const hoja = visor.querySelector('.hoja-carta');
+    if (!hoja) return;
+    hoja.style.zoom = 1;
+    const escala = Math.min(1, visor.clientWidth / hoja.offsetWidth);
+    hoja.style.zoom = escala < 1 ? escala : '';
+  });
+}
+window.addEventListener('resize', ajustarHojas);
+window.addEventListener('beforeprint', () => document.querySelectorAll('.hoja-carta').forEach((h) => { h.style.zoom = ''; }));
+window.addEventListener('afterprint', ajustarHojas);
+
+// Compartir declarativo: <button data-compartir data-titulo="..." data-texto="...">
+document.addEventListener('click', (ev) => {
+  const btn = ev.target.closest('[data-compartir]');
+  if (btn) compartirEnlace(btn.dataset.titulo, btn.dataset.texto, btn.dataset.url);
+});
+
 // Confirmación declarativa: <form data-confirmar="¿Seguro?">
 document.addEventListener('submit', (ev) => {
   const mensaje = ev.target.dataset && ev.target.dataset.confirmar;
@@ -378,6 +398,7 @@ document.addEventListener('submit', (ev) => {
 // Inicialización general al cargar el DOM
 document.addEventListener('DOMContentLoaded', () => {
   inicializarBannerCookies();
+  ajustarHojas();
   inicializarPestanasPorHash();
   inicializarReporteDinamico();
   inicializarCalculadoraCompra();

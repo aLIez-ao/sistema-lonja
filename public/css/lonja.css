@@ -379,24 +379,82 @@ td .btn-sm { padding: 0.3rem 0.55rem; line-height: 1; }
 }
 
 /* ==========================================================================
-   FACTURA VIRTUAL / COMPROBANTE EN PANTALLA
+   DOCUMENTOS OFICIALES EN PANTALLA (factura y reportes)
+   Hoja carta con las mismas medidas en puntos que los PDF generados con pdfkit
+   (helpers/facturaPdf.js): 612pt de ancho, márgenes de 40pt, Helvetica.
+   Siempre en blanco, sin depender del tema, igual que el PDF.
    ========================================================================== */
-.invoice-box {
-  background: #FFFFFF;
-  color: #1E293B;
-  border: 1px solid #CBD5E1;
-  border-radius: 12px;
-  padding: 2.5rem;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.06);
-  max-width: 820px;
+.hoja-visor { overflow-x: auto; padding-bottom: 0.5rem; }
+.hoja-carta {
+  box-sizing: border-box;
+  width: 612pt;
+  min-height: 500pt;
   margin: 0 auto;
+  padding: 40pt;
+  background: #FFFFFF;
+  color: #334155;
+  font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
+  font-size: 8.5pt;
+  line-height: 1.25;
+  border: 1px solid #CBD5E1;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.10);
+  text-align: left;
 }
+.hoja-franja { height: 6pt; background: #0B3954; }
+.hoja-caja { background: #F1F5F9; border: 0.75pt solid #CBD5E1; border-radius: 6pt; }
+.hoja-caja-titulo { color: #0B3954; font-weight: 700; letter-spacing: 0.4pt; }
+.hoja-carta .der { text-align: right; }
+.hoja-carta .fuerte { font-weight: 700; }
+.hoja-carta .marino { color: #0B3954; }
+.hoja-carta .tenue { color: #64748B; }
+.hoja-carta .mono { font-family: "Courier New", Courier, monospace; font-size: 6.5pt; color: #64748B; word-break: break-all; }
 
-.invoice-header {
-  border-bottom: 2px solid #0B3954;
-  padding-bottom: 1.25rem;
-  margin-bottom: 1.5rem;
+.hoja-tabla { width: 100%; border-collapse: collapse; table-layout: fixed; }
+.hoja-tabla th {
+  background: #0B3954; color: #FFFFFF; font-size: 8pt; font-weight: 700;
+  padding: 0 8pt; height: 22pt; text-align: left; white-space: nowrap;
 }
+.hoja-tabla td { border: 0.75pt solid #CBD5E1; padding: 6pt 8pt; vertical-align: middle; background: #FFFFFF; }
+
+.factura-encabezado { display: flex; justify-content: space-between; align-items: flex-start; margin-top: 10pt; }
+.factura-logo { height: 46pt; width: auto; display: block; }
+.factura-lema { color: #087E8B; font-weight: 700; font-size: 9pt; margin-top: 8pt; }
+.factura-emisor { font-size: 7.5pt; line-height: 10pt; margin-top: 3pt; }
+.factura-folio { width: 192pt; border: 0.75pt solid #CBD5E1; border-radius: 6pt; overflow: hidden; flex-shrink: 0; }
+.factura-folio-titulo { background: #0B3954; color: #FFFFFF; font-weight: 700; font-size: 10pt; letter-spacing: 0.6pt; text-align: center; height: 22pt; line-height: 22pt; }
+.factura-folio-fila { display: flex; justify-content: space-between; margin: 0 12pt; padding: 5pt 0; }
+.factura-folio-fila.borde { border-bottom: 0.5pt solid #CBD5E1; }
+.factura-folio-fila span { color: #64748B; font-weight: 700; }
+.factura-folio-fila strong { color: #0B3954; }
+.factura-folio-fila em { font-style: normal; }
+
+.factura-receptor { margin-top: 12pt; padding: 9pt 12pt; min-height: 62pt; }
+.factura-receptor-cols { display: flex; gap: 18pt; margin-top: 5pt; line-height: 12pt; }
+.factura-receptor-cols > div { flex: 1; min-width: 0; }
+.factura-receptor-cols > div > div { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.factura-receptor-cols span { color: #64748B; }
+
+.factura-tabla { margin-top: 16pt; }
+.factura-tabla td { height: 40pt; }
+.factura-tabla .nota { font-size: 7pt; color: #64748B; margin-top: 2pt; }
+
+.factura-resumen { display: flex; justify-content: space-between; align-items: stretch; margin-top: 14pt; }
+.factura-notas { width: 320pt; padding: 9pt 10pt; font-size: 7.5pt; }
+.factura-notas .hoja-caja-titulo { font-size: 8pt; margin-bottom: 4pt; }
+.factura-notas > div + div { margin-top: 2pt; }
+.factura-totales { width: 197pt; padding: 8pt 12pt; }
+.factura-totales .fila { display: flex; justify-content: space-between; padding: 2pt 0; }
+.factura-totales .fila span { color: #64748B; }
+.factura-totales .fila b { font-weight: 400; }
+.factura-totales .fila.borde { border-bottom: 0.5pt solid #CBD5E1; padding-bottom: 6pt; }
+.factura-totales .fila.total { padding-top: 7pt; color: #0B3954; font-weight: 700; font-size: 10pt; align-items: baseline; }
+.factura-totales .fila.total span { color: #0B3954; }
+.factura-totales .fila.total strong { font-size: 11pt; }
+
+.factura-sello { margin-top: 18pt; border-top: 0.75pt solid #CBD5E1; padding-top: 9pt; }
+.factura-sello .etiqueta { font-weight: 700; font-size: 7.5pt; margin-bottom: 2pt; }
+.factura-sello .mono + .etiqueta { margin-top: 8pt; }
+.factura-sello .leyenda { text-align: center; font-style: italic; font-size: 7.5pt; color: #64748B; margin-top: 14pt; }
 
 /* ==========================================================================
    DISEÑO RESPONSIVO (MÓVIL Y TABLET)
@@ -443,18 +501,15 @@ td .btn-sm { padding: 0.3rem 0.55rem; line-height: 1; }
 
 }
 
-/* Modo Impresión */
+/* Modo Impresión: la hoja ocupa la página tal cual, sin sombras ni marco */
+@page { size: letter; margin: 0; }
 @media print {
-  .navbar-lonja, .cookie-consent-bar, footer, .d-print-none {
-    display: none !important;
-  }
-  body {
-    background: #FFFFFF !important;
-    color: #000000 !important;
-  }
-  .card, .invoice-box {
-    box-shadow: none !important;
-    border: none !important;
-    padding: 0 !important;
-  }
+  .navbar-lonja, .cookie-consent-bar, footer, .d-print-none { display: none !important; }
+  html { font-size: 12px; }
+  body { background: #FFFFFF !important; color: #000000 !important; display: block; min-height: 0; }
+  main.container { max-width: none; padding: 0 !important; margin: 0; }
+  .hoja-visor { overflow: visible; padding: 0; }
+  .hoja-carta { border: none; box-shadow: none; margin: 0 auto; min-height: 0; }
+  .hoja-carta, .hoja-carta * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .card { box-shadow: none !important; }
 }
