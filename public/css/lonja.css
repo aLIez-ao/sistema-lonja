@@ -481,7 +481,7 @@ td .btn-sm { padding: 0.3rem 0.55rem; line-height: 1; }
 /* ==========================================================================
    DISEÑO RESPONSIVO (MÓVIL Y TABLET)
    ========================================================================== */
-@media (max-width: 991.98px) {
+@media (max-width: 1199.98px) {
   .navbar-lonja .navbar-collapse {
     background: var(--lonja-surface);
     border-radius: 12px;

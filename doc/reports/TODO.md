@@ -21,13 +21,15 @@ Decisiones que se tomaron con un supuesto razonable; confirmar o corregir:
 - [ ] Comprobar contraste, foco de teclado y navegación móvil con datos reales.
 - [ ] Verificar que la impresión del reporte diario conserve una jerarquía clara.
 - [ ] Probar contra MariaDB real y ajustar si hay diferencias.
-- [ ] Límite de intentos de login (`express-rate-limit`).
+- [x] Límite de intentos de login y de recuperación (en memoria, `helpers/seguridad.js`).
 - [ ] Token CSRF propio y cabeceras con `helmet`.
-- [ ] Recuperación de contraseña y cambio de contraseña por el propio usuario.
+- [x] Recuperación de contraseña y cambio de contraseña por el propio usuario.
 - [ ] Paginación en listas (compras, lotes) cuando crezcan.
 - [ ] Migraciones (Sequelize CLI / umzug) en lugar de `sync`.
 - [ ] Bitácora de auditoría (quién registró/modificó/eliminó cada compra).
 - [ ] Subida de imágenes de especies (multer) si se confirma el punto 5.
-- [ ] Reporte en PDF y por rango de fechas.
+- [x] Reporte anual en PDF (`/reportes/anual.pdf`). Pendiente: rango de fechas libre.
 - [ ] Dockerfile / docker-compose con MariaDB.
 - [ ] Prueba en dispositivos móviles.
+- [ ] Servir las fuentes (Inter/Roboto) localmente: hoy se cargan de Google Fonts y no funcionan sin internet.
+- [ ] El límite de intentos vive en memoria: con varias instancias del servidor habría que moverlo a la BD o a Redis.

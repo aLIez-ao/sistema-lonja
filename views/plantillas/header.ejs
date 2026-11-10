@@ -23,7 +23,7 @@
     const activo = (ruta) => (rutaActual || '').startsWith(ruta) ? 'active' : '';
   %>
 
-  <nav class="navbar navbar-expand-lg navbar-lonja d-print-none">
+  <nav class="navbar navbar-expand-xl navbar-lonja d-print-none">
     <div class="container-fluid px-lg-4">
       <!-- El logo redirige al inicio -->
       <a class="navbar-brand" href="<%= usuario ? '/inicio' : '/' %>" title="Lonja de Veracruz">
@@ -37,7 +37,7 @@
         </button>
 
         <div class="collapse navbar-collapse" id="menuPrincipal">
-          <ul class="navbar-nav me-auto mb-2 mb-lg-0 ms-lg-3">
+          <ul class="navbar-nav me-auto mb-2 mb-xl-0 ms-xl-3">
             <li class="nav-item"><a class="nav-link <%= activo('/compras') %>" href="/compras"><%= t('compras') %></a></li>
             <li class="nav-item"><a class="nav-link <%= activo('/lotes') %>" href="/lotes"><%= t('lotes') %></a></li>
             <li class="nav-item"><a class="nav-link <%= activo('/especies') %>" href="/especies"><%= t('especies') %></a></li>
@@ -49,7 +49,7 @@
             <% } %>
           </ul>
 
-          <div class="d-flex align-items-center gap-2 flex-wrap">
+          <div class="d-flex align-items-center gap-2 flex-nowrap">
             <!-- Moneda -->
             <div class="dropdown">
               <button class="btn btn-sm btn-outline-secondary dropdown-toggle rounded-pill py-1 px-2" type="button" data-bs-toggle="dropdown" title="<%= t('moneda') %>">

@@ -8,7 +8,7 @@ Proyecto de **Web 2** (FES Aragón, UNAM) · Entrega: **12 de noviembre de 2026*
 |---|---|
 | 1. Registro y almacenamiento de compras diarias | Lotes, especies, tipos, compradores y compras, con validación en servidor. El total lo calcula el servidor (kilos × precio final por kilo). |
 | 2. Control de acceso | Login con contraseñas bcrypt y sesión JWT en cookie `httpOnly`. Roles **admin** y **capturista**; solo el admin gestiona usuarios y borra registros. |
-| 3. Reporte diario | `/reportes/diario`: detalle, totales, resumen por comprador, CSV e impresión. |
+| 3. Reportes | `/reportes/diario`: selector de año, tablero con gráficas, compras por mes enlazadas a su factura, CSV y reporte oficial en PDF. |
 
 Esquema relacional del cliente: `tipo`, `especie`, `lote`, `compra`, `comprador` (+ `usuario`). Ver [doc/base-de-datos.md](doc/base-de-datos.md).
 
@@ -42,7 +42,7 @@ Datos de ejemplo: `npm run demo` · Pruebas: `npm test` (usan SQLite en memoria)
 1. **Compradores** → registrar a quien compra. **Tipos** → catálogo (Pescado, Marisco…).
 2. **Lotes → Nuevo lote** (kilos, cajas, precio de salida) → agregar sus **especies**.
 3. En la lista de lotes, **Vender** → elegir comprador y precio final por kilo. El total se calcula solo.
-4. **Reporte diario** → elegir fecha, ver totales, descargar CSV o imprimir.
+4. **Reportes** → elegir año, revisar el tablero y las compras de cada mes, descargar CSV o el reporte oficial en PDF.
 
 ## Estructura
 ```

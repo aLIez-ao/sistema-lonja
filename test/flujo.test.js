@@ -198,7 +198,9 @@ test("todas las pantallas del administrador renderizan (200)", async () => {
   for (const ruta of rutas) assert.equal((await admin.get(ruta)).status, 200, ruta);
 });
 
-test("cerrar sesión borra la cookie", async () => {
+test("cerrar sesión borra la cookie y las páginas privadas no quedan en caché (botón atrás)", async () => {
+  const privada = await admin.get("/compras");
+  assert.match(privada.headers.get("cache-control"), /no-store/);
   const r = await admin.post("/cerrarsesion", {});
   assert.equal(r.status, 302);
   assert.equal((await admin.get("/inicio")).status, 302);
