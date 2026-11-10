@@ -139,23 +139,31 @@ test("editar la compra cambia el total", async () => {
   assert.equal(Number((await Compra.findOne({ where: { id_cmp: loteId } })).precio_total), 6025);
 });
 
-test("reporte diario muestra la compra de hoy, totales y CSV", async () => {
+test("reporte por año: tablero, compras por mes con enlace a su compra, CSV y PDF", async () => {
   const r = await capt.get("/reportes/diario");
   assert.equal(r.status, 200);
+  assert.match(r.texto, /id="selectorAnio"/);
   assert.match(r.texto, /Huachinango/);
   assert.match(r.texto, /Ana López Ruiz/);
   assert.match(r.texto, /6,025\.00/);
+  const compra = await Compra.findOne();
+  assert.match(r.texto, new RegExp(`href="/compras/${compra.id_cmp}/factura"`));
 
-  const vacio = await capt.get("/reportes/diario?fecha=2020-01-01");
-  assert.match(vacio.texto, /No hay compras/);
+  // un año sin compras cae al más reciente disponible en vez de romper
+  assert.equal((await capt.get("/reportes/diario?anio=1990")).status, 200);
+  assert.equal((await capt.get("/reportes/diario?anio=basura")).status, 200);
 
   const csv = await capt.get("/reportes/diario.csv");
   assert.match(csv.headers.get("content-type"), /text\/csv/);
   assert.match(csv.texto, /Huachinango \(Pescado\)/);
   assert.match(csv.texto, /TOTAL/);
+  const csvAnual = await capt.get(`/reportes/diario.csv?anio=${new Date().getFullYear()}`);
+  assert.match(csvAnual.texto, /"Mes","Fecha"/);
 
-  // fecha inválida cae a hoy en vez de romper
-  assert.equal((await capt.get("/reportes/diario?fecha=basura")).status, 200);
+  const pdf = await fetch(base + "/reportes/anual.pdf", { headers: { cookie: capt.cookie } });
+  assert.equal(pdf.status, 200);
+  assert.match(pdf.headers.get("content-type"), /application\/pdf/);
+  assert.equal(Buffer.from(await pdf.arrayBuffer()).subarray(0, 4).toString(), "%PDF");
 });
 
 test("XSS: los datos se escapan en las vistas", async () => {

@@ -1,11 +1,12 @@
 import express from "express";
-import { diario, diarioAPI, fechasConComprasAPI, diarioCsv } from "../controllers/reporteController.js";
+import { anual, anualPdf, reporteCsv } from "../controllers/reporteController.js";
 
 const router = express.Router();
 
-router.get("/diario", diario);
-router.get("/diario.csv", diarioCsv);
-router.get("/api/diario", diarioAPI);
-router.get("/api/fechas-con-compras", fechasConComprasAPI);
+// /reportes/diario se conserva como dirección de entrada (enlaces y marcadores existentes)
+router.get("/", (req, res) => res.redirect("/reportes/diario"));
+router.get("/diario", anual);
+router.get("/anual.pdf", anualPdf);
+router.get("/diario.csv", reporteCsv);
 
 export default router;

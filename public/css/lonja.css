@@ -241,6 +241,10 @@ main.container {
   letter-spacing: 0.05em;
 }
 
+.grafica { position: relative; height: 260px; }
+.grafica-baja { height: 200px; }
+.accordion { --bs-accordion-bg: var(--lonja-surface); --bs-accordion-color: var(--lonja-text); --bs-accordion-border-color: var(--lonja-border); --bs-accordion-btn-color: var(--lonja-text); --bs-accordion-active-bg: var(--lonja-surface-subtle); --bs-accordion-active-color: var(--lonja-text); --bs-accordion-btn-focus-box-shadow: 0 0 0 3px rgba(8, 126, 139, 0.15); }
+
 /* ==========================================================================
    BOTONES E INPUTS
    ========================================================================== */

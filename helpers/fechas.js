@@ -24,3 +24,20 @@ export const dinero = (n) =>
   new Intl.NumberFormat("es-MX", { style: "currency", currency: "MXN" }).format(Number(n) || 0);
 
 export const redondea = (n) => Math.round((Number(n) + Number.EPSILON) * 100) / 100;
+
+/** Año, mes (1-12) y día de una fecha en la zona horaria de la lonja. */
+export const partesFecha = (d) => {
+  const [anio, mes, dia] = new Intl.DateTimeFormat("en-CA", { timeZone: tz() }).format(new Date(d)).split("-").map(Number);
+  return { anio, mes, dia };
+};
+
+/** Inicio (incluido) y fin (excluido) de un año en la zona horaria de la lonja. */
+export const rangoDelAnio = (anio) => ({
+  inicio: new Date(`${anio}-01-01T00:00:00${offset()}`),
+  fin: new Date(`${Number(anio) + 1}-01-01T00:00:00${offset()}`),
+});
+
+export const formatoFecha = (d) =>
+  new Intl.DateTimeFormat("es-MX", { timeZone: tz(), day: "2-digit", month: "2-digit", year: "numeric" }).format(new Date(d));
+
+export const NOMBRES_MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
