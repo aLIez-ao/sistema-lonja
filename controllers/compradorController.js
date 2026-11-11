@@ -3,6 +3,7 @@ import { literal } from "sequelize";
 import { Comprador, Compra } from "../models/index.js";
 import { mensajesError, mensajeBD, aMensaje } from "../helpers/utiles.js";
 import { leerListado, consultarListado } from "../helpers/listado.js";
+import { condicionBusqueda } from "../helpers/busqueda.js";
 
 const reglas = [
   body("nombre").trim().notEmpty().withMessage("El nombre es obligatorio").isLength({ max: 15 }).withMessage("Nombre: máximo 15 caracteres"),
@@ -37,6 +38,7 @@ const lista = async (req, res) => {
     pk: "codigo_cpr",
     include: [{ model: Compra, as: "compras", attributes: ["id_cmp"] }],
     includeOrden: [],
+    where: await condicionBusqueda("compradores", l.q),
     orden: ORDEN,
   });
   res.render("compradores/index", { l, compradores: l.filas, mensaje: req.query.mensaje });

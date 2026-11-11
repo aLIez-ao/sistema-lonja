@@ -370,6 +370,25 @@ main.container {
 /* Botones de acción de las tablas: solo icono, mismo tamaño en todas */
 td .btn-sm { padding: 0.3rem 0.55rem; line-height: 1; }
 
+/* Barra de búsqueda de los listados */
+.barra-listado { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; }
+.barra-listado .buscador { min-width: 14rem; max-width: 30rem; }
+.barra-listado .form-control-sm { padding: 0.4rem 0.7rem; font-size: 0.9rem; border-radius: 8px; }
+
+.lista-sugerencias {
+  position: absolute;
+  z-index: 1055;
+  top: calc(100% + 2px);
+  left: 0;
+  right: 0;
+  max-height: 18rem;
+  overflow-y: auto;
+  margin: 0;
+  border-radius: 8px;
+}
+.lista-sugerencias .list-group-item { cursor: pointer; }
+.lista-sugerencias mark { padding: 0 0.1em; background-color: rgba(0, 166, 251, 0.25); color: inherit; border-radius: 2px; }
+
 .table-hover tbody tr:hover {
   background-color: var(--lonja-surface-subtle);
 }

@@ -15,6 +15,7 @@ import router_compra from "./routes/compra_router.js";
 import router_reporte from "./routes/reporte_router.js";
 import router_usuario from "./routes/usuario_router.js";
 import router_configuracion from "./routes/configuracion_router.js";
+import router_busqueda from "./routes/busqueda_router.js";
 import { dinero, formatoFechaHora } from "./helpers/fechas.js";
 import { icono } from "./helpers/iconos.js";
 
@@ -72,6 +73,7 @@ app.use("/especies", rutaProteger, router_especie);
 app.use("/compras", rutaProteger, router_compra);
 app.use("/reportes", rutaProteger, router_reporte);
 app.use("/configuracion", rutaProteger, router_configuracion);
+app.use("/buscar", rutaProteger, router_busqueda);
 
 // Solo administrador
 app.use("/usuarios", rutaProteger, permitir("admin"), router_usuario);

@@ -5,6 +5,7 @@ import { problemasPassword, passwordInutilizable } from "../helpers/seguridad.js
 import { aplicarFoto, borrarFoto } from "../helpers/avatar.js";
 import { enviarEnlacePassword, enviarVerificacionCorreo, resumenEnvio } from "../helpers/cuentas.js";
 import { leerListado, consultarListado } from "../helpers/listado.js";
+import { condicionBusqueda } from "../helpers/busqueda.js";
 
 const reglas = [
   body("usuario").trim().isLength({ min: 3, max: 40 }).withMessage("El usuario debe tener entre 3 y 40 caracteres").matches(/^[\w.-]+$/).withMessage("El usuario solo admite letras, números, punto, guion y guion bajo"),
@@ -46,6 +47,7 @@ const lista = async (req, res) => {
     pk: "id",
     include: [],
     includeOrden: [],
+    where: await condicionBusqueda("usuarios", l.q),
     orden: ORDEN,
   });
   res.render("usuarios/index", { l, usuarios: l.filas, nombreRol: NOMBRE_ROL, mensaje: req.query.mensaje, error: req.query.error });

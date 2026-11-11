@@ -7,6 +7,7 @@ import { generarFacturaPDF } from "../helpers/facturaPdf.js";
 import { datosFactura } from "../helpers/factura.js";
 import { enviarEmailComprobanteCompra } from "../helpers/email.js";
 import { leerListado, consultarListado } from "../helpers/listado.js";
+import { condicionBusqueda } from "../helpers/busqueda.js";
 
 const reglas = [
   body("precio_kilo_final").isFloat({ gt: 0, max: 99999999 }).withMessage("El precio final por kilo debe ser un número mayor a 0"),
@@ -55,6 +56,7 @@ const lista = async (req, res) => {
     pk: "id_cmp",
     include: incluye,
     includeOrden: [{ model: Comprador, as: "comprador" }, { model: Lote, as: "lote" }],
+    where: await condicionBusqueda("compras", l.q),
     orden: ORDEN,
   });
   res.render("compras/index", {

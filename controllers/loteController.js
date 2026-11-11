@@ -3,6 +3,7 @@ import { literal } from "sequelize";
 import { Lote, Especie, Tipo, Compra, Comprador } from "../models/index.js";
 import { mensajesError, mensajeBD, aMensaje } from "../helpers/utiles.js";
 import { leerListado, consultarListado } from "../helpers/listado.js";
+import { condicionBusqueda } from "../helpers/busqueda.js";
 
 const reglas = [
   body("kilos").isFloat({ gt: 0, max: 99999999 }).withMessage("Los kilos deben ser un número mayor a 0"),
@@ -34,6 +35,7 @@ const lista = async (req, res) => {
       { model: Compra, as: "compra", include: [{ model: Comprador, as: "comprador" }] },
     ],
     includeOrden: [],
+    where: await condicionBusqueda("lotes", l.q),
     orden: ORDEN,
   });
   res.render("lotes/index", { l, lotes: l.filas, mensaje: req.query.mensaje });
