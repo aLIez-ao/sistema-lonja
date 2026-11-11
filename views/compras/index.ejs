@@ -11,7 +11,7 @@
   </a>
 </div>
 
-<%- include('../plantillas/mensajes', { errores: [] }) %>
+<%- include('../plantillas/mensajes', { errores: (typeof error !== 'undefined' && error) ? [error] : [] }) %>
 
 <%- include('../plantillas/barra-listado', { l, entidad: 'compras', etiqueta: 'compras' }) %>
 
@@ -41,9 +41,14 @@
         <% compras.forEach(c => { %>
           <tr>
             <td data-sort-value="<%= new Date(c.fecha).getTime() %>"><%= fechaHora(c.fecha) %></td>
-            <td><span class="badge bg-secondary">#<%= c.id_cmp %></span></td>
-            <td><strong><%= c.lote.especies.map(e => e.nombre).join(', ') || '—' %></strong></td>
-            <td><%= c.comprador.nombre %> <%= c.comprador.apellido_paterno %></td>
+            <td><a class="enlace-registro" href="/lotes/<%= c.id_cmp %>"><span class="badge bg-secondary">#<%= c.id_cmp %></span></a></td>
+            <td>
+              <% (c.lote.especies || []).forEach((e, i) => { %>
+                <a class="enlace-registro" href="/especies/<%= e.id_epe %>"><%= e.nombre %></a><%= i < c.lote.especies.length - 1 ? ', ' : '' %>
+              <% }) %>
+              <% if (!(c.lote.especies || []).length) { %>—<% } %>
+            </td>
+            <td><a class="enlace-registro" href="/compradores/<%= c.comprador.codigo_cpr %>"><%= c.comprador.nombre %> <%= c.comprador.apellido_paterno %></a></td>
             <td class="text-end"><%= Number(c.lote.kilos).toFixed(2) %> kg</td>
             <td class="text-end"><%= dinero(c.precio_kilo_final) %></td>
             <td class="text-end text-primary fw-bold"><%= dinero(c.precio_total) %></td>

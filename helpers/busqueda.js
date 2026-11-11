@@ -156,7 +156,7 @@ export async function sugerencias(entidad, q, usuario) {
         id: c.id_cmp,
         titulo: `Compra #${c.id_cmp} · ${c.comprador.nombre} ${c.comprador.apellido_paterno}`,
         subtitulo: `${formatoFechaHora(c.fecha)} · ${dinero(c.precio_total)}`,
-        url: `/compras/${c.id_cmp}/editar`,
+        url: `/compras/${c.id_cmp}/factura`,
       }));
     }
 
@@ -176,7 +176,7 @@ export async function sugerencias(entidad, q, usuario) {
           id: l.id_lte,
           titulo: `Lote #${l.id_lte}${especies ? ` · ${especies}` : ""}`,
           subtitulo: `${Number(l.kilos).toFixed(2)} kg · ${l.compra ? "vendido" : "disponible"}`,
-          url: `/lotes/${l.id_lte}/editar`,
+          url: `/lotes/${l.id_lte}`,
         };
       });
     }
@@ -192,7 +192,7 @@ export async function sugerencias(entidad, q, usuario) {
         id: e.id_epe,
         titulo: e.nombre,
         subtitulo: `${e.tipo.nombre} · Lote #${e.id_lte}`,
-        url: `/especies/${e.id_epe}/editar`,
+        url: `/especies/${e.id_epe}`,
       }));
     }
 
@@ -206,7 +206,7 @@ export async function sugerencias(entidad, q, usuario) {
         id: c.codigo_cpr,
         titulo: `${c.nombre} ${c.apellido_paterno} ${c.apellido_materno ?? ""}`.trim(),
         subtitulo: c.correo,
-        url: `/compradores/${c.codigo_cpr}/editar`,
+        url: `/compradores/${c.codigo_cpr}`,
       }));
     }
 
@@ -220,7 +220,7 @@ export async function sugerencias(entidad, q, usuario) {
         id: tp.id_tpo,
         titulo: tp.nombre,
         subtitulo: "Tipo de especie",
-        url: `/tipos/${tp.id_tpo}/editar`,
+        url: `/tipos/${tp.id_tpo}`,
       }));
     }
 

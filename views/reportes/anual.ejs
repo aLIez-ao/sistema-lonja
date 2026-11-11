@@ -145,7 +145,7 @@
                   <td data-sort-value="<%= f.marca %>" class="text-nowrap"><%= f.fecha %> <span class="text-muted small"><%= f.hora %></span></td>
                   <td><a class="fw-semibold text-decoration-none" href="/compras/<%= f.id_cmp %>/factura" title="Abrir la compra del lote #<%= f.lote %>">Lote #<%= f.lote %></a></td>
                   <td><%= f.especies %></td>
-                  <td><%= f.comprador %></td>
+                  <td><a class="enlace-registro" href="/compradores/<%= f.codigo_cpr %>"><%= f.comprador %></a></td>
                   <td class="text-end"><%= f.cajas %></td>
                   <td class="text-end"><%= f.kilos.toFixed(2) %></td>
                   <td class="text-end"><%= dinero(f.precio_final) %></td>

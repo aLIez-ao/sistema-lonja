@@ -9,7 +9,7 @@
     <%= t('registrar_lote') %>
   </a>
 </div>
-<%- include('../plantillas/mensajes', { errores: [] }) %>
+<%- include('../plantillas/mensajes', { errores: (typeof error !== 'undefined' && error) ? [error] : [] }) %>
 <%- include('../plantillas/barra-listado', { l, entidad: 'lotes', etiqueta: 'lotes' }) %>
 <div class="card overflow-hidden">
   <div class="table-responsive">
@@ -39,7 +39,10 @@
           <td><span class="badge bg-secondary">#<%= lote.id_lte %></span></td>
           <td data-sort-value="<%= new Date(lote.fecha).getTime() %>"><%= fechaHora(lote.fecha) %></td>
           <td>
-            <strong><%= lote.especies.map(e => e.nombre + ' (' + e.tipo.nombre + ')').join(', ') || '—' %></strong>
+            <% (lote.especies || []).forEach((e, i) => { %>
+              <a class="enlace-registro" href="/especies/<%= e.id_epe %>"><%= e.nombre %> (<%= e.tipo.nombre %>)</a><%= i < lote.especies.length - 1 ? ', ' : '' %>
+            <% }) %>
+            <% if (!(lote.especies || []).length) { %>—<% } %>
             <a class="small text-decoration-none ms-1" href="/especies/crear?lote=<%= lote.id_lte %>">+ especie</a>
           </td>
           <td class="text-end"><%= lote.numero_cajas %></td>
@@ -47,7 +50,9 @@
           <td class="text-end text-muted"><%= dinero(lote.precio_kilo_salida) %></td>
           <td>
             <% if (lote.compra) { %>
-              <span class="badge bg-success">Comprado por <%= lote.compra.comprador.nombre %> <%= lote.compra.comprador.apellido_paterno %></span>
+              <span class="badge bg-success">Vendido</span>
+              <a class="enlace-registro small ms-1" href="/compradores/<%= lote.compra.comprador.codigo_cpr %>">a <%= lote.compra.comprador.nombre %> <%= lote.compra.comprador.apellido_paterno %></a>
+              <a class="enlace-registro small ms-1" href="/compras/<%= lote.compra.id_cmp %>/factura">#<%= lote.compra.id_cmp %></a>
             <% } else { %>
               <span class="badge bg-warning text-dark">Disponible</span>
             <% } %>

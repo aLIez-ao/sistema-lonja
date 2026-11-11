@@ -1,7 +1,7 @@
 import { body } from "express-validator";
 import { col } from "sequelize";
-import { Especie, Lote, Tipo } from "../models/index.js";
-import { mensajesError, mensajeBD, aMensaje } from "../helpers/utiles.js";
+import { Especie, Lote, Tipo, Compra } from "../models/index.js";
+import { mensajesError, mensajeBD, aMensaje, aError } from "../helpers/utiles.js";
 import { leerListado, consultarListado, combinarWhere } from "../helpers/listado.js";
 import { condicionBusqueda } from "../helpers/busqueda.js";
 import { condicionFiltros, filtroEntero, filtroLista } from "../helpers/filtros.js";
@@ -71,6 +71,7 @@ const lista = async (req, res) => {
       },
     ],
     mensaje: req.query.mensaje,
+    error: req.query.error,
   });
 };
 
@@ -96,6 +97,22 @@ const editar = async (req, res) => {
   res.render("especies/formulario", { especie, action: `/especies/${especie.id_epe}?_method=PUT`, errores: [], mensaje: null, ...(await catalogos()) });
 };
 
+/** Detalle de solo lectura: datos, tipo, lote y estado del lote. */
+const detalle = async (req, res) => {
+  const especie = await Especie.findByPk(req.params.id, {
+    include: [
+      { model: Tipo, as: "tipo" },
+      { model: Lote, as: "lote", include: [{ model: Compra, as: "compra" }] },
+    ],
+  });
+  if (!especie) return res.redirect(`/especies?${aError("No se encontró el registro")}`);
+  res.render("especies/detalle", {
+    especie,
+    mensaje: req.query.mensaje,
+    error: req.query.error,
+  });
+};
+
 const actualizar = async (req, res) => {
   const especie = await Especie.findByPk(req.params.id);
   if (!especie) return res.redirect("/especies");
@@ -114,4 +131,4 @@ const eliminar = async (req, res) => {
   res.redirect(`/especies?${aMensaje("Especie eliminada")}`);
 };
 
-export { reglas, lista, verCrear, registrar, editar, actualizar, eliminar };
+export { reglas, lista, verCrear, registrar, detalle, editar, actualizar, eliminar };

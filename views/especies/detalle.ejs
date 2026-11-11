@@ -1,0 +1,62 @@
+<%- include('../plantillas/header') %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <div>
+    <a href="/especies" class="btn btn-sm btn-outline-secondary mb-2"><%- icono('arrow-left', 14, 'me-1') %>Volver a la lista</a>
+    <h1 class="h3 mb-0 fw-bold"><%= especie.nombre %></h1>
+    <p class="text-muted small mb-0">Especie #<%= especie.id_epe %></p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a class="btn btn-primary" href="/especies/<%= especie.id_epe %>/editar">
+      <%- icono('pencil', 16, 'me-1') %>Editar
+    </a>
+    <% if (usuario.rol === 'admin') { %>
+      <form action="/especies/<%= especie.id_epe %>?_method=DELETE" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar esta especie?')">
+        <button class="btn btn-outline-danger" type="submit"><%- icono('trash', 16, 'me-1') %>Eliminar</button>
+      </form>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../plantillas/mensajes', { errores: (typeof error !== 'undefined' && error) ? [error] : [] }) %>
+
+<div class="row g-3">
+  <div class="col-lg-8">
+    <div class="card h-100">
+      <div class="card-header"><h2 class="h6 mb-0 fw-bold">Datos de la especie</h2></div>
+      <div class="card-body">
+        <dl class="row mb-0">
+          <dt class="col-sm-4">Tipo</dt>
+          <dd class="col-sm-8"><a class="enlace-registro" href="/tipos/<%= especie.tipo.id_tpo %>"><%= especie.tipo.nombre %></a></dd>
+          <dt class="col-sm-4">Lote</dt>
+          <dd class="col-sm-8"><a class="enlace-registro" href="/lotes/<%= especie.lote.id_lte %>">Lote #<%= especie.lote.id_lte %></a></dd>
+          <dt class="col-sm-4">Fecha del lote</dt>
+          <dd class="col-sm-8"><%= fechaHora(especie.lote.fecha) %></dd>
+          <dt class="col-sm-4">Estado del lote</dt>
+          <dd class="col-sm-8 mb-0">
+            <% if (especie.lote.compra) { %>
+              <span class="badge bg-success">Vendido</span>
+              <a class="enlace-registro ms-2" href="/compras/<%= especie.lote.compra.id_cmp %>/factura">Ver factura</a>
+            <% } else { %>
+              <span class="badge bg-warning text-dark">Disponible</span>
+            <% } %>
+          </dd>
+        </dl>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card h-100">
+      <div class="card-header"><h2 class="h6 mb-0 fw-bold">Imagen</h2></div>
+      <div class="card-body text-center">
+        <% if (especie.imagen) { %>
+          <img src="<%= especie.imagen %>" alt="<%= especie.nombre %>" class="img-fluid rounded border" onerror="this.style.display='none'">
+        <% } else { %>
+          <p class="text-muted mb-0">Sin imagen registrada.</p>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<%- include('../plantillas/footer') %>

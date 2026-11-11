@@ -1,0 +1,124 @@
+<%- include('../plantillas/header') %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <div>
+    <a href="/lotes" class="btn btn-sm btn-outline-secondary mb-2"><%- icono('arrow-left', 14, 'me-1') %>Volver a la lista</a>
+    <h1 class="h3 mb-0 fw-bold">Lote #<%= lote.id_lte %></h1>
+    <p class="text-muted small mb-0">
+      <% if (lote.compra) { %>
+        Vendido a <a class="enlace-registro" href="/compradores/<%= lote.compra.comprador.codigo_cpr %>"><%= lote.compra.comprador.nombre %> <%= lote.compra.comprador.apellido_paterno %></a>
+        · <a class="enlace-registro" href="/compras/<%= lote.compra.id_cmp %>/factura">Factura #<%= lote.compra.id_cmp %></a>
+      <% } else { %>
+        Lote disponible para subasta
+      <% } %>
+    </p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <% if (!lote.compra) { %>
+      <a class="btn btn-primary" href="/compras/crear?lote=<%= lote.id_lte %>">
+        <%- icono('cart-plus', 16, 'me-1') %>Vender
+      </a>
+      <a class="btn btn-outline-secondary" href="/lotes/<%= lote.id_lte %>/editar">
+        <%- icono('pencil', 16, 'me-1') %>Editar
+      </a>
+    <% } else { %>
+      <a class="btn btn-primary" href="/compras/<%= lote.compra.id_cmp %>/factura">
+        <%- icono('receipt', 16, 'me-1') %>Ver factura
+      </a>
+    <% } %>
+    <% if (usuario.rol === 'admin' && !lote.compra) { %>
+      <form action="/lotes/<%= lote.id_lte %>?_method=DELETE" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este lote y sus especies?')">
+        <button class="btn btn-outline-danger" type="submit"><%- icono('trash', 16, 'me-1') %>Eliminar</button>
+      </form>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../plantillas/mensajes', { errores: (typeof error !== 'undefined' && error) ? [error] : [] }) %>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-xl-3">
+    <div class="metric-card">
+      <div class="metric-label">Kilos</div>
+      <div class="metric-value"><%= Number(lote.kilos).toFixed(2) %></div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="metric-card">
+      <div class="metric-label">Cajas</div>
+      <div class="metric-value"><%= lote.numero_cajas %></div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="metric-card">
+      <div class="metric-label">Precio salida/kg</div>
+      <div class="metric-value"><%= dinero(lote.precio_kilo_salida) %></div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="metric-card">
+      <div class="metric-label">Estado</div>
+      <div class="metric-value metric-estado">
+        <% if (lote.compra) { %>
+          <span class="badge bg-success">Vendido</span>
+        <% } else { %>
+          <span class="badge bg-warning text-dark">Disponible</span>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header"><h2 class="h6 mb-0 fw-bold">Datos del lote</h2></div>
+  <div class="card-body">
+    <dl class="row mb-0">
+      <dt class="col-sm-3">Fecha de registro</dt>
+      <dd class="col-sm-9"><%= fechaHora(lote.fecha) %></dd>
+      <dt class="col-sm-3">Especies</dt>
+      <dd class="col-sm-9 mb-0"><%= lote.especies.length %></dd>
+    </dl>
+  </div>
+</div>
+
+<div class="card overflow-hidden">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h2 class="h6 mb-0 fw-bold">Especies del lote</h2>
+    <% if (!lote.compra) { %>
+      <a class="small text-decoration-none" href="/especies/crear?lote=<%= lote.id_lte %>">+ Agregar especie</a>
+    <% } %>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover table-striped align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Especie</th>
+          <th>Tipo</th>
+          <th>Imagen</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (!lote.especies.length) { %>
+          <tr>
+            <td colspan="3" class="text-center py-4 text-muted">Este lote todavía no tiene especies registradas.</td>
+          </tr>
+        <% } %>
+        <% lote.especies.forEach(e => { %>
+          <tr>
+            <td><a class="enlace-registro" href="/especies/<%= e.id_epe %>"><%= e.nombre %></a></td>
+            <td><a class="enlace-registro" href="/tipos/<%= e.tipo.id_tpo %>"><%= e.tipo.nombre %></a></td>
+            <td>
+              <% if (e.imagen) { %>
+                <img src="<%= e.imagen %>" alt="<%= e.nombre %>" height="38" class="rounded border" onerror="this.style.display='none'">
+              <% } else { %>
+                <span class="text-muted">—</span>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('../plantillas/footer') %>
