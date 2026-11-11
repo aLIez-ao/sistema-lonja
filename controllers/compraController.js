@@ -30,9 +30,31 @@ const catalogos = async (incluirId) => ({
   compradores: await Comprador.findAll({ order: [["apellido_paterno", "ASC"], ["nombre", "ASC"]] }),
 });
 
+const POR_PAGINA = [10, 25, 50, 100];
+
 const lista = async (req, res) => {
-  const compras = await Compra.findAll({ order: [["fecha", "DESC"]], limit: 200, include: incluye });
-  res.render("compras/index", { compras, mensaje: req.query.mensaje, error: req.query.error });
+  const tam = POR_PAGINA.includes(Number(req.query.tam)) ? Number(req.query.tam) : 25;
+  const total = await Compra.count();
+  const paginas = Math.max(1, Math.ceil(total / tam));
+  const pagina = Math.min(Math.max(1, parseInt(req.query.pagina, 10) || 1), paginas);
+  const compras = await Compra.findAll({
+    order: [["fecha", "DESC"], ["id_cmp", "DESC"]],
+    limit: tam,
+    offset: (pagina - 1) * tam,
+    include: incluye,
+  });
+  res.render("compras/index", {
+    compras,
+    total,
+    pagina,
+    paginas,
+    tam,
+    porPagina: POR_PAGINA,
+    inicio: total ? (pagina - 1) * tam + 1 : 0,
+    fin: Math.min(pagina * tam, total),
+    mensaje: req.query.mensaje,
+    error: req.query.error,
+  });
 };
 
 const verCrear = async (req, res) => {
