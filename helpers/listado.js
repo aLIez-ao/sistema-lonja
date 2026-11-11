@@ -8,6 +8,15 @@ import { Op } from "sequelize";
 
 const DIRECCIONES = ["asc", "desc"];
 
+/** Combina varios where ignorando los vacíos. */
+export function combinarWhere(...wheres) {
+  // Object.keys ignora las claves símbolo de Sequelize (Op.or, Op.and…),
+  // así que se cuentan también con Reflect.ownKeys.
+  const activos = wheres.filter((w) => w && Reflect.ownKeys(w).length);
+  if (!activos.length) return {};
+  return activos.length === 1 ? activos[0] : { [Op.and]: activos };
+}
+
 const aEntero = (valor) => {
   const n = parseInt(valor, 10);
   return Number.isInteger(n) ? n : NaN;

@@ -4,8 +4,9 @@ import { mensajesError, mensajeBD, aMensaje } from "../helpers/utiles.js";
 import { problemasPassword, passwordInutilizable } from "../helpers/seguridad.js";
 import { aplicarFoto, borrarFoto } from "../helpers/avatar.js";
 import { enviarEnlacePassword, enviarVerificacionCorreo, resumenEnvio } from "../helpers/cuentas.js";
-import { leerListado, consultarListado } from "../helpers/listado.js";
+import { leerListado, consultarListado, combinarWhere } from "../helpers/listado.js";
 import { condicionBusqueda } from "../helpers/busqueda.js";
+import { condicionFiltros, filtroLista } from "../helpers/filtros.js";
 
 const reglas = [
   body("usuario").trim().isLength({ min: 3, max: 40 }).withMessage("El usuario debe tener entre 3 y 40 caracteres").matches(/^[\w.-]+$/).withMessage("El usuario solo admite letras, números, punto, guion y guion bajo"),
@@ -37,20 +38,62 @@ const ORDEN = {
   estado: "activo",
 };
 
+const FILTROS = {
+  rol: filtroLista(...ROLES),
+  activo: filtroLista("activo", "inactivo"),
+  verificado: filtroLista("verificado", "sin"),
+};
+
 const lista = async (req, res) => {
   const l = leerListado(req, {
     orden: ORDEN,
     ordenDefecto: { campo: "id", dir: "asc" },
+    filtros: FILTROS,
   });
   await consultarListado(l, {
     modelo: Usuario.scope("sinClave"),
     pk: "id",
     include: [],
     includeOrden: [],
-    where: await condicionBusqueda("usuarios", l.q),
+    where: combinarWhere(
+      await condicionBusqueda("usuarios", l.q),
+      await condicionFiltros("usuarios", l.filtros),
+    ),
     orden: ORDEN,
   });
-  res.render("usuarios/index", { l, usuarios: l.filas, nombreRol: NOMBRE_ROL, mensaje: req.query.mensaje, error: req.query.error });
+  res.render("usuarios/index", {
+    l,
+    usuarios: l.filas,
+    nombreRol: NOMBRE_ROL,
+    filtros: [
+      {
+        clave: "rol",
+        etiqueta: "Rol",
+        tipo: "select",
+        opciones: ROLES.map((r) => ({ valor: r, texto: NOMBRE_ROL[r] || r })),
+      },
+      {
+        clave: "activo",
+        etiqueta: "Estado",
+        tipo: "select",
+        opciones: [
+          { valor: "activo", texto: "Activo" },
+          { valor: "inactivo", texto: "Inactivo" },
+        ],
+      },
+      {
+        clave: "verificado",
+        etiqueta: "Correo",
+        tipo: "select",
+        opciones: [
+          { valor: "verificado", texto: "Verificado" },
+          { valor: "sin", texto: "Sin verificar" },
+        ],
+      },
+    ],
+    mensaje: req.query.mensaje,
+    error: req.query.error,
+  });
 };
 
 const verCrear = (req, res) => vistaFormulario(res, { us: null, action: "/usuarios" });
