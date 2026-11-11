@@ -2,15 +2,22 @@ import { formatearMoneda, infoMoneda, t } from "../helpers/i18n.js";
 import { CATEGORIAS, COOKIE_CONSENT, COOKIE_DE_PREF, leerConsentimiento } from "../helpers/cookies.js";
 
 export const VALORES_PREF = {
-  tema: ["ocean", "light", "dark"],
+  tema: ["ocean", "dark"],
   idioma: ["es", "en"],
   moneda: ["MXN", "USD", "EUR"],
   tamanoFuente: ["sm", "md", "lg"],
   tipoFuente: ["sans", "roboto", "segoe", "serif"],
 };
 
-/** Devuelve el valor si es válido para esa preferencia; si no, undefined. */
-export const prefValida = (clave, valor) => (VALORES_PREF[clave]?.includes(valor) ? valor : undefined);
+// El tema "light" (Google Clean) se retiró: las preferencias antiguas se
+// convierten a "ocean" (el único tema claro) al leerlas o guardarlas.
+const normalizar = (clave, valor) => (clave === "tema" && valor === "light" ? "ocean" : valor);
+
+/** Devuelve el valor (ya normalizado) si es válido para esa preferencia; si no, undefined. */
+export const prefValida = (clave, valor) => {
+  const v = normalizar(clave, valor);
+  return VALORES_PREF[clave]?.includes(v) ? v : undefined;
+};
 
 /**
  * Resuelve las preferencias de la petición. Orden de prioridad:

@@ -34,19 +34,6 @@
 }
 
 /* --- Variantes de Tema --- */
-/* Tema Claro Google */
-[data-theme="light"] {
-  --lonja-navy: #1A73E8;
-  --lonja-navy-dark: #1557B0;
-  --lonja-teal: #188038;
-  --lonja-bg: #FFFFFF;
-  --lonja-surface: #F8F9FA;
-  --lonja-surface-subtle: #F1F3F4;
-  --lonja-border: #DADCE0;
-  --lonja-text: #202124;
-  --lonja-text-muted: #5F6368;
-}
-
 /* Tema Noche Marina (Dark) */
 [data-theme="dark"] {
   --lonja-navy: #38BDF8;
@@ -62,8 +49,24 @@
   --lonja-text: #F8FAFC;
   --lonja-text-muted: #94A3B8;
   --lonja-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
+
+  /* Variables de Bootstrap para que sus componentes (tablas, tarjetas,
+     menús, formularios, acordeones) usen la misma paleta oscura. */
   --bs-body-bg: var(--lonja-bg);
   --bs-body-color: var(--lonja-text);
+  --bs-emphasis-color: var(--lonja-text);
+  --bs-secondary-color: var(--lonja-text-muted);
+  --bs-tertiary-bg: var(--lonja-surface-subtle);
+  --bs-border-color: var(--lonja-border);
+  --bs-table-color: var(--lonja-text);
+  --bs-table-bg: var(--lonja-surface);
+  --bs-table-striped-color: var(--lonja-text);
+  --bs-table-hover-color: var(--lonja-text);
+  --bs-card-bg: var(--lonja-surface);
+  --bs-dropdown-bg: var(--lonja-surface);
+  --bs-dropdown-link-color: var(--lonja-text);
+  --bs-heading-color: var(--lonja-text);
+  --bs-link-color: var(--lonja-cyan);
 }
 
 /* --- Tamaños de Fuente --- */
@@ -415,6 +418,7 @@ td .btn-sm { padding: 0.3rem 0.55rem; line-height: 1; }
   padding: 40pt;
   background: #FFFFFF;
   color: #334155;
+  color-scheme: light;
   font-family: Helvetica, Arial, "Liberation Sans", sans-serif;
   font-size: 8.5pt;
   line-height: 1.25;

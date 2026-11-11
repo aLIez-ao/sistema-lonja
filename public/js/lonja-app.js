@@ -19,6 +19,8 @@ function postJSON(url, datos) {
 function aplicarPreferencia(clave, valor) {
   const atributos = { tema: 'data-theme', tamanoFuente: 'data-font-size', tipoFuente: 'data-font-family' };
   if (atributos[clave]) document.documentElement.setAttribute(atributos[clave], valor);
+  // Bootstrap 5.3 necesita data-bs-theme para cambiar su paleta (tablas, menús…)
+  if (clave === 'tema') document.documentElement.setAttribute('data-bs-theme', valor === 'dark' ? 'dark' : 'light');
 
   const recargar = clave === 'moneda' || clave === 'idioma'; // el servidor vuelve a formatear/traducir
   postJSON('/configuracion/guardar-rapido', { clave, valor })
