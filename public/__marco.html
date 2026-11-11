@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Marco de verificación 375 px</title>
+  <style>
+    body { margin: 0; background: #888; font-family: sans-serif; }
+    iframe { width: 375px; height: 812px; border: 0; background: #fff; display: block; }
+  </style>
+</head>
+<body>
+  <iframe id="marco"></iframe>
+  <script>
+    const ruta = new URLSearchParams(location.search).get('ruta') || '/compras';
+    document.getElementById('marco').src = ruta;
+  </script>
+</body>
+</html>

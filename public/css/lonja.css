@@ -52,6 +52,8 @@
 
   /* Variables de Bootstrap para que sus componentes (tablas, tarjetas,
      menús, formularios, acordeones) usen la misma paleta oscura. */
+  --bs-primary: var(--lonja-navy);
+  --bs-primary-rgb: 56, 189, 248;
   --bs-body-bg: var(--lonja-bg);
   --bs-body-color: var(--lonja-text);
   --bs-emphasis-color: var(--lonja-text);
@@ -435,6 +437,12 @@ td .btn-sm { padding: 0.3rem 0.55rem; line-height: 1; }
 }
 
 .cookie-consent-bar { max-height: calc(100vh - 2rem); overflow-y: auto; gap: 0.6rem; }
+
+/* El aviso es fijo: deja espacio para que no tape el pie en páginas cortas */
+body:has(.cookie-consent-bar) footer { margin-bottom: 15rem; }
+@media (max-width: 575.98px) {
+  body:has(.cookie-consent-bar) footer { margin-bottom: 22rem; }
+}
 .cookies-categorias { max-height: 40vh; overflow-y: auto; }
 .cookies-categoria {
   border: 1px solid var(--lonja-border);
