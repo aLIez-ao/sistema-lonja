@@ -47,7 +47,7 @@
           </td>
           <td><%= u.telefono || '—' %></td>
           <td><%= u.puesto || '—' %></td>
-          <td><span class="badge bg-light text-dark border"><%= nombreRol[u.rol] || u.rol %></span></td>
+          <td><span class="badge bg-body-tertiary text-body border"><%= nombreRol[u.rol] || u.rol %></span></td>
           <td><span class="badge <%= u.activo ? 'bg-success' : 'bg-danger' %>"><%= u.activo ? 'Activo' : 'Inactivo' %></span></td>
           <td class="text-end text-nowrap">
             <% if (u.correo && u.activo) { %>

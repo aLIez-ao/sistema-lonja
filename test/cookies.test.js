@@ -17,7 +17,9 @@ test("sin consentimiento la preferencia se guarda en la cuenta pero no en cookie
   const r = await c.postJSON("/configuracion/guardar-rapido", { clave: "tema", valor: "dark" });
   assert.equal(r.status, 200);
   assert.equal(c.cookies.has("lonja_theme"), false);
-  assert.match((await c.get("/inicio")).texto, /data-theme="dark"/);
+  const html = (await c.get("/inicio")).texto;
+  assert.match(html, /data-theme="dark"/);
+  assert.match(html, /data-bs-theme="dark"/);
 });
 
 test("valores inválidos se rechazan", async () => {
@@ -47,4 +49,12 @@ test("guardar cookies desde Configuración no reinicia tema ni moneda", async ()
   const html = (await c.get("/configuracion")).texto;
   assert.match(html, /data-theme="dark"/);
   assert.match(html, /value="USD" selected/);
+});
+
+test("el tema retirado 'light' se normaliza a 'ocean'", async () => {
+  const r = await c.postJSON("/configuracion/guardar-rapido", { clave: "tema", valor: "light" });
+  assert.equal(r.status, 200);
+  const html = (await c.get("/inicio")).texto;
+  assert.match(html, /data-theme="ocean"/);
+  assert.match(html, /data-bs-theme="light"/);
 });

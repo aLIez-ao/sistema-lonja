@@ -23,7 +23,7 @@ export const CATEGORIAS = [
     descripcion: "Recuerdan el aspecto e idioma en este navegador aunque no hayas iniciado sesión.",
     siDesactivas: "El tema y el idioma se toman de tu cuenta al iniciar sesión; la pantalla de acceso usa los valores por defecto.",
     cookies: [
-      { nombre: "lonja_theme", pref: "tema", proposito: "Tema visual elegido (Océano, Claro u Oscuro).", duracion: "1 año" },
+      { nombre: "lonja_theme", pref: "tema", proposito: "Tema visual elegido (Claro u Oscuro).", duracion: "1 año" },
       { nombre: "lonja_lang", pref: "idioma", proposito: "Idioma de la interfaz (Español o English).", duracion: "1 año" },
     ],
   },
