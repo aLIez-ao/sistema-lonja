@@ -617,6 +617,12 @@ function inicializarFacturaModal() {
   });
 }
 
+// Si el navegador restaura una página protegida desde su caché de historial
+// (botón Atrás después de cerrar sesión), se vuelve a pedir al servidor.
+window.addEventListener('pageshow', (ev) => {
+  if (ev.persisted && document.body.dataset.protegida === '1') window.location.reload();
+});
+
 // Inicialización general al cargar el DOM
 document.addEventListener('DOMContentLoaded', () => {
   inicializarBannerCookies();
