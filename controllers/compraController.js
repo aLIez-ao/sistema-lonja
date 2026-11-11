@@ -6,8 +6,9 @@ import { redondea } from "../helpers/fechas.js";
 import { generarFacturaPDF } from "../helpers/facturaPdf.js";
 import { datosFactura } from "../helpers/factura.js";
 import { enviarEmailComprobanteCompra } from "../helpers/email.js";
-import { leerListado, consultarListado } from "../helpers/listado.js";
+import { leerListado, consultarListado, combinarWhere } from "../helpers/listado.js";
 import { condicionBusqueda } from "../helpers/busqueda.js";
+import { condicionFiltros, filtroEntero, filtroFecha, filtroNumero } from "../helpers/filtros.js";
 
 const reglas = [
   body("precio_kilo_final").isFloat({ gt: 0, max: 99999999 }).withMessage("El precio final por kilo debe ser un número mayor a 0"),
@@ -34,6 +35,15 @@ const catalogos = async (incluirId) => ({
 
 const POR_PAGINA = [10, 25, 50, 100];
 
+const FILTROS = {
+  desde: filtroFecha,
+  hasta: filtroFecha,
+  comprador: filtroEntero,
+  tipo: filtroEntero,
+  totalMin: filtroNumero,
+  totalMax: filtroNumero,
+};
+
 // Clave pública del orden → expresión Sequelize
 const ORDEN = {
   fecha: "fecha",
@@ -50,18 +60,44 @@ const lista = async (req, res) => {
     tamDefecto: 25,
     orden: ORDEN,
     ordenDefecto: { campo: "fecha", dir: "desc" },
+    filtros: FILTROS,
   });
+  const [compradores, tipos] = await Promise.all([
+    Comprador.findAll({ order: [["apellido_paterno", "ASC"], ["nombre", "ASC"]] }),
+    Tipo.findAll({ order: [["nombre", "ASC"]] }),
+  ]);
   await consultarListado(l, {
     modelo: Compra,
     pk: "id_cmp",
     include: incluye,
     includeOrden: [{ model: Comprador, as: "comprador" }, { model: Lote, as: "lote" }],
-    where: await condicionBusqueda("compras", l.q),
+    where: combinarWhere(
+      await condicionBusqueda("compras", l.q),
+      await condicionFiltros("compras", l.filtros),
+    ),
     orden: ORDEN,
   });
   res.render("compras/index", {
     l,
     compras: l.filas,
+    filtros: [
+      { clave: "desde", etiqueta: "Desde", tipo: "fecha" },
+      { clave: "hasta", etiqueta: "Hasta", tipo: "fecha" },
+      {
+        clave: "comprador",
+        etiqueta: "Comprador",
+        tipo: "select",
+        opciones: compradores.map((c) => ({ valor: c.codigo_cpr, texto: `${c.nombre} ${c.apellido_paterno}` })),
+      },
+      {
+        clave: "tipo",
+        etiqueta: "Tipo de especie",
+        tipo: "select",
+        opciones: tipos.map((tp) => ({ valor: tp.id_tpo, texto: tp.nombre })),
+      },
+      { clave: "totalMin", etiqueta: "Total mínimo", tipo: "numero" },
+      { clave: "totalMax", etiqueta: "Total máximo", tipo: "numero" },
+    ],
     mensaje: req.query.mensaje,
     error: req.query.error,
   });

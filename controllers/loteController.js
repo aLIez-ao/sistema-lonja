@@ -2,8 +2,9 @@ import { body } from "express-validator";
 import { literal } from "sequelize";
 import { Lote, Especie, Tipo, Compra, Comprador } from "../models/index.js";
 import { mensajesError, mensajeBD, aMensaje } from "../helpers/utiles.js";
-import { leerListado, consultarListado } from "../helpers/listado.js";
+import { leerListado, consultarListado, combinarWhere } from "../helpers/listado.js";
 import { condicionBusqueda } from "../helpers/busqueda.js";
+import { condicionFiltros, filtroEntero, filtroFecha, filtroLista, filtroNumero } from "../helpers/filtros.js";
 
 const reglas = [
   body("kilos").isFloat({ gt: 0, max: 99999999 }).withMessage("Los kilos deben ser un número mayor a 0"),
@@ -22,11 +23,22 @@ const ORDEN = {
   estado: literal("(SELECT COUNT(*) FROM compra WHERE compra.id_cmp = `Lote`.`id_lte`)"),
 };
 
+const FILTROS = {
+  estado: filtroLista("disponibles", "vendidos"),
+  desde: filtroFecha,
+  hasta: filtroFecha,
+  tipo: filtroEntero,
+  kilosMin: filtroNumero,
+  kilosMax: filtroNumero,
+};
+
 const lista = async (req, res) => {
   const l = leerListado(req, {
     orden: ORDEN,
     ordenDefecto: { campo: "id", dir: "desc" },
+    filtros: FILTROS,
   });
+  const tipos = await Tipo.findAll({ order: [["nombre", "ASC"]] });
   await consultarListado(l, {
     modelo: Lote,
     pk: "id_lte",
@@ -35,10 +47,38 @@ const lista = async (req, res) => {
       { model: Compra, as: "compra", include: [{ model: Comprador, as: "comprador" }] },
     ],
     includeOrden: [],
-    where: await condicionBusqueda("lotes", l.q),
+    where: combinarWhere(
+      await condicionBusqueda("lotes", l.q),
+      await condicionFiltros("lotes", l.filtros),
+    ),
     orden: ORDEN,
   });
-  res.render("lotes/index", { l, lotes: l.filas, mensaje: req.query.mensaje });
+  res.render("lotes/index", {
+    l,
+    lotes: l.filas,
+    filtros: [
+      {
+        clave: "estado",
+        etiqueta: "Estado",
+        tipo: "select",
+        opciones: [
+          { valor: "disponibles", texto: "Disponibles" },
+          { valor: "vendidos", texto: "Vendidos" },
+        ],
+      },
+      { clave: "desde", etiqueta: "Desde", tipo: "fecha" },
+      { clave: "hasta", etiqueta: "Hasta", tipo: "fecha" },
+      {
+        clave: "tipo",
+        etiqueta: "Tipo de especie",
+        tipo: "select",
+        opciones: tipos.map((tp) => ({ valor: tp.id_tpo, texto: tp.nombre })),
+      },
+      { clave: "kilosMin", etiqueta: "Kilos mínimo", tipo: "numero" },
+      { clave: "kilosMax", etiqueta: "Kilos máximo", tipo: "numero" },
+    ],
+    mensaje: req.query.mensaje,
+  });
 };
 
 const verCrear = (req, res) => res.render("lotes/formulario", { lote: null, action: "/lotes", errores: [] });

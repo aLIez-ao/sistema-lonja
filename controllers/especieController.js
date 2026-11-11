@@ -2,8 +2,9 @@ import { body } from "express-validator";
 import { col } from "sequelize";
 import { Especie, Lote, Tipo } from "../models/index.js";
 import { mensajesError, mensajeBD, aMensaje } from "../helpers/utiles.js";
-import { leerListado, consultarListado } from "../helpers/listado.js";
+import { leerListado, consultarListado, combinarWhere } from "../helpers/listado.js";
 import { condicionBusqueda } from "../helpers/busqueda.js";
+import { condicionFiltros, filtroEntero, filtroLista } from "../helpers/filtros.js";
 
 const reglas = [
   body("nombre").trim().notEmpty().withMessage("El nombre es obligatorio").isLength({ max: 25 }).withMessage("Nombre: máximo 25 caracteres"),
@@ -26,20 +27,51 @@ const ORDEN = {
   lote: "id_lte",
 };
 
+const FILTROS = {
+  tipo: filtroEntero,
+  estado: filtroLista("disponibles", "vendidos"),
+};
+
 const lista = async (req, res) => {
   const l = leerListado(req, {
     orden: ORDEN,
     ordenDefecto: { campo: "id", dir: "desc" },
+    filtros: FILTROS,
   });
+  const tipos = await Tipo.findAll({ order: [["nombre", "ASC"]] });
   await consultarListado(l, {
     modelo: Especie,
     pk: "id_epe",
     include: [{ model: Tipo, as: "tipo" }, { model: Lote, as: "lote" }],
     includeOrden: [{ model: Tipo, as: "tipo" }],
-    where: await condicionBusqueda("especies", l.q),
+    where: combinarWhere(
+      await condicionBusqueda("especies", l.q),
+      await condicionFiltros("especies", l.filtros),
+    ),
     orden: ORDEN,
   });
-  res.render("especies/index", { l, especies: l.filas, mensaje: req.query.mensaje });
+  res.render("especies/index", {
+    l,
+    especies: l.filas,
+    filtros: [
+      {
+        clave: "tipo",
+        etiqueta: "Tipo",
+        tipo: "select",
+        opciones: tipos.map((tp) => ({ valor: tp.id_tpo, texto: tp.nombre })),
+      },
+      {
+        clave: "estado",
+        etiqueta: "Estado del lote",
+        tipo: "select",
+        opciones: [
+          { valor: "disponibles", texto: "Disponible" },
+          { valor: "vendidos", texto: "Vendido" },
+        ],
+      },
+    ],
+    mensaje: req.query.mensaje,
+  });
 };
 
 const verCrear = async (req, res) => {

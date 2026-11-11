@@ -2,8 +2,9 @@ import { body } from "express-validator";
 import { literal } from "sequelize";
 import { Comprador, Compra } from "../models/index.js";
 import { mensajesError, mensajeBD, aMensaje } from "../helpers/utiles.js";
-import { leerListado, consultarListado } from "../helpers/listado.js";
+import { leerListado, consultarListado, combinarWhere } from "../helpers/listado.js";
 import { condicionBusqueda } from "../helpers/busqueda.js";
+import { condicionFiltros, filtroSiNo } from "../helpers/filtros.js";
 
 const reglas = [
   body("nombre").trim().notEmpty().withMessage("El nombre es obligatorio").isLength({ max: 15 }).withMessage("Nombre: máximo 15 caracteres"),
@@ -28,20 +29,53 @@ const ORDEN = {
   compras: literal("(SELECT COUNT(*) FROM compra WHERE compra.codigo_cpr = `Comprador`.`codigo_cpr`)"),
 };
 
+const FILTROS = {
+  compras: filtroSiNo,
+  correo: filtroSiNo,
+};
+
 const lista = async (req, res) => {
   const l = leerListado(req, {
     orden: ORDEN,
     ordenDefecto: { campo: "codigo", dir: "desc" },
+    filtros: FILTROS,
   });
   await consultarListado(l, {
     modelo: Comprador,
     pk: "codigo_cpr",
     include: [{ model: Compra, as: "compras", attributes: ["id_cmp"] }],
     includeOrden: [],
-    where: await condicionBusqueda("compradores", l.q),
+    where: combinarWhere(
+      await condicionBusqueda("compradores", l.q),
+      await condicionFiltros("compradores", l.filtros),
+    ),
     orden: ORDEN,
   });
-  res.render("compradores/index", { l, compradores: l.filas, mensaje: req.query.mensaje });
+  res.render("compradores/index", {
+    l,
+    compradores: l.filas,
+    filtros: [
+      {
+        clave: "compras",
+        etiqueta: "Compras",
+        tipo: "select",
+        opciones: [
+          { valor: "con", texto: "Con compras" },
+          { valor: "sin", texto: "Sin compras" },
+        ],
+      },
+      {
+        clave: "correo",
+        etiqueta: "Correo",
+        tipo: "select",
+        opciones: [
+          { valor: "con", texto: "Con correo" },
+          { valor: "sin", texto: "Sin correo" },
+        ],
+      },
+    ],
+    mensaje: req.query.mensaje,
+  });
 };
 
 const verCrear = (req, res) => res.render("compradores/formulario", { comprador: null, action: "/compradores", errores: [] });

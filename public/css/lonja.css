@@ -389,6 +389,12 @@ td .btn-sm { padding: 0.3rem 0.55rem; line-height: 1; }
 .lista-sugerencias .list-group-item { cursor: pointer; }
 .lista-sugerencias mark { padding: 0 0.1em; background-color: rgba(0, 166, 251, 0.25); color: inherit; border-radius: 2px; }
 
+/* Panel y chips de filtros */
+.filtros-panel { background-color: var(--lonja-surface-subtle); }
+.chip-filtro { background-color: var(--lonja-teal); color: #fff; font-weight: 500; }
+.chip-filtro:hover, .chip-filtro:focus-visible { background-color: var(--lonja-navy); color: #fff; outline: none; }
+.chip-filtro:focus-visible { box-shadow: 0 0 0 3px rgba(8, 126, 139, 0.3); }
+
 .table-hover tbody tr:hover {
   background-color: var(--lonja-surface-subtle);
 }

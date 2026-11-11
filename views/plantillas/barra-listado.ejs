@@ -1,40 +1,97 @@
 <%
-  // Barra de búsqueda común de los listados.
-  // Uso: include con { l, entidad, etiqueta }.
+  // Barra de búsqueda y filtros común de los listados.
+  // Uso: include con { l, entidad, etiqueta, filtros } (filtros es opcional).
   const textoEtiqueta = typeof etiqueta !== 'undefined' ? etiqueta : entidad;
+  const defs = typeof filtros !== 'undefined' ? filtros : [];
+  const clavesFiltro = new Set(defs.map((d) => d.clave));
+  const activos = defs.filter((d) => l.filtros[d.clave] !== undefined);
+  const urlLimpiar = l.urlCon(Object.fromEntries(defs.map((d) => [d.clave, null])));
 %>
-<form method="GET" action="<%= l.ruta %>" class="barra-listado mb-3" role="search" data-buscador>
-  <% Object.entries(l.params).forEach(([clave, valor]) => { %>
-    <% if (clave !== 'q') { %>
-      <input type="hidden" name="<%= clave %>" value="<%= valor %>">
+<div class="barra-listado-contenedor mb-3">
+  <form method="GET" action="<%= l.ruta %>" class="barra-listado" role="search" data-buscador>
+    <% Object.entries(l.params).forEach(([clave, valor]) => { %>
+      <% if (clave !== 'q' && !clavesFiltro.has(clave)) { %>
+        <input type="hidden" name="<%= clave %>" value="<%= valor %>">
+      <% } %>
+    <% }) %>
+
+    <div class="buscador position-relative flex-grow-1">
+      <input
+        type="search"
+        name="q"
+        value="<%= l.q %>"
+        class="form-control form-control-sm"
+        placeholder="Buscar en <%= textoEtiqueta %>…"
+        autocomplete="off"
+        role="combobox"
+        aria-expanded="false"
+        aria-autocomplete="list"
+        aria-controls="sugerencias-<%= entidad %>"
+        aria-label="Buscar en <%= textoEtiqueta %>"
+        data-entidad="<%= entidad %>"
+      >
+      <ul id="sugerencias-<%= entidad %>" class="list-group lista-sugerencias shadow-sm" role="listbox" hidden></ul>
+    </div>
+
+    <button class="btn btn-sm btn-primary" type="submit">
+      <%- icono('search', 14, 'me-1') %>Buscar
+    </button>
+
+    <% if (l.q) { %>
+      <a class="btn btn-sm btn-outline-secondary" href="<%= l.urlCon({ q: null, pagina: 1 }) %>" aria-label="Limpiar búsqueda" title="Limpiar búsqueda">
+        <%- icono('x-lg', 14) %>
+      </a>
     <% } %>
-  <% }) %>
 
-  <div class="buscador position-relative flex-grow-1">
-    <input
-      type="search"
-      name="q"
-      value="<%= l.q %>"
-      class="form-control form-control-sm"
-      placeholder="Buscar en <%= textoEtiqueta %>…"
-      autocomplete="off"
-      role="combobox"
-      aria-expanded="false"
-      aria-autocomplete="list"
-      aria-controls="sugerencias-<%= entidad %>"
-      aria-label="Buscar en <%= textoEtiqueta %>"
-      data-entidad="<%= entidad %>"
-    >
-    <ul id="sugerencias-<%= entidad %>" class="list-group lista-sugerencias shadow-sm" role="listbox" hidden></ul>
-  </div>
+    <% if (defs.length) { %>
+      <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#filtros-<%= entidad %>" aria-expanded="<%= activos.length ? 'true' : 'false' %>" aria-controls="filtros-<%= entidad %>">
+        <%- icono('funnel', 14, 'me-1') %>Filtros<% if (activos.length) { %> · <%= activos.length %><% } %>
+      </button>
+    <% } %>
 
-  <button class="btn btn-sm btn-primary" type="submit">
-    <%- icono('search', 14, 'me-1') %>Buscar
-  </button>
+    <% if (defs.length) { %>
+      <div class="collapse w-100 <%= activos.length ? 'show' : '' %>" id="filtros-<%= entidad %>">
+        <div class="filtros-panel border rounded p-3 mt-2">
+          <div class="row g-2">
+            <% defs.forEach((d) => { %>
+              <div class="col-sm-6 col-lg-3">
+                <label class="form-label small mb-1" for="f-<%= entidad %>-<%= d.clave %>"><%= d.etiqueta %></label>
+                <% if (d.tipo === 'select') { %>
+                  <select class="form-select form-select-sm" id="f-<%= entidad %>-<%= d.clave %>" name="<%= d.clave %>">
+                    <option value="">Todos</option>
+                    <% (d.opciones || []).forEach((o) => { %>
+                      <option value="<%= o.valor %>" <%= String(l.filtros[d.clave]) === String(o.valor) ? 'selected' : '' %>><%= o.texto %></option>
+                    <% }) %>
+                  </select>
+                <% } else if (d.tipo === 'fecha') { %>
+                  <input type="date" class="form-control form-control-sm" id="f-<%= entidad %>-<%= d.clave %>" name="<%= d.clave %>" value="<%= l.filtros[d.clave] || '' %>">
+                <% } else if (d.tipo === 'numero') { %>
+                  <input type="number" min="0" step="0.01" class="form-control form-control-sm" id="f-<%= entidad %>-<%= d.clave %>" name="<%= d.clave %>" value="<%= l.filtros[d.clave] ?? '' %>">
+                <% } %>
+              </div>
+            <% }) %>
+          </div>
+          <div class="d-flex gap-2 mt-3">
+            <button class="btn btn-sm btn-primary" type="submit">Aplicar</button>
+            <a class="btn btn-sm btn-outline-secondary" href="<%= urlLimpiar %>">Limpiar</a>
+          </div>
+        </div>
+      </div>
+    <% } %>
+  </form>
 
-  <% if (l.q) { %>
-    <a class="btn btn-sm btn-outline-secondary" href="<%= l.urlCon({ q: null, pagina: 1 }) %>" aria-label="Limpiar búsqueda" title="Limpiar búsqueda">
-      <%- icono('x-lg', 14) %>
-    </a>
+  <% if (activos.length) { %>
+    <div class="chips-filtros mt-2 d-flex flex-wrap gap-2 align-items-center">
+      <span class="small text-muted">Filtros activos:</span>
+      <% activos.forEach((d) => { %>
+        <%
+          const opcion = (d.opciones || []).find((o) => String(o.valor) === String(l.filtros[d.clave]));
+          const texto = opcion ? opcion.texto : String(l.filtros[d.clave]);
+        %>
+        <a class="chip-filtro badge rounded-pill text-decoration-none" href="<%= l.urlCon({ [d.clave]: null }) %>" aria-label="Quitar filtro <%= d.etiqueta %>">
+          <%= d.etiqueta %>: <%= texto %> <span aria-hidden="true">×</span>
+        </a>
+      <% }) %>
+    </div>
   <% } %>
-</form>
+</div>
