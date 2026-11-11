@@ -169,6 +169,11 @@ main.container {
   display: block;
 }
 
+/* Dos versiones del logo: la oscura solo se muestra en el tema oscuro. */
+.logo-oscuro { display: none !important; }
+[data-theme="dark"] .logo-claro { display: none !important; }
+[data-theme="dark"] .logo-oscuro { display: block !important; }
+
 .navbar-lonja .nav-link {
   color: var(--lonja-text-muted);
   font-weight: 500;
@@ -289,6 +294,22 @@ main.container {
   border-color: var(--lonja-navy-dark);
   box-shadow: 0 4px 10px rgba(11, 57, 84, 0.25);
 }
+
+/* Tema oscuro: el celeste de los botones necesita texto oscuro (contraste ≥ 4.5:1). */
+[data-theme="dark"] .btn-primary,
+[data-theme="dark"] .btn-primary:hover,
+[data-theme="dark"] .btn-primary:focus,
+[data-theme="dark"] .btn-primary:active {
+  color: #0B132B;
+}
+[data-theme="dark"] .btn-primary:hover { background-color: #7DD3FC; border-color: #7DD3FC; }
+[data-theme="dark"] .btn-outline-primary:hover,
+[data-theme="dark"] .btn-outline-primary:active,
+[data-theme="dark"] .btn-outline-primary.active { color: #0B132B; }
+[data-theme="dark"] .page-item.active .page-link,
+[data-theme="dark"] .badge.bg-primary,
+[data-theme="dark"] .text-bg-primary,
+[data-theme="dark"] .nav-pills .nav-link.active { color: #0B132B; }
 
 .btn-success {
   background-color: var(--lonja-teal);
