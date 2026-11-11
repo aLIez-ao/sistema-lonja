@@ -70,3 +70,10 @@ reports/
 # Fotos de perfil subidas por los usuarios
 public/uploads/avatares/*
 !public/uploads/avatares/.gitkeep
+
+# ==========================================
+# Docs
+# ==========================================
+docs/
+plan/
+reports/
