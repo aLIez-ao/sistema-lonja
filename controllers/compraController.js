@@ -198,12 +198,17 @@ const verFactura = async (req, res) => {
 
   if (!compra) return res.redirect("/compras");
 
-  res.render("compras/factura", {
+  const datos = {
     compra,
     f: datosFactura(compra),
     mensaje: req.query.mensaje,
     error: req.query.error,
-  });
+  };
+
+  // ?parcial=1 devuelve solo la hoja y sus acciones, para insertarla en el modal.
+  if (req.query.parcial === "1") return res.render("compras/factura-parcial", datos);
+
+  res.render("compras/factura", datos);
 };
 
 /**

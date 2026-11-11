@@ -585,3 +585,15 @@ td .btn-sm { padding: 0.3rem 0.55rem; line-height: 1; }
   .hoja-carta, .hoja-carta * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .card { box-shadow: none !important; }
 }
+
+/* Impresión desde el modal de factura: solo sale la hoja carta */
+@media print {
+  body.imprimiendo-modal > :not(.modal) { display: none !important; }
+  body.imprimiendo-modal .modal { position: static; display: block !important; overflow: visible; }
+  body.imprimiendo-modal .modal-dialog { max-width: none; margin: 0; }
+  body.imprimiendo-modal .modal-content { max-height: none; border: none; box-shadow: none; }
+  body.imprimiendo-modal .modal-header,
+  body.imprimiendo-modal .factura-modal-acciones { display: none !important; }
+  body.imprimiendo-modal .modal-body { max-height: none; padding: 0; overflow: visible; }
+  body.imprimiendo-modal .modal-backdrop { display: none !important; }
+}

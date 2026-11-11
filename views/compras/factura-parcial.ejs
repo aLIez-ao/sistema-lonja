@@ -1,0 +1,6 @@
+<div class="factura-parcial" data-folio="<%= f.folio %>" data-id="<%= compra.id_cmp %>">
+  <div class="factura-modal-acciones d-flex flex-wrap gap-2 mb-3 d-print-none">
+    <%- include('_acciones-factura', { compra, f, modal: true }) %>
+  </div>
+  <%- include('_hoja-factura', { compra, f }) %>
+</div>
