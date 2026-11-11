@@ -20,7 +20,8 @@
     <div class="container-fluid px-lg-4">
       <!-- El logo redirige al inicio -->
       <a class="navbar-brand" href="<%= usuario ? '/inicio' : '/' %>" title="Lonja de Veracruz">
-        <img src="/img/logo.svg" alt="Lonja de Veracruz" width="204" height="42">
+        <img class="logo-claro" src="/img/logo.svg" alt="Lonja de Veracruz" width="204" height="42">
+        <img class="logo-oscuro" src="/img/logo-oscuro.svg" alt="" aria-hidden="true" width="204" height="42">
       </a>
 
       <% if (usuario) { %>
