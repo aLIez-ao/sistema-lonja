@@ -53,8 +53,8 @@
             <td class="text-end"><%= dinero(c.precio_kilo_final) %></td>
             <td class="text-end text-primary fw-bold"><%= dinero(c.precio_total) %></td>
             <td class="text-end text-nowrap">
-              <!-- Factura Detalle -->
-              <a class="btn btn-sm btn-outline-primary" href="/compras/<%= c.id_cmp %>/factura" title="Ver factura" aria-label="Ver factura">
+              <!-- Factura Detalle: con JS se abre en un modal; sin JS sigue siendo un enlace -->
+              <a class="btn btn-sm btn-outline-primary" href="/compras/<%= c.id_cmp %>/factura" data-factura-modal data-id="<%= c.id_cmp %>" title="Ver factura" aria-label="Ver factura">
                 <%- icono('receipt', 14) %>
               </a>
 
@@ -84,5 +84,7 @@
 </div>
 
 <%- include('../plantillas/paginacion', { l, etiqueta: 'compras' }) %>
+
+<%- include('_modal-factura') %>
 
 <%- include('../plantillas/footer') %>

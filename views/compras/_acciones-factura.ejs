@@ -1,0 +1,31 @@
+<%
+  // Acciones de la factura. En la página son botones normales; en el modal son compactos.
+  const enModal = typeof modal !== 'undefined' && modal;
+  const tamIcono = enModal ? 14 : 16;
+  const clase = enModal ? 'btn btn-sm' : 'btn';
+%>
+<a class="<%= clase %> btn-primary" href="/compras/<%= compra.id_cmp %>/factura.pdf">
+  <%- icono('download', tamIcono, 'me-1') %><%= t('descargar_pdf') %>
+</a>
+<button class="<%= clase %> btn-outline-secondary" type="button" data-compartir
+  data-url="/compras/<%= compra.id_cmp %>/factura"
+  data-titulo="Factura <%= f.folio %> · Lonja de Veracruz"
+  data-texto="Factura de compra del lote #<%= compra.id_cmp %> por <%= f.total %>">
+  <%- icono('share', tamIcono, 'me-1') %><%= t('compartir') %>
+</button>
+<% if (compra.comprador && compra.comprador.correo) { %>
+  <form action="/compras/<%= compra.id_cmp %>/enviar-correo" method="POST" class="d-inline" data-confirmar="¿Enviar la factura en PDF a <%= compra.comprador.correo %>?">
+    <button class="<%= clase %> btn-outline-primary" type="submit"><%- icono('envelope', tamIcono, 'me-1') %><%= t('enviar_correo') %></button>
+  </form>
+<% } %>
+<button class="<%= clase %> btn-outline-secondary" type="button" onclick="window.print()">
+  <%- icono('printer', tamIcono, 'me-1') %>Imprimir
+</button>
+<% if (enModal) { %>
+  <a class="<%= clase %> btn-outline-secondary" href="/compras/<%= compra.id_cmp %>/factura" target="_blank" rel="noopener">
+    <%- icono('file-earmark-text', tamIcono, 'me-1') %>Abrir en página
+  </a>
+  <button class="<%= clase %> btn-outline-secondary" type="button" data-bs-dismiss="modal">
+    <%- icono('x-lg', tamIcono, 'me-1') %>Cerrar
+  </button>
+<% } %>
