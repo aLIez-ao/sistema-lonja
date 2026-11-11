@@ -3,6 +3,7 @@ import { literal } from "sequelize";
 import { Tipo, Especie } from "../models/index.js";
 import { mensajesError, mensajeBD, aMensaje } from "../helpers/utiles.js";
 import { leerListado, consultarListado } from "../helpers/listado.js";
+import { condicionBusqueda } from "../helpers/busqueda.js";
 
 const reglas = [body("nombre").trim().notEmpty().withMessage("El nombre es obligatorio").isLength({ max: 30 }).withMessage("El nombre admite máximo 30 caracteres")];
 
@@ -22,6 +23,7 @@ const lista = async (req, res) => {
     pk: "id_tpo",
     include: [{ model: Especie, as: "especies", attributes: ["id_epe"] }],
     includeOrden: [],
+    where: await condicionBusqueda("tipos", l.q),
     orden: ORDEN,
   });
   res.render("tipos/index", { l, tipos: l.filas, mensaje: req.query.mensaje });
