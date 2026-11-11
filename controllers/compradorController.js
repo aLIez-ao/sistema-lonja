@@ -1,6 +1,8 @@
 import { body } from "express-validator";
+import { literal } from "sequelize";
 import { Comprador, Compra } from "../models/index.js";
 import { mensajesError, mensajeBD, aMensaje } from "../helpers/utiles.js";
+import { leerListado, consultarListado } from "../helpers/listado.js";
 
 const reglas = [
   body("nombre").trim().notEmpty().withMessage("El nombre es obligatorio").isLength({ max: 15 }).withMessage("Nombre: máximo 15 caracteres"),
@@ -18,9 +20,26 @@ const datos = (b) => ({
   correo: b.correo,
 });
 
+const ORDEN = {
+  codigo: "codigo_cpr",
+  nombre: "apellido_paterno",
+  correo: "correo",
+  compras: literal("(SELECT COUNT(*) FROM compra WHERE compra.codigo_cpr = `Comprador`.`codigo_cpr`)"),
+};
+
 const lista = async (req, res) => {
-  const compradores = await Comprador.findAll({ order: [["codigo_cpr", "DESC"]], include: [{ model: Compra, as: "compras", attributes: ["id_cmp"] }] });
-  res.render("compradores/index", { compradores, mensaje: req.query.mensaje });
+  const l = leerListado(req, {
+    orden: ORDEN,
+    ordenDefecto: { campo: "codigo", dir: "desc" },
+  });
+  await consultarListado(l, {
+    modelo: Comprador,
+    pk: "codigo_cpr",
+    include: [{ model: Compra, as: "compras", attributes: ["id_cmp"] }],
+    includeOrden: [],
+    orden: ORDEN,
+  });
+  res.render("compradores/index", { l, compradores: l.filas, mensaje: req.query.mensaje });
 };
 
 const verCrear = (req, res) => res.render("compradores/formulario", { comprador: null, action: "/compradores", errores: [] });

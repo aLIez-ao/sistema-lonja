@@ -1,0 +1,69 @@
+<%
+  // Barra inferior común de los listados: filas por página, resumen y paginador.
+  // Uso: include con { l, etiqueta }.
+  const ventana = 2;
+  const desde = Math.max(1, l.pagina - ventana);
+  const hasta = Math.min(l.paginas, l.pagina + ventana);
+%>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
+  <form method="GET" action="<%= l.ruta %>" class="d-flex align-items-center gap-2 mb-0 flex-wrap">
+    <% Object.entries(l.params).forEach(([clave, valor]) => { %>
+      <% if (clave !== 'tam') { %>
+        <input type="hidden" name="<%= clave %>" value="<%= valor %>">
+      <% } %>
+    <% }) %>
+    <label for="tam-<%= etiqueta %>" class="small text-muted mb-0">Filas por página</label>
+    <select id="tam-<%= etiqueta %>" name="tam" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+      <% l.porPagina.forEach((n) => { %>
+        <option value="<%= n %>" <%= n === l.tam ? 'selected' : '' %>><%= n %></option>
+      <% }) %>
+    </select>
+    <noscript><button class="btn btn-sm btn-outline-secondary" type="submit">Aplicar</button></noscript>
+  </form>
+
+  <span class="small text-muted">
+    Mostrando <%= l.inicio %>–<%= l.fin %> de <%= l.total %> <%= etiqueta %>
+  </span>
+
+  <nav aria-label="Paginación de <%= etiqueta %>">
+    <ul class="pagination pagination-sm mb-0 flex-wrap">
+      <li class="page-item <%= l.pagina <= 1 ? 'disabled' : '' %>">
+        <% if (l.pagina <= 1) { %>
+          <span class="page-link" role="link" aria-disabled="true" aria-label="Primera página">&laquo;</span>
+        <% } else { %>
+          <a class="page-link" href="<%= l.urlCon({ pagina: 1 }) %>" aria-label="Primera página">&laquo;</a>
+        <% } %>
+      </li>
+      <li class="page-item <%= l.pagina <= 1 ? 'disabled' : '' %>">
+        <% if (l.pagina <= 1) { %>
+          <span class="page-link" role="link" aria-disabled="true" aria-label="Página anterior">&lsaquo;</span>
+        <% } else { %>
+          <a class="page-link" href="<%= l.urlCon({ pagina: l.pagina - 1 }) %>" aria-label="Página anterior">&lsaquo;</a>
+        <% } %>
+      </li>
+      <% for (let n = desde; n <= hasta; n++) { %>
+        <li class="page-item <%= n === l.pagina ? 'active' : '' %>">
+          <% if (n === l.pagina) { %>
+            <span class="page-link" aria-current="page"><%= n %></span>
+          <% } else { %>
+            <a class="page-link" href="<%= l.urlCon({ pagina: n }) %>" aria-label="Página <%= n %>"><%= n %></a>
+          <% } %>
+        </li>
+      <% } %>
+      <li class="page-item <%= l.pagina >= l.paginas ? 'disabled' : '' %>">
+        <% if (l.pagina >= l.paginas) { %>
+          <span class="page-link" role="link" aria-disabled="true" aria-label="Página siguiente">&rsaquo;</span>
+        <% } else { %>
+          <a class="page-link" href="<%= l.urlCon({ pagina: l.pagina + 1 }) %>" aria-label="Página siguiente">&rsaquo;</a>
+        <% } %>
+      </li>
+      <li class="page-item <%= l.pagina >= l.paginas ? 'disabled' : '' %>">
+        <% if (l.pagina >= l.paginas) { %>
+          <span class="page-link" role="link" aria-disabled="true" aria-label="Última página">&raquo;</span>
+        <% } else { %>
+          <a class="page-link" href="<%= l.urlCon({ pagina: l.paginas }) %>" aria-label="Última página">&raquo;</a>
+        <% } %>
+      </li>
+    </ul>
+  </nav>
+</div>

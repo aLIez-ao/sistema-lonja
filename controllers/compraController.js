@@ -1,11 +1,12 @@
 import { body } from "express-validator";
-import { Op } from "sequelize";
+import { Op, col } from "sequelize";
 import { Compra, Lote, Comprador, Especie, Tipo } from "../models/index.js";
 import { mensajesError, mensajeBD, aMensaje } from "../helpers/utiles.js";
 import { redondea } from "../helpers/fechas.js";
 import { generarFacturaPDF } from "../helpers/facturaPdf.js";
 import { datosFactura } from "../helpers/factura.js";
 import { enviarEmailComprobanteCompra } from "../helpers/email.js";
+import { leerListado, consultarListado } from "../helpers/listado.js";
 
 const reglas = [
   body("precio_kilo_final").isFloat({ gt: 0, max: 99999999 }).withMessage("El precio final por kilo debe ser un número mayor a 0"),
@@ -32,26 +33,33 @@ const catalogos = async (incluirId) => ({
 
 const POR_PAGINA = [10, 25, 50, 100];
 
+// Clave pública del orden → expresión Sequelize
+const ORDEN = {
+  fecha: "fecha",
+  lote: "id_cmp",
+  comprador: col("comprador.apellido_paterno"),
+  kilos: col("lote.kilos"),
+  precio: "precio_kilo_final",
+  total: "precio_total",
+};
+
 const lista = async (req, res) => {
-  const tam = POR_PAGINA.includes(Number(req.query.tam)) ? Number(req.query.tam) : 25;
-  const total = await Compra.count();
-  const paginas = Math.max(1, Math.ceil(total / tam));
-  const pagina = Math.min(Math.max(1, parseInt(req.query.pagina, 10) || 1), paginas);
-  const compras = await Compra.findAll({
-    order: [["fecha", "DESC"], ["id_cmp", "DESC"]],
-    limit: tam,
-    offset: (pagina - 1) * tam,
+  const l = leerListado(req, {
+    porPagina: POR_PAGINA,
+    tamDefecto: 25,
+    orden: ORDEN,
+    ordenDefecto: { campo: "fecha", dir: "desc" },
+  });
+  await consultarListado(l, {
+    modelo: Compra,
+    pk: "id_cmp",
     include: incluye,
+    includeOrden: [{ model: Comprador, as: "comprador" }, { model: Lote, as: "lote" }],
+    orden: ORDEN,
   });
   res.render("compras/index", {
-    compras,
-    total,
-    pagina,
-    paginas,
-    tam,
-    porPagina: POR_PAGINA,
-    inicio: total ? (pagina - 1) * tam + 1 : 0,
-    fin: Math.min(pagina * tam, total),
+    l,
+    compras: l.filas,
     mensaje: req.query.mensaje,
     error: req.query.error,
   });

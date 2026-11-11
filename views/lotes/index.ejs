@@ -12,51 +12,58 @@
 <%- include('../plantillas/mensajes', { errores: [] }) %>
 <div class="card overflow-hidden">
   <div class="table-responsive">
-    <table class="table table-hover table-striped align-middle mb-0 table-sortable">
+    <table class="table table-hover table-striped align-middle mb-0" data-orden-servidor>
       <thead>
         <tr>
-          <th>Lote</th>
-          <th>Fecha</th>
+          <%- include('../plantillas/encabezado-orden', { l, campo: 'id', titulo: 'Lote' }) %>
+          <%- include('../plantillas/encabezado-orden', { l, campo: 'fecha', titulo: 'Fecha' }) %>
           <th>Especies</th>
-          <th class="text-end">Cajas</th>
-          <th class="text-end">Kilos</th>
-          <th class="text-end">Precio salida/kg</th>
-          <th>Estado</th>
+          <%- include('../plantillas/encabezado-orden', { l, campo: 'cajas', titulo: 'Cajas', claseExtra: 'text-end' }) %>
+          <%- include('../plantillas/encabezado-orden', { l, campo: 'kilos', titulo: 'Kilos', claseExtra: 'text-end' }) %>
+          <%- include('../plantillas/encabezado-orden', { l, campo: 'salida', titulo: 'Precio salida/kg', claseExtra: 'text-end' }) %>
+          <%- include('../plantillas/encabezado-orden', { l, campo: 'estado', titulo: 'Estado' }) %>
           <th class="text-end" data-no-sort>Acciones</th>
         </tr>
       </thead>
       <tbody>
-      <% lotes.forEach(l => { %>
-        <tr>
-          <td><span class="badge bg-secondary">#<%= l.id_lte %></span></td>
-          <td data-sort-value="<%= new Date(l.fecha).getTime() %>"><%= fechaHora(l.fecha) %></td>
-          <td>
-            <strong><%= l.especies.map(e => e.nombre + ' (' + e.tipo.nombre + ')').join(', ') || '—' %></strong>
-            <a class="small text-decoration-none ms-1" href="/especies/crear?lote=<%= l.id_lte %>">+ especie</a>
+      <% if (!lotes.length) { %>
+        <tr class="fila-vacia">
+          <td colspan="8" class="text-center py-4 text-muted">
+            <%= (l.q || Object.keys(l.filtros).length) ? 'No hay registros que coincidan con la búsqueda.' : 'No hay lotes registrados en el sistema.' %>
           </td>
-          <td class="text-end"><%= l.numero_cajas %></td>
-          <td class="text-end"><%= Number(l.kilos).toFixed(2) %> kg</td>
-          <td class="text-end text-muted"><%= dinero(l.precio_kilo_salida) %></td>
+        </tr>
+      <% } %>
+      <% lotes.forEach(lote => { %>
+        <tr>
+          <td><span class="badge bg-secondary">#<%= lote.id_lte %></span></td>
+          <td data-sort-value="<%= new Date(lote.fecha).getTime() %>"><%= fechaHora(lote.fecha) %></td>
           <td>
-            <% if (l.compra) { %>
-              <span class="badge bg-success">Comprado por <%= l.compra.comprador.nombre %> <%= l.compra.comprador.apellido_paterno %></span>
+            <strong><%= lote.especies.map(e => e.nombre + ' (' + e.tipo.nombre + ')').join(', ') || '—' %></strong>
+            <a class="small text-decoration-none ms-1" href="/especies/crear?lote=<%= lote.id_lte %>">+ especie</a>
+          </td>
+          <td class="text-end"><%= lote.numero_cajas %></td>
+          <td class="text-end"><%= Number(lote.kilos).toFixed(2) %> kg</td>
+          <td class="text-end text-muted"><%= dinero(lote.precio_kilo_salida) %></td>
+          <td>
+            <% if (lote.compra) { %>
+              <span class="badge bg-success">Comprado por <%= lote.compra.comprador.nombre %> <%= lote.compra.comprador.apellido_paterno %></span>
             <% } else { %>
               <span class="badge bg-warning text-dark">Disponible</span>
             <% } %>
           </td>
           <td class="text-end text-nowrap">
-            <% if (!l.compra) { %>
+            <% if (!lote.compra) { %>
               <!-- Vender Lote -->
-              <a class="btn btn-sm btn-outline-primary" href="/compras/crear?lote=<%= l.id_lte %>" title="Registrar compra de este lote">
+              <a class="btn btn-sm btn-outline-primary" href="/compras/crear?lote=<%= lote.id_lte %>" title="Registrar compra de este lote" aria-label="Registrar compra de este lote">
                 <%- icono('cart-plus', 14) %>
               </a>
               <!-- Editar Lote -->
-              <a class="btn btn-sm btn-outline-secondary" href="/lotes/<%= l.id_lte %>/editar" title="Editar lote">
+              <a class="btn btn-sm btn-outline-secondary" href="/lotes/<%= lote.id_lte %>/editar" title="Editar lote" aria-label="Editar lote">
                 <%- icono('pencil', 14) %>
               </a>
             <% } %>
-            <% if (usuario.rol === 'admin' && !l.compra) { %>
-              <form action="/lotes/<%= l.id_lte %>?_method=DELETE" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este lote y sus especies?')">
+            <% if (usuario.rol === 'admin' && !lote.compra) { %>
+              <form action="/lotes/<%= lote.id_lte %>?_method=DELETE" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este lote y sus especies?')">
                 <button class="btn btn-sm btn-outline-danger" type="submit" title="Eliminar lote" aria-label="Eliminar lote">
                   <%- icono('trash', 14) %>
                 </button>
@@ -69,4 +76,5 @@
     </table>
   </div>
 </div>
+<%- include('../plantillas/paginacion', { l, etiqueta: 'lotes' }) %>
 <%- include('../plantillas/footer') %>

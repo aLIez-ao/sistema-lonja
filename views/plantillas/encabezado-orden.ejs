@@ -1,0 +1,13 @@
+<%
+  // Encabezado de columna ordenable en el servidor.
+  // Uso: include con { l, campo, titulo, claseExtra }.
+  const activo = l.campo === campo;
+  const siguiente = activo && l.dir === 'asc' ? 'desc' : 'asc';
+  const ariaSort = activo ? (l.dir === 'asc' ? 'ascending' : 'descending') : 'none';
+  const clase = typeof claseExtra !== 'undefined' ? claseExtra : '';
+%>
+<th scope="col" class="th-ordenable <%= clase %>" aria-sort="<%= ariaSort %>">
+  <a class="text-reset text-decoration-none" href="<%= l.urlCon({ orden: campo, dir: siguiente }) %>">
+    <%= titulo %><span class="sort-indicator" aria-hidden="true"></span>
+  </a>
+</th>
