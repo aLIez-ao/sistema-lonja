@@ -1,6 +1,8 @@
 import { body } from "express-validator";
+import { literal } from "sequelize";
 import { Lote, Especie, Tipo, Compra, Comprador } from "../models/index.js";
 import { mensajesError, mensajeBD, aMensaje } from "../helpers/utiles.js";
+import { leerListado, consultarListado } from "../helpers/listado.js";
 
 const reglas = [
   body("kilos").isFloat({ gt: 0, max: 99999999 }).withMessage("Los kilos deben ser un número mayor a 0"),
@@ -10,15 +12,31 @@ const reglas = [
 
 const datos = (b) => ({ kilos: b.kilos, numero_cajas: b.numero_cajas, precio_kilo_salida: b.precio_kilo_salida });
 
+const ORDEN = {
+  id: "id_lte",
+  fecha: "fecha",
+  kilos: "kilos",
+  cajas: "numero_cajas",
+  salida: "precio_kilo_salida",
+  estado: literal("(SELECT COUNT(*) FROM compra WHERE compra.id_cmp = `Lote`.`id_lte`)"),
+};
+
 const lista = async (req, res) => {
-  const lotes = await Lote.findAll({
-    order: [["id_lte", "DESC"]],
+  const l = leerListado(req, {
+    orden: ORDEN,
+    ordenDefecto: { campo: "id", dir: "desc" },
+  });
+  await consultarListado(l, {
+    modelo: Lote,
+    pk: "id_lte",
     include: [
       { model: Especie, as: "especies", include: [{ model: Tipo, as: "tipo" }] },
       { model: Compra, as: "compra", include: [{ model: Comprador, as: "comprador" }] },
     ],
+    includeOrden: [],
+    orden: ORDEN,
   });
-  res.render("lotes/index", { lotes, mensaje: req.query.mensaje });
+  res.render("lotes/index", { l, lotes: l.filas, mensaje: req.query.mensaje });
 };
 
 const verCrear = (req, res) => res.render("lotes/formulario", { lote: null, action: "/lotes", errores: [] });

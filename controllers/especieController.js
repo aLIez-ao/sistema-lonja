@@ -1,6 +1,8 @@
 import { body } from "express-validator";
+import { col } from "sequelize";
 import { Especie, Lote, Tipo } from "../models/index.js";
 import { mensajesError, mensajeBD, aMensaje } from "../helpers/utiles.js";
+import { leerListado, consultarListado } from "../helpers/listado.js";
 
 const reglas = [
   body("nombre").trim().notEmpty().withMessage("El nombre es obligatorio").isLength({ max: 25 }).withMessage("Nombre: máximo 25 caracteres"),
@@ -16,9 +18,26 @@ const catalogos = async () => ({
   tipos: await Tipo.findAll({ order: [["nombre", "ASC"]] }),
 });
 
+const ORDEN = {
+  id: "id_epe",
+  nombre: "nombre",
+  tipo: col("tipo.nombre"),
+  lote: "id_lte",
+};
+
 const lista = async (req, res) => {
-  const especies = await Especie.findAll({ order: [["id_epe", "DESC"]], include: [{ model: Tipo, as: "tipo" }, { model: Lote, as: "lote" }] });
-  res.render("especies/index", { especies, mensaje: req.query.mensaje });
+  const l = leerListado(req, {
+    orden: ORDEN,
+    ordenDefecto: { campo: "id", dir: "desc" },
+  });
+  await consultarListado(l, {
+    modelo: Especie,
+    pk: "id_epe",
+    include: [{ model: Tipo, as: "tipo" }, { model: Lote, as: "lote" }],
+    includeOrden: [{ model: Tipo, as: "tipo" }],
+    orden: ORDEN,
+  });
+  res.render("especies/index", { l, especies: l.filas, mensaje: req.query.mensaje });
 };
 
 const verCrear = async (req, res) => {

@@ -1,12 +1,30 @@
 import { body } from "express-validator";
-import { Tipo } from "../models/index.js";
+import { literal } from "sequelize";
+import { Tipo, Especie } from "../models/index.js";
 import { mensajesError, mensajeBD, aMensaje } from "../helpers/utiles.js";
+import { leerListado, consultarListado } from "../helpers/listado.js";
 
 const reglas = [body("nombre").trim().notEmpty().withMessage("El nombre es obligatorio").isLength({ max: 30 }).withMessage("El nombre admite máximo 30 caracteres")];
 
+const ORDEN = {
+  id: "id_tpo",
+  nombre: "nombre",
+  especies: literal("(SELECT COUNT(*) FROM especie WHERE especie.id_tpo = `Tipo`.`id_tpo`)"),
+};
+
 const lista = async (req, res) => {
-  const tipos = await Tipo.findAll({ order: [["nombre", "ASC"]] });
-  res.render("tipos/index", { tipos, mensaje: req.query.mensaje });
+  const l = leerListado(req, {
+    orden: ORDEN,
+    ordenDefecto: { campo: "nombre", dir: "asc" },
+  });
+  await consultarListado(l, {
+    modelo: Tipo,
+    pk: "id_tpo",
+    include: [{ model: Especie, as: "especies", attributes: ["id_epe"] }],
+    includeOrden: [],
+    orden: ORDEN,
+  });
+  res.render("tipos/index", { l, tipos: l.filas, mensaje: req.query.mensaje });
 };
 
 const verCrear = (req, res) => res.render("tipos/formulario", { tipo: null, action: "/tipos", method: "POST", errores: [] });

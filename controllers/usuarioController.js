@@ -4,6 +4,7 @@ import { mensajesError, mensajeBD, aMensaje } from "../helpers/utiles.js";
 import { problemasPassword, passwordInutilizable } from "../helpers/seguridad.js";
 import { aplicarFoto, borrarFoto } from "../helpers/avatar.js";
 import { enviarEnlacePassword, enviarVerificacionCorreo, resumenEnvio } from "../helpers/cuentas.js";
+import { leerListado, consultarListado } from "../helpers/listado.js";
 
 const reglas = [
   body("usuario").trim().isLength({ min: 3, max: 40 }).withMessage("El usuario debe tener entre 3 y 40 caracteres").matches(/^[\w.-]+$/).withMessage("El usuario solo admite letras, números, punto, guion y guion bajo"),
@@ -27,9 +28,27 @@ function erroresPassword(req) {
   return errs;
 }
 
+const ORDEN = {
+  id: "id",
+  usuario: "usuario",
+  nombre: "nombre_completo",
+  rol: "rol",
+  estado: "activo",
+};
+
 const lista = async (req, res) => {
-  const usuarios = await Usuario.scope("sinClave").findAll({ order: [["id", "ASC"]] });
-  res.render("usuarios/index", { usuarios, nombreRol: NOMBRE_ROL, mensaje: req.query.mensaje, error: req.query.error });
+  const l = leerListado(req, {
+    orden: ORDEN,
+    ordenDefecto: { campo: "id", dir: "asc" },
+  });
+  await consultarListado(l, {
+    modelo: Usuario.scope("sinClave"),
+    pk: "id",
+    include: [],
+    includeOrden: [],
+    orden: ORDEN,
+  });
+  res.render("usuarios/index", { l, usuarios: l.filas, nombreRol: NOMBRE_ROL, mensaje: req.query.mensaje, error: req.query.error });
 };
 
 const verCrear = (req, res) => vistaFormulario(res, { us: null, action: "/usuarios" });

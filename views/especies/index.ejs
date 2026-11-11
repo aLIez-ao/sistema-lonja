@@ -12,18 +12,25 @@
 <%- include('../plantillas/mensajes', { errores: [] }) %>
 <div class="card overflow-hidden">
   <div class="table-responsive">
-    <table class="table table-hover table-striped align-middle mb-0 table-sortable">
+    <table class="table table-hover table-striped align-middle mb-0" data-orden-servidor>
       <thead>
         <tr>
-          <th>ID</th>
+          <%- include('../plantillas/encabezado-orden', { l, campo: 'id', titulo: 'ID' }) %>
           <th data-no-sort>Imagen</th>
-          <th>Nombre</th>
-          <th>Tipo</th>
-          <th>Lote</th>
+          <%- include('../plantillas/encabezado-orden', { l, campo: 'nombre', titulo: 'Nombre' }) %>
+          <%- include('../plantillas/encabezado-orden', { l, campo: 'tipo', titulo: 'Tipo' }) %>
+          <%- include('../plantillas/encabezado-orden', { l, campo: 'lote', titulo: 'Lote' }) %>
           <th class="text-end" data-no-sort>Acciones</th>
         </tr>
       </thead>
       <tbody>
+      <% if (!especies.length) { %>
+        <tr class="fila-vacia">
+          <td colspan="6" class="text-center py-4 text-muted">
+            <%= (l.q || Object.keys(l.filtros).length) ? 'No hay registros que coincidan con la búsqueda.' : 'No hay especies registradas en el sistema.' %>
+          </td>
+        </tr>
+      <% } %>
       <% especies.forEach(e => { %>
         <tr>
           <td><%= e.id_epe %></td>
@@ -38,7 +45,7 @@
           <td><span class="badge bg-body-tertiary text-body border"><%= e.tipo.nombre %></span></td>
           <td><span class="badge bg-secondary">#<%= e.id_lte %></span></td>
           <td class="text-end text-nowrap">
-            <a class="btn btn-sm btn-outline-secondary" href="/especies/<%= e.id_epe %>/editar" title="Editar especie">
+            <a class="btn btn-sm btn-outline-secondary" href="/especies/<%= e.id_epe %>/editar" title="Editar especie" aria-label="Editar especie">
               <%- icono('pencil', 14) %>
             </a>
             <% if (usuario.rol === 'admin') { %>
@@ -55,4 +62,5 @@
     </table>
   </div>
 </div>
+<%- include('../plantillas/paginacion', { l, etiqueta: 'especies' }) %>
 <%- include('../plantillas/footer') %>

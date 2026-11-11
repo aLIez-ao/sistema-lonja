@@ -15,18 +15,25 @@
 
 <div class="card overflow-hidden">
   <div class="table-responsive">
-    <table class="table table-hover table-striped align-middle mb-0 table-sortable">
+    <table class="table table-hover table-striped align-middle mb-0" data-orden-servidor>
       <thead>
         <tr>
-          <th>Código</th>
-          <th>Nombre</th>
-          <th>Correo</th>
+          <%- include('../plantillas/encabezado-orden', { l, campo: 'codigo', titulo: 'Código' }) %>
+          <%- include('../plantillas/encabezado-orden', { l, campo: 'nombre', titulo: 'Nombre' }) %>
+          <%- include('../plantillas/encabezado-orden', { l, campo: 'correo', titulo: 'Correo' }) %>
           <th>Dirección</th>
-          <th class="text-end">Compras</th>
+          <%- include('../plantillas/encabezado-orden', { l, campo: 'compras', titulo: 'Compras', claseExtra: 'text-end' }) %>
           <th class="text-end" data-no-sort>Acciones</th>
         </tr>
       </thead>
       <tbody>
+      <% if (!compradores.length) { %>
+        <tr class="fila-vacia">
+          <td colspan="6" class="text-center py-4 text-muted">
+            <%= (l.q || Object.keys(l.filtros).length) ? 'No hay registros que coincidan con la búsqueda.' : 'No hay compradores registrados en el sistema.' %>
+          </td>
+        </tr>
+      <% } %>
       <% compradores.forEach(c => { %>
         <tr>
           <td><span class="badge bg-secondary">#<%= c.codigo_cpr %></span></td>
@@ -35,7 +42,7 @@
           <td><%= c.direccion || '—' %></td>
           <td class="text-end fw-semibold"><%= c.compras.length %></td>
           <td class="text-end text-nowrap">
-            <a class="btn btn-sm btn-outline-secondary" href="/compradores/<%= c.codigo_cpr %>/editar" title="Editar comprador">
+            <a class="btn btn-sm btn-outline-secondary" href="/compradores/<%= c.codigo_cpr %>/editar" title="Editar comprador" aria-label="Editar comprador">
               <%- icono('pencil', 14) %>
             </a>
             <% if (usuario.rol === 'admin') { %>
@@ -52,5 +59,7 @@
     </table>
   </div>
 </div>
+
+<%- include('../plantillas/paginacion', { l, etiqueta: 'compradores' }) %>
 
 <%- include('../plantillas/footer') %>

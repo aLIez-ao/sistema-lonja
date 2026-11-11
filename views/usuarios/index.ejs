@@ -9,19 +9,26 @@
 <%- include('../plantillas/mensajes', { errores: (typeof error !== 'undefined' && error) ? [error] : [] }) %>
 <div class="card overflow-hidden">
   <div class="table-responsive">
-    <table class="table table-hover table-striped align-middle mb-0 table-sortable">
+    <table class="table table-hover table-striped align-middle mb-0" data-orden-servidor>
       <thead>
         <tr>
-          <th>Usuario</th>
+          <%- include('../plantillas/encabezado-orden', { l, campo: 'nombre', titulo: 'Usuario' }) %>
           <th>Correo</th>
           <th>Teléfono</th>
           <th>Puesto</th>
-          <th>Rol</th>
-          <th>Estado</th>
+          <%- include('../plantillas/encabezado-orden', { l, campo: 'rol', titulo: 'Rol' }) %>
+          <%- include('../plantillas/encabezado-orden', { l, campo: 'estado', titulo: 'Estado' }) %>
           <th class="text-end" data-no-sort>Acciones</th>
         </tr>
       </thead>
       <tbody>
+      <% if (!usuarios.length) { %>
+        <tr class="fila-vacia">
+          <td colspan="7" class="text-center py-4 text-muted">
+            <%= (l.q || Object.keys(l.filtros).length) ? 'No hay registros que coincidan con la búsqueda.' : 'No hay usuarios registrados en el sistema.' %>
+          </td>
+        </tr>
+      <% } %>
       <% usuarios.forEach(u => { %>
         <tr>
           <td data-sort-value="<%= u.nombre_completo %>">
@@ -68,4 +75,5 @@
     </table>
   </div>
 </div>
+<%- include('../plantillas/paginacion', { l, etiqueta: 'usuarios' }) %>
 <%- include('../plantillas/footer') %>

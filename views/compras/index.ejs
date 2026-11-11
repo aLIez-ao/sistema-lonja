@@ -15,24 +15,24 @@
 
 <div class="card overflow-hidden">
   <div class="table-responsive">
-    <table class="table table-hover table-striped align-middle mb-0 table-sortable">
+    <table class="table table-hover table-striped align-middle mb-0" data-orden-servidor>
       <thead>
         <tr>
-          <th>Fecha y Hora</th>
-          <th>Lote</th>
+          <%- include('../plantillas/encabezado-orden', { l, campo: 'fecha', titulo: 'Fecha y Hora' }) %>
+          <%- include('../plantillas/encabezado-orden', { l, campo: 'lote', titulo: 'Lote' }) %>
           <th>Especies</th>
-          <th>Comprador</th>
-          <th class="text-end">Kilos</th>
-          <th class="text-end">Precio Final/kg</th>
-          <th class="text-end">Total</th>
+          <%- include('../plantillas/encabezado-orden', { l, campo: 'comprador', titulo: 'Comprador' }) %>
+          <%- include('../plantillas/encabezado-orden', { l, campo: 'kilos', titulo: 'Kilos', claseExtra: 'text-end' }) %>
+          <%- include('../plantillas/encabezado-orden', { l, campo: 'precio', titulo: 'Precio Final/kg', claseExtra: 'text-end' }) %>
+          <%- include('../plantillas/encabezado-orden', { l, campo: 'total', titulo: 'Total', claseExtra: 'text-end' }) %>
           <th class="text-end" data-no-sort>Acciones</th>
         </tr>
       </thead>
       <tbody>
-        <% if (compras.length === 0) { %>
+        <% if (!compras.length) { %>
           <tr class="fila-vacia">
             <td colspan="8" class="text-center py-4 text-muted">
-              No hay compras registradas en el sistema.
+              <%= (l.q || Object.keys(l.filtros).length) ? 'No hay registros que coincidan con la búsqueda.' : 'No hay compras registradas en el sistema.' %>
             </td>
           </tr>
         <% } %>
@@ -76,31 +76,6 @@
   </div>
 </div>
 
-<% const enlacePagina = (n) => `/compras?pagina=${n}&tam=${tam}`; %>
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mt-3">
-  <form method="GET" action="/compras" class="d-flex align-items-center gap-2 mb-0">
-    <label for="tam" class="small text-muted mb-0">Filas por página</label>
-    <select id="tam" name="tam" class="form-select form-select-sm w-auto">
-      <% porPagina.forEach(n => { %>
-        <option value="<%= n %>" <%= n === tam ? 'selected' : '' %>><%= n %></option>
-      <% }) %>
-    </select>
-    <button class="btn btn-sm btn-outline-secondary" type="submit">Aplicar</button>
-  </form>
-
-  <span class="small text-muted">Mostrando <%= inicio %>–<%= fin %> de <%= total %> compras</span>
-
-  <nav aria-label="Paginación de compras">
-    <ul class="pagination pagination-sm mb-0">
-      <li class="page-item <%= pagina <= 1 ? 'disabled' : '' %>">
-        <a class="page-link" href="<%= enlacePagina(pagina - 1) %>" aria-label="Página anterior">&laquo;</a>
-      </li>
-      <li class="page-item disabled"><span class="page-link">Página <%= pagina %> de <%= paginas %></span></li>
-      <li class="page-item <%= pagina >= paginas ? 'disabled' : '' %>">
-        <a class="page-link" href="<%= enlacePagina(pagina + 1) %>" aria-label="Página siguiente">&raquo;</a>
-      </li>
-    </ul>
-  </nav>
-</div>
+<%- include('../plantillas/paginacion', { l, etiqueta: 'compras' }) %>
 
 <%- include('../plantillas/footer') %>

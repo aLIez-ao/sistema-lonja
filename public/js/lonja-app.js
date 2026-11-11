@@ -176,7 +176,9 @@ function comoNumero(texto) {
 }
 
 function inicializarTablasOrdenables() {
-  document.querySelectorAll('table.table-sortable').forEach((tabla) => {
+  // Las tablas con orden en el servidor (data-orden-servidor) no se reordenan
+  // aquí: el orden completo vive en la URL.
+  document.querySelectorAll('table.table-sortable:not([data-orden-servidor])').forEach((tabla) => {
     const tbody = tabla.tBodies[0];
     if (!tbody) return;
     const cabeceras = Array.from(tabla.querySelectorAll('thead th'));

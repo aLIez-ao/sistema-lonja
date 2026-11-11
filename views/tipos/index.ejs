@@ -12,25 +12,34 @@
 <%- include('../plantillas/mensajes', { errores: [] }) %>
 <div class="card overflow-hidden">
   <div class="table-responsive">
-    <table class="table table-hover table-striped align-middle mb-0 table-sortable">
+    <table class="table table-hover table-striped align-middle mb-0" data-orden-servidor>
       <thead>
         <tr>
-          <th>ID</th>
-          <th>Nombre de Categoría</th>
+          <%- include('../plantillas/encabezado-orden', { l, campo: 'id', titulo: 'ID' }) %>
+          <%- include('../plantillas/encabezado-orden', { l, campo: 'nombre', titulo: 'Nombre de Categoría' }) %>
+          <%- include('../plantillas/encabezado-orden', { l, campo: 'especies', titulo: 'Especies', claseExtra: 'text-end' }) %>
           <th class="text-end" data-no-sort>Acciones</th>
         </tr>
       </thead>
       <tbody>
-      <% tipos.forEach(t => { %>
+      <% if (!tipos.length) { %>
+        <tr class="fila-vacia">
+          <td colspan="4" class="text-center py-4 text-muted">
+            <%= (l.q || Object.keys(l.filtros).length) ? 'No hay registros que coincidan con la búsqueda.' : 'No hay tipos registrados en el sistema.' %>
+          </td>
+        </tr>
+      <% } %>
+      <% tipos.forEach(tipo => { %>
         <tr>
-          <td><span class="badge bg-secondary">#<%= t.id_tpo %></span></td>
-          <td><strong><%= t.nombre %></strong></td>
+          <td><span class="badge bg-secondary">#<%= tipo.id_tpo %></span></td>
+          <td><strong><%= tipo.nombre %></strong></td>
+          <td class="text-end fw-semibold"><%= tipo.especies.length %></td>
           <td class="text-end text-nowrap">
-            <a class="btn btn-sm btn-outline-secondary" href="/tipos/<%= t.id_tpo %>/editar" title="Editar tipo">
+            <a class="btn btn-sm btn-outline-secondary" href="/tipos/<%= tipo.id_tpo %>/editar" title="Editar tipo" aria-label="Editar tipo">
               <%- icono('pencil', 14) %>
             </a>
             <% if (usuario.rol === 'admin') { %>
-            <form action="/tipos/<%= t.id_tpo %>?_method=DELETE" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este tipo?')">
+            <form action="/tipos/<%= tipo.id_tpo %>?_method=DELETE" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este tipo?')">
               <button class="btn btn-sm btn-outline-danger" type="submit" title="Eliminar tipo" aria-label="Eliminar tipo">
                 <%- icono('trash', 14) %>
               </button>
@@ -43,4 +52,5 @@
     </table>
   </div>
 </div>
+<%- include('../plantillas/paginacion', { l, etiqueta: 'tipos' }) %>
 <%- include('../plantillas/footer') %>
