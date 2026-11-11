@@ -24,7 +24,7 @@ Decisiones que se tomaron con un supuesto razonable; confirmar o corregir:
 - [x] Límite de intentos de login y de recuperación (en memoria, `helpers/seguridad.js`).
 - [ ] Token CSRF propio y cabeceras con `helmet`.
 - [x] Recuperación de contraseña y cambio de contraseña por el propio usuario.
-- [ ] Paginación en listas (compras, lotes) cuando crezcan.
+- [x] Paginación en compras (10, 25, 50 o 100 por página). Pendiente: lotes.
 - [ ] Migraciones (Sequelize CLI / umzug) en lugar de `sync`.
 - [ ] Bitácora de auditoría (quién registró/modificó/eliminó cada compra).
 - [ ] Subida de imágenes de especies (multer) si se confirma el punto 5.
