@@ -11,7 +11,7 @@
   </a>
 </div>
 
-<%- include('../plantillas/mensajes', { errores: [] }) %>
+<%- include('../plantillas/mensajes', { errores: (typeof error !== 'undefined' && error) ? [error] : [] }) %>
 
 <%- include('../plantillas/barra-listado', { l, entidad: 'compradores', etiqueta: 'compradores' }) %>
 
@@ -42,7 +42,7 @@
           <td><strong><%= c.nombre %> <%= c.apellido_paterno %> <%= c.apellido_materno || '' %></strong></td>
           <td><%= c.correo %></td>
           <td><%= c.direccion || '—' %></td>
-          <td class="text-end fw-semibold"><%= c.compras.length %></td>
+          <td class="text-end fw-semibold"><a class="enlace-registro" href="/compradores/<%= c.codigo_cpr %>"><%= c.compras.length %></a></td>
           <td class="text-end text-nowrap">
             <a class="btn btn-sm btn-outline-secondary" href="/compradores/<%= c.codigo_cpr %>/editar" title="Editar comprador" aria-label="Editar comprador">
               <%- icono('pencil', 14) %>

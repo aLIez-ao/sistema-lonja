@@ -14,3 +14,6 @@ export const mensajeBD = (err) => {
 };
 
 export const aMensaje = (texto) => `mensaje=${encodeURIComponent(texto)}`;
+
+/** Parámetro de error para redirecciones a la lista. */
+export const aError = (texto) => `error=${encodeURIComponent(texto)}`;

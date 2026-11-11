@@ -1,7 +1,7 @@
 import { body } from "express-validator";
 import { literal } from "sequelize";
 import { Lote, Especie, Tipo, Compra, Comprador } from "../models/index.js";
-import { mensajesError, mensajeBD, aMensaje } from "../helpers/utiles.js";
+import { mensajesError, mensajeBD, aMensaje, aError } from "../helpers/utiles.js";
 import { leerListado, consultarListado, combinarWhere } from "../helpers/listado.js";
 import { condicionBusqueda } from "../helpers/busqueda.js";
 import { condicionFiltros, filtroEntero, filtroFecha, filtroLista, filtroNumero } from "../helpers/filtros.js";
@@ -78,6 +78,7 @@ const lista = async (req, res) => {
       { clave: "kilosMax", etiqueta: "Kilos máximo", tipo: "numero" },
     ],
     mensaje: req.query.mensaje,
+    error: req.query.error,
   });
 };
 
@@ -99,6 +100,22 @@ const editar = async (req, res) => {
   const lote = await Lote.findByPk(req.params.id, { include: [{ model: Compra, as: "compra" }] });
   if (!lote) return res.redirect("/lotes");
   res.render("lotes/formulario", { lote, action: `/lotes/${lote.id_lte}?_method=PUT`, errores: [] });
+};
+
+/** Detalle de solo lectura: datos, especies y estado de venta del lote. */
+const detalle = async (req, res) => {
+  const lote = await Lote.findByPk(req.params.id, {
+    include: [
+      { model: Especie, as: "especies", include: [{ model: Tipo, as: "tipo" }] },
+      { model: Compra, as: "compra", include: [{ model: Comprador, as: "comprador" }] },
+    ],
+  });
+  if (!lote) return res.redirect(`/lotes?${aError("No se encontró el registro")}`);
+  res.render("lotes/detalle", {
+    lote,
+    mensaje: req.query.mensaje,
+    error: req.query.error,
+  });
 };
 
 const actualizar = async (req, res) => {
@@ -125,4 +142,4 @@ const eliminar = async (req, res) => {
   }
 };
 
-export { reglas, lista, verCrear, registrar, editar, actualizar, eliminar };
+export { reglas, lista, verCrear, registrar, detalle, editar, actualizar, eliminar };

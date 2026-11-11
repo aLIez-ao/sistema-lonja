@@ -134,11 +134,11 @@
         <% ultimasCompras.forEach(c => { %>
           <tr>
             <td class="text-nowrap"><%= c.fecha %> <span class="text-muted small"><%= c.hora %></span></td>
-            <td><a class="fw-semibold text-decoration-none" href="/compras/<%= c.id %>/factura">Lote #<%= c.id %></a></td>
+            <td><a class="enlace-registro" href="/lotes/<%= c.id %>">Lote #<%= c.id %></a></td>
             <td><%= c.especies %></td>
-            <td><%= c.comprador %></td>
+            <td><a class="enlace-registro" href="/compradores/<%= c.codigo_cpr %>"><%= c.comprador %></a></td>
             <td class="text-end"><%= c.kilos.toFixed(2) %></td>
-            <td class="text-end fw-semibold"><%= dinero(c.total) %></td>
+            <td class="text-end fw-semibold"><a class="enlace-registro" href="/compras/<%= c.id %>/factura"><%= dinero(c.total) %></a></td>
           </tr>
         <% }) %>
       </tbody>

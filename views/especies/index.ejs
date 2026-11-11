@@ -9,7 +9,7 @@
     Nueva especie
   </a>
 </div>
-<%- include('../plantillas/mensajes', { errores: [] }) %>
+<%- include('../plantillas/mensajes', { errores: (typeof error !== 'undefined' && error) ? [error] : [] }) %>
 <%- include('../plantillas/barra-listado', { l, entidad: 'especies', etiqueta: 'especies' }) %>
 <div class="card overflow-hidden">
   <div class="table-responsive">
@@ -43,8 +43,8 @@
             <% } %>
           </td>
           <td><strong><%= e.nombre %></strong></td>
-          <td><span class="badge bg-body-tertiary text-body border"><%= e.tipo.nombre %></span></td>
-          <td><span class="badge bg-secondary">#<%= e.id_lte %></span></td>
+          <td><a class="enlace-registro" href="/tipos/<%= e.tipo.id_tpo %>"><%= e.tipo.nombre %></a></td>
+          <td><a class="enlace-registro" href="/lotes/<%= e.id_lte %>">#<%= e.id_lte %></a></td>
           <td class="text-end text-nowrap">
             <a class="btn btn-sm btn-outline-secondary" href="/especies/<%= e.id_epe %>/editar" title="Editar especie" aria-label="Editar especie">
               <%- icono('pencil', 14) %>

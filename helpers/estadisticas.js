@@ -97,6 +97,7 @@ export async function estadisticasInicio() {
       hora: formatoHora(c.fecha),
       especies: c.lote.especies.map((e) => e.nombre).join(", ") || "—",
       comprador: `${c.comprador.nombre} ${c.comprador.apellido_paterno}`,
+      codigo_cpr: c.comprador.codigo_cpr,
       kilos: Number(c.lote.kilos),
       total: Number(c.precio_total),
     })),

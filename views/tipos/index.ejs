@@ -9,7 +9,7 @@
     Nuevo tipo
   </a>
 </div>
-<%- include('../plantillas/mensajes', { errores: [] }) %>
+<%- include('../plantillas/mensajes', { errores: (typeof error !== 'undefined' && error) ? [error] : [] }) %>
 <%- include('../plantillas/barra-listado', { l, entidad: 'tipos', etiqueta: 'tipos' }) %>
 <div class="card overflow-hidden">
   <div class="table-responsive">
@@ -34,7 +34,7 @@
         <tr>
           <td><span class="badge bg-secondary">#<%= tipo.id_tpo %></span></td>
           <td><strong><%= tipo.nombre %></strong></td>
-          <td class="text-end fw-semibold"><%= tipo.especies.length %></td>
+          <td class="text-end fw-semibold"><a class="enlace-registro" href="/tipos/<%= tipo.id_tpo %>"><%= tipo.especies.length %></a></td>
           <td class="text-end text-nowrap">
             <a class="btn btn-sm btn-outline-secondary" href="/tipos/<%= tipo.id_tpo %>/editar" title="Editar tipo" aria-label="Editar tipo">
               <%- icono('pencil', 14) %>

@@ -6,6 +6,7 @@ const router = express.Router();
 router.get("/", c.lista);
 router.get("/crear", c.verCrear);
 router.post("/", c.reglas, c.registrar);
+router.get("/:id", c.detalle);
 router.get("/:id/editar", c.editar);
 router.put("/:id", c.reglas, c.actualizar);
 router.delete("/:id", permitir("admin"), c.eliminar); // solo el administrador borra

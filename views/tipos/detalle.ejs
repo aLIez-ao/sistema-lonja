@@ -1,0 +1,69 @@
+<%- include('../plantillas/header') %>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <div>
+    <a href="/tipos" class="btn btn-sm btn-outline-secondary mb-2"><%- icono('arrow-left', 14, 'me-1') %>Volver a la lista</a>
+    <h1 class="h3 mb-0 fw-bold"><%= tipo.nombre %></h1>
+    <p class="text-muted small mb-0">Tipo #<%= tipo.id_tpo %></p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a class="btn btn-primary" href="/tipos/<%= tipo.id_tpo %>/editar">
+      <%- icono('pencil', 16, 'me-1') %>Editar
+    </a>
+    <% if (usuario.rol === 'admin') { %>
+      <form action="/tipos/<%= tipo.id_tpo %>?_method=DELETE" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este tipo?')">
+        <button class="btn btn-outline-danger" type="submit"><%- icono('trash', 16, 'me-1') %>Eliminar</button>
+      </form>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../plantillas/mensajes', { errores: (typeof error !== 'undefined' && error) ? [error] : [] }) %>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-xl-3">
+    <div class="metric-card">
+      <div class="metric-label">Especies</div>
+      <div class="metric-value"><%= especies.length %></div>
+    </div>
+  </div>
+</div>
+
+<div class="card overflow-hidden">
+  <div class="card-header"><h2 class="h6 mb-0 fw-bold">Especies de este tipo</h2></div>
+  <div class="table-responsive">
+    <table class="table table-hover table-striped align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Especie</th>
+          <th>Lote</th>
+          <th>Fecha del lote</th>
+          <th>Estado del lote</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (!especies.length) { %>
+          <tr>
+            <td colspan="4" class="text-center py-4 text-muted">Todavía no hay especies de este tipo.</td>
+          </tr>
+        <% } %>
+        <% especies.forEach(e => { %>
+          <tr>
+            <td><a class="enlace-registro" href="/especies/<%= e.id_epe %>"><%= e.nombre %></a></td>
+            <td><a class="enlace-registro" href="/lotes/<%= e.lote.id_lte %>">Lote #<%= e.lote.id_lte %></a></td>
+            <td><%= fechaHora(e.lote.fecha) %></td>
+            <td>
+              <% if (e.lote.compra) { %>
+                <span class="badge bg-success">Vendido</span>
+              <% } else { %>
+                <span class="badge bg-warning text-dark">Disponible</span>
+              <% } %>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('../plantillas/footer') %>

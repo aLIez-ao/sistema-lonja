@@ -1,0 +1,114 @@
+<%- include('../plantillas/header') %>
+<%
+  const nombreCompleto = `${comprador.nombre} ${comprador.apellido_paterno} ${comprador.apellido_materno || ''}`.trim();
+%>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <div>
+    <a href="/compradores" class="btn btn-sm btn-outline-secondary mb-2"><%- icono('arrow-left', 14, 'me-1') %>Volver a la lista</a>
+    <h1 class="h3 mb-0 fw-bold"><%= nombreCompleto %></h1>
+    <p class="text-muted small mb-0">Comprador #<%= comprador.codigo_cpr %></p>
+  </div>
+  <div class="d-flex gap-2 flex-wrap">
+    <a class="btn btn-primary" href="/compradores/<%= comprador.codigo_cpr %>/editar">
+      <%- icono('pencil', 16, 'me-1') %>Editar
+    </a>
+    <% if (usuario.rol === 'admin') { %>
+      <form action="/compradores/<%= comprador.codigo_cpr %>?_method=DELETE" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este comprador?')">
+        <button class="btn btn-outline-danger" type="submit"><%- icono('trash', 16, 'me-1') %>Eliminar</button>
+      </form>
+    <% } %>
+  </div>
+</div>
+
+<%- include('../plantillas/mensajes', { errores: (typeof error !== 'undefined' && error) ? [error] : [] }) %>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-xl-3">
+    <div class="metric-card">
+      <div class="metric-label">Compras</div>
+      <div class="metric-value"><%= compras.length %></div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="metric-card">
+      <div class="metric-label">Kilos comprados</div>
+      <div class="metric-value"><%= kilos.toLocaleString('es-MX', { maximumFractionDigits: 2 }) %></div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="metric-card">
+      <div class="metric-label">Total gastado</div>
+      <div class="metric-value"><%= dinero(total) %></div>
+    </div>
+  </div>
+  <div class="col-6 col-xl-3">
+    <div class="metric-card">
+      <div class="metric-label">Última compra</div>
+      <div class="metric-value metric-fecha"><%= ultima ? fechaHora(ultima) : '—' %></div>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-4">
+  <div class="card-header"><h2 class="h6 mb-0 fw-bold">Datos de contacto</h2></div>
+  <div class="card-body">
+    <dl class="row mb-0">
+      <dt class="col-sm-3">Correo</dt>
+      <dd class="col-sm-9"><a class="enlace-registro" href="mailto:<%= comprador.correo %>"><%= comprador.correo %></a></dd>
+      <dt class="col-sm-3">Dirección</dt>
+      <dd class="col-sm-9 mb-0"><%= comprador.direccion || '—' %></dd>
+    </dl>
+  </div>
+</div>
+
+<div class="card overflow-hidden">
+  <div class="card-header d-flex justify-content-between align-items-center">
+    <h2 class="h6 mb-0 fw-bold">Compras del comprador</h2>
+    <a class="small text-decoration-none" href="/compras?comprador=<%= comprador.codigo_cpr %>">Ver en el listado</a>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover table-striped align-middle mb-0">
+      <thead>
+        <tr>
+          <th>Fecha y hora</th>
+          <th>Compra</th>
+          <th>Lote</th>
+          <th>Especies</th>
+          <th class="text-end">Kilos</th>
+          <th class="text-end">Final/kg</th>
+          <th class="text-end">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% if (!compras.length) { %>
+          <tr>
+            <td colspan="7" class="text-center py-4 text-muted">Este comprador todavía no tiene compras registradas.</td>
+          </tr>
+        <% } %>
+        <% compras.forEach(c => { %>
+          <tr>
+            <td class="text-nowrap"><%= fechaHora(c.fecha) %></td>
+            <td>
+              <a class="enlace-registro" href="/compras/<%= c.id_cmp %>/factura" title="Ver la factura de la compra">#<%= c.id_cmp %></a>
+            </td>
+            <td>
+              <a class="enlace-registro" href="/lotes/<%= c.lote.id_lte %>">Lote #<%= c.lote.id_lte %></a>
+            </td>
+            <td>
+              <% (c.lote.especies || []).forEach((e, i) => { %>
+                <a class="enlace-registro" href="/especies/<%= e.id_epe %>"><%= e.nombre %></a><%= i < c.lote.especies.length - 1 ? ', ' : '' %>
+              <% }) %>
+              <% if (!(c.lote.especies || []).length) { %>—<% } %>
+            </td>
+            <td class="text-end"><%= Number(c.lote.kilos).toFixed(2) %></td>
+            <td class="text-end"><%= dinero(c.precio_kilo_final) %></td>
+            <td class="text-end fw-semibold"><%= dinero(c.precio_total) %></td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<%- include('../plantillas/footer') %>

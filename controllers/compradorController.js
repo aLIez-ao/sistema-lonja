@@ -1,7 +1,7 @@
 import { body } from "express-validator";
 import { literal } from "sequelize";
-import { Comprador, Compra } from "../models/index.js";
-import { mensajesError, mensajeBD, aMensaje } from "../helpers/utiles.js";
+import { Comprador, Compra, Lote, Especie, Tipo } from "../models/index.js";
+import { mensajesError, mensajeBD, aMensaje, aError } from "../helpers/utiles.js";
 import { leerListado, consultarListado, combinarWhere } from "../helpers/listado.js";
 import { condicionBusqueda } from "../helpers/busqueda.js";
 import { condicionFiltros, filtroSiNo } from "../helpers/filtros.js";
@@ -75,6 +75,7 @@ const lista = async (req, res) => {
       },
     ],
     mensaje: req.query.mensaje,
+    error: req.query.error,
   });
 };
 
@@ -95,6 +96,40 @@ const editar = async (req, res) => {
   const comprador = await Comprador.findByPk(req.params.id);
   if (!comprador) return res.redirect("/compradores");
   res.render("compradores/formulario", { comprador, action: `/compradores/${comprador.codigo_cpr}?_method=PUT`, errores: [] });
+};
+
+/** Detalle de solo lectura: contacto, indicadores y compras del comprador. */
+const detalle = async (req, res) => {
+  const comprador = await Comprador.findByPk(req.params.id, {
+    include: [
+      {
+        model: Compra,
+        as: "compras",
+        include: [
+          {
+            model: Lote,
+            as: "lote",
+            include: [{ model: Especie, as: "especies", include: [{ model: Tipo, as: "tipo" }] }],
+          },
+        ],
+      },
+    ],
+  });
+  if (!comprador) return res.redirect(`/compradores?${aError("No se encontró el registro")}`);
+
+  const compras = (comprador.compras || []).slice().sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+  const kilos = compras.reduce((suma, c) => suma + Number(c.lote?.kilos || 0), 0);
+  const total = compras.reduce((suma, c) => suma + Number(c.precio_total || 0), 0);
+
+  res.render("compradores/detalle", {
+    comprador,
+    compras,
+    kilos,
+    total,
+    ultima: compras.length ? compras[0].fecha : null,
+    mensaje: req.query.mensaje,
+    error: req.query.error,
+  });
 };
 
 const actualizar = async (req, res) => {
@@ -119,4 +154,4 @@ const eliminar = async (req, res) => {
   }
 };
 
-export { reglas, lista, verCrear, registrar, editar, actualizar, eliminar };
+export { reglas, lista, verCrear, registrar, detalle, editar, actualizar, eliminar };

@@ -61,7 +61,7 @@
       <div class="hoja-caja-titulo">DATOS DEL RECEPTOR / COMPRADOR</div>
       <div class="factura-receptor-cols">
         <div>
-          <div><span>Cliente: </span><%= f.cliente.nombre %></div>
+          <div><span>Cliente: </span><a class="enlace-registro" href="/compradores/<%= compra.comprador.codigo_cpr %>"><%= f.cliente.nombre %></a></div>
           <div><span>Código de comprador: </span>#<%= f.cliente.codigo %></div>
           <div><span>Correo: </span><%= f.cliente.correo %></div>
         </div>
@@ -84,7 +84,7 @@
       </thead>
       <tbody>
         <tr>
-          <td class="fuerte marino"><%= f.concepto.lote %></td>
+          <td class="fuerte marino"><a class="enlace-registro" href="/lotes/<%= compra.id_cmp %>"><%= f.concepto.lote %></a></td>
           <td><div class="fuerte"><%= f.concepto.especies %></div><div class="nota"><%= f.concepto.nota %></div></td>
           <td class="der"><%= f.concepto.cajas %></td>
           <td class="der"><%= f.concepto.kilos %></td>

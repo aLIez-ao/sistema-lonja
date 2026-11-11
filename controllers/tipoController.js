@@ -1,7 +1,7 @@
 import { body } from "express-validator";
 import { literal } from "sequelize";
-import { Tipo, Especie } from "../models/index.js";
-import { mensajesError, mensajeBD, aMensaje } from "../helpers/utiles.js";
+import { Tipo, Especie, Lote, Compra } from "../models/index.js";
+import { mensajesError, mensajeBD, aMensaje, aError } from "../helpers/utiles.js";
 import { leerListado, consultarListado } from "../helpers/listado.js";
 import { condicionBusqueda } from "../helpers/busqueda.js";
 
@@ -26,7 +26,7 @@ const lista = async (req, res) => {
     where: await condicionBusqueda("tipos", l.q),
     orden: ORDEN,
   });
-  res.render("tipos/index", { l, tipos: l.filas, mensaje: req.query.mensaje });
+  res.render("tipos/index", { l, tipos: l.filas, mensaje: req.query.mensaje, error: req.query.error });
 };
 
 const verCrear = (req, res) => res.render("tipos/formulario", { tipo: null, action: "/tipos", method: "POST", errores: [] });
@@ -46,6 +46,20 @@ const editar = async (req, res) => {
   const tipo = await Tipo.findByPk(req.params.id);
   if (!tipo) return res.redirect("/tipos");
   res.render("tipos/formulario", { tipo, action: `/tipos/${tipo.id_tpo}?_method=PUT`, method: "POST", errores: [] });
+};
+
+/** Detalle de solo lectura: nombre del tipo y sus especies. */
+const detalle = async (req, res) => {
+  const tipo = await Tipo.findByPk(req.params.id, {
+    include: [{ model: Especie, as: "especies", include: [{ model: Lote, as: "lote", include: [{ model: Compra, as: "compra" }] }] }],
+  });
+  if (!tipo) return res.redirect(`/tipos?${aError("No se encontró el registro")}`);
+  res.render("tipos/detalle", {
+    tipo,
+    especies: tipo.especies,
+    mensaje: req.query.mensaje,
+    error: req.query.error,
+  });
 };
 
 const actualizar = async (req, res) => {
@@ -70,4 +84,4 @@ const eliminar = async (req, res) => {
   }
 };
 
-export { reglas, lista, verCrear, registrar, editar, actualizar, eliminar };
+export { reglas, lista, verCrear, registrar, detalle, editar, actualizar, eliminar };

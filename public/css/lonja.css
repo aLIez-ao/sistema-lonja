@@ -395,6 +395,19 @@ td .btn-sm { padding: 0.3rem 0.55rem; line-height: 1; }
 .chip-filtro:hover, .chip-filtro:focus-visible { background-color: var(--lonja-navy); color: #fff; outline: none; }
 .chip-filtro:focus-visible { box-shadow: 0 0 0 3px rgba(8, 126, 139, 0.3); }
 
+/* Enlaces entre registros relacionados (listas y páginas de detalle) */
+.enlace-registro { color: var(--lonja-navy); font-weight: 600; text-decoration: none; }
+.enlace-registro:hover { color: var(--lonja-teal); text-decoration: underline; }
+.enlace-registro:focus-visible { outline: 2px solid var(--lonja-teal); outline-offset: 2px; border-radius: 2px; }
+
+/* Detalle: valores de métrica que no son cifras grandes */
+.metric-fecha { font-size: 1.05rem; }
+.metric-estado { font-size: 1.15rem; }
+
+/* En la factura los enlaces no alteran el aspecto del documento */
+.hoja-carta .enlace-registro { color: inherit; font-weight: inherit; }
+.hoja-carta .enlace-registro:hover { color: inherit; }
+
 .table-hover tbody tr:hover {
   background-color: var(--lonja-surface-subtle);
 }

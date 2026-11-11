@@ -36,7 +36,7 @@ test("sugerencias de especies: 'huach' propone Huachinango con su enlace", async
   const datos = json(r);
   assert.equal(datos.length, 1);
   assert.equal(datos[0].titulo, "Huachinango");
-  assert.equal(datos[0].url, `/especies/${especieHuach.id_epe}/editar`);
+  assert.equal(datos[0].url, `/especies/${especieHuach.id_epe}`);
   assert.match(datos[0].subtitulo, /Pescado · Lote #/);
 });
 
