@@ -112,3 +112,28 @@ test("nombres públicos abreviados y Referer remoto no pueden abrir redireccione
   req.get = (h) => h === "host" ? "lonja.local" : "//evil.example/x";
   assert.equal(rutaReferer(req, "/tienda/lote/1"), "/tienda/lote/1");
 });
+
+test("mi cuenta muestra, edita y elimina solo mis opiniones y propone compras sin calificar", async () => {
+  const a = await comprador("mis_opiniones_a"), b = await comprador("mis_opiniones_b");
+  const x = await articulo(), y = await articulo(), z = await articulo();
+  for (const item of [x, y]) await Compra.create({ id_cmp: item.lote.id_lte, codigo_cpr: a.c.codigo_cpr, precio_kilo_final: 20, precio_total: 100 });
+  await Compra.create({ id_cmp: z.lote.id_lte, codigo_cpr: b.c.codigo_cpr, precio_kilo_final: 20, precio_total: 100 });
+  const propia = await Opinion.create({ id_usuario: a.u.id, id_cat: x.catalogo.id_cat, estrellas: 4, titulo: "Anterior", texto: "Reseña propia", visible: false });
+  const ajena = await Opinion.create({ id_usuario: b.u.id, id_cat: z.catalogo.id_cat, estrellas: 5, titulo: "Privada", texto: "No es mía", visible: true });
+  const lista = await a.web.get("/cuenta/opiniones");
+  assert.equal(lista.status, 200);
+  assert.match(lista.texto, /Oculta por moderación/);
+  assert.match(lista.texto, /Especies que compraste y aún no calificaste/);
+  assert.match(lista.texto, new RegExp(`/tienda/especie/${y.catalogo.id_cat}#opiniones`));
+  assert.equal(lista.texto.includes(`/tienda/especie/${z.catalogo.id_cat}#opiniones`), false);
+  assert.equal(lista.texto.includes("No es mía"), false);
+  await a.web.post(`/tienda/especie/${x.catalogo.id_cat}/opiniones`, { estrellas: "5", titulo: "Actualizada", texto: "Mi versión nueva" });
+  assert.equal((await Opinion.findByPk(propia.id_op)).titulo, "Actualizada");
+  assert.equal((await a.web.get("/cuenta/opiniones")).texto.includes("Actualizada"), true);
+  assert.equal((await a.web.post(`/cuenta/opiniones/${ajena.id_op}?_method=DELETE`)).status, 404);
+  assert.equal((await a.web.post(`/cuenta/opiniones/${propia.id_op}?_method=DELETE`)).status, 302);
+  assert.equal(await Opinion.findByPk(propia.id_op), null);
+  const empleado = await Usuario.create({ usuario: "opinion_personal", nombre_completo: "Personal", password: "Clave1234", rol: "capturista" });
+  const personal = cliente(srv.base); await personal.entrar(empleado.usuario, "Clave1234");
+  assert.equal((await personal.get("/cuenta/opiniones")).status, 403);
+});

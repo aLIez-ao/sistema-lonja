@@ -135,6 +135,39 @@ export async function guardarOpinion(req, res) {
   if (opinion.estrellas !== estrellas || opinion.titulo !== limpio(req.body.titulo, 80) || opinion.texto !== limpio(req.body.texto, 1000)) await opinion.update({ estrellas, titulo: limpio(req.body.titulo, 80), texto: limpio(req.body.texto, 1000), visible: true, fecha: new Date() });
   return volverA(req, res, destino, { mensaje: "Tu opinión se guardó correctamente." });
 }
+export async function misOpiniones(req, res) {
+  const opiniones = await Opinion.findAll({
+    where: { id_usuario: req.usuario.id },
+    include: [{ model: EspecieCatalogo, as: "especie", attributes: ["id_cat", "nombre", "imagen"] }],
+    order: [["fecha", "DESC"]],
+  });
+  const compras = req.usuario.codigo_cpr ? await Compra.findAll({
+    where: { codigo_cpr: req.usuario.codigo_cpr },
+    include: [
+      { model: Lote, as: "lote", required: true, include: [{ model: Especie, as: "especies", required: true, where: { id_cat: { [Op.ne]: null } }, include: [{ model: EspecieCatalogo, as: "catalogo", attributes: ["id_cat", "nombre", "imagen"] }] }] },
+      { model: Pedido, as: "pedido", required: false, attributes: ["id_ped", "estado"] },
+    ],
+    order: [["fecha", "DESC"]],
+  }) : [];
+  const estadosPagados = new Set(["pagado", "preparando", "enviado", "entregado"]);
+  const yaOpino = new Set(opiniones.map((o) => Number(o.id_cat)));
+  const pendientes = new Map();
+  for (const compra of compras) {
+    if (compra.id_ped && !estadosPagados.has(compra.pedido?.estado)) continue;
+    for (const especie of compra.lote?.especies || []) {
+      const ficha = especie.catalogo;
+      if (ficha && !yaOpino.has(Number(ficha.id_cat))) pendientes.set(Number(ficha.id_cat), ficha);
+    }
+  }
+  res.render("cuenta/opiniones", { opiniones, pendientes: [...pendientes.values()] });
+}
+
+export async function borrarMiOpinion(req, res) {
+  const opinion = await Opinion.findOne({ where: { id_op: req.params.id, id_usuario: req.usuario.id } });
+  if (!opinion) return errorDeSitio(req, res, 404, "No encontramos esa opinión en tu cuenta.", "/cuenta/opiniones");
+  await opinion.destroy();
+  return volverA(req, res, "/cuenta/opiniones", { mensaje: "Opinión eliminada." });
+}
 export async function moderarOpiniones(req, res) { res.render("social/opiniones", { opiniones: await Opinion.findAll({ include: [{ model: Usuario, as: "autor", attributes: ["nombre_completo"] }, { model: EspecieCatalogo, as: "especie" }], order: [["fecha", "DESC"]] }) }); }
 export async function cambiarVisibilidadOpinion(req, res) {
   const opinion = await Opinion.findByPk(req.params.id);
@@ -143,14 +176,15 @@ export async function cambiarVisibilidadOpinion(req, res) {
   return volverA(req, res, "/opiniones", { mensaje: "Visibilidad de opinión actualizada." });
 }
 
-export async function ponerOpinionesEnFicha(id_cat) {
+export async function ponerOpinionesEnFicha(id_cat, id_usuario = null) {
   const opiniones = await Opinion.findAll({ where: { id_cat, visible: true }, include: [{ model: Usuario, as: "autor", attributes: ["nombre_completo"] }], order: [["fecha", "DESC"]] });
   const opinionesPublicas = opiniones.map((opinion) => ({
     id_op: opinion.id_op, estrellas: opinion.estrellas, titulo: opinion.titulo, texto: opinion.texto, fecha: opinion.fecha,
     autorPublico: nombrePublico(opinion.autor?.nombre_completo),
   }));
   const distribucion = [1, 2, 3, 4, 5].map((n) => opiniones.filter((o) => o.estrellas === n).length);
-  return { opiniones: opinionesPublicas, resumenOpiniones: { total: opiniones.length, media: opiniones.length ? opiniones.reduce((s, o) => s + o.estrellas, 0) / opiniones.length : 0, distribucion } };
+  const opinionPropia = id_usuario ? await Opinion.findOne({ where: { id_cat, id_usuario } }) : null;
+  return { opiniones: opinionesPublicas, opinionPropia, resumenOpiniones: { total: opiniones.length, media: opiniones.length ? opiniones.reduce((s, o) => s + o.estrellas, 0) / opiniones.length : 0, distribucion } };
 }
 
 export async function preguntasPublicas(condicion) {

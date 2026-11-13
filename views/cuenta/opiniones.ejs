@@ -1,0 +1,27 @@
+<%- include('../plantillas/header') %>
+<main class="container py-4">
+  <div class="mb-4"><h1>Mis opiniones</h1><p class="text-muted">Consulta y administra las opiniones que escribiste.</p></div>
+  <%- include('../plantillas/mensajes', { mensaje: typeof mensaje !== 'undefined' ? mensaje : null, errores: (typeof error !== 'undefined' && error) ? [error] : [] }) %>
+
+  <section class="mb-5" aria-labelledby="opiniones-heading">
+    <h2 id="opiniones-heading" class="h4">Opiniones publicadas o en revisión</h2>
+    <% if (!opiniones.length) { %><p class="text-muted">Aún no has escrito opiniones.</p><% } %>
+    <div class="row g-3">
+      <% opiniones.forEach((opinion) => { %>
+        <div class="col-12 col-lg-6"><article class="card h-100"><div class="card-body">
+          <div class="d-flex justify-content-between gap-2 align-items-start"><div><h3 class="h5 mb-1"><a href="/tienda/especie/<%= opinion.id_cat %>"><%= opinion.especie?.nombre || 'Especie' %></a></h3><div class="text-warning" aria-label="<%= opinion.estrellas %> de 5 estrellas"><%= '★'.repeat(opinion.estrellas) %></div></div><span class="badge <%= opinion.visible ? 'text-bg-success' : 'text-bg-secondary' %>"><%= opinion.visible ? 'Visible' : 'Oculta por moderación' %></span></div>
+          <h4 class="h6 mt-3"><%= opinion.titulo %></h4><p class="mb-2"><%= opinion.texto %></p><small class="text-muted">Actualizada: <%= fechaHora(opinion.fecha) %></small>
+          <div class="d-flex flex-wrap gap-2 mt-3"><a class="btn btn-sm btn-outline-primary" href="/tienda/especie/<%= opinion.id_cat %>#opiniones">Editar opinión</a><form action="/cuenta/opiniones/<%= opinion.id_op %>?_method=DELETE" method="post" onsubmit="return confirm('¿Eliminar esta opinión?')"><button class="btn btn-sm btn-outline-danger">Eliminar</button></form></div>
+        </div></article></div>
+      <% }) %>
+    </div>
+  </section>
+
+  <section aria-labelledby="pendientes-heading">
+    <h2 id="pendientes-heading" class="h4">Especies que compraste y aún no calificaste</h2>
+    <% if (!pendientes.length) { %><p class="text-muted">No tienes especies pendientes de calificar.</p><% } else { %>
+      <div class="list-group"><% pendientes.forEach((especie) => { %><a class="list-group-item list-group-item-action d-flex justify-content-between align-items-center gap-3" href="/tienda/especie/<%= especie.id_cat %>#opiniones"><span><strong><%= especie.nombre %></strong><small class="d-block text-muted">Compra verificada</small></span><span class="btn btn-sm btn-primary">Opinar</span></a><% }) %></div>
+    <% } %>
+  </section>
+</main>
+<%- include('../plantillas/footer') %>
