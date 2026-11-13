@@ -1,6 +1,6 @@
 // Estadísticas del tablero de inicio.
 import { Op } from "sequelize";
-import { Compra, Lote, Comprador, Especie, Tipo } from "../models/index.js";
+import { Compra, Lote, Comprador, Especie, Tipo, Pedido, Pregunta, Opinion } from "../models/index.js";
 import { hoy, rangoDelDia, redondea, formatoFecha, formatoHora, NOMBRES_MESES } from "./fechas.js";
 
 const DIA = 24 * 60 * 60 * 1000;
@@ -28,7 +28,7 @@ export async function estadisticasInicio() {
   const inicio30 = new Date(inicioHoy.getTime() - 29 * DIA);
   const desde = new Date(Math.min(inicioMesAnterior.getTime(), inicio30.getTime()));
 
-  const [compras, totalLotes, lotesVendidos, compradores, especies] = await Promise.all([
+  const [compras, totalLotes, lotesVendidos, compradores, especies, pedidosAtender, preguntasSinResponder, opinionesNuevas, comprasTienda, comprasMostrador] = await Promise.all([
     Compra.findAll({
       where: { fecha: { [Op.gte]: desde, [Op.lt]: finHoy } },
       order: [["fecha", "DESC"]],
@@ -41,6 +41,11 @@ export async function estadisticasInicio() {
     Compra.count(),
     Comprador.count(),
     Especie.count({ distinct: true, col: "nombre" }),
+    Pedido.count({ where: { estado: { [Op.in]: ["pagado", "preparando", "enviado"] } } }),
+    Pregunta.count({ where: { estado: "pendiente" } }),
+    Opinion.count({ where: { fecha: { [Op.gte]: new Date(Date.now() - 7 * DIA) } } }),
+    Compra.count({ where: { id_ped: { [Op.ne]: null } } }),
+    Compra.count({ where: { id_ped: null } }),
   ]);
 
   const entre = (a, b) => compras.filter((c) => c.fecha >= a && c.fecha < b);
@@ -91,6 +96,8 @@ export async function estadisticasInicio() {
     sobreprecioMedio: conSalida ? redondea((sobreprecio / conSalida) * 100) : null,
     lotes: { total: totalLotes, vendidos: lotesVendidos, disponibles, porcentajeVendido: totalLotes ? Math.round((lotesVendidos / totalLotes) * 100) : 0 },
     catalogo: { compradores, especies },
+    pendientes: { pedidos: pedidosAtender, preguntas: preguntasSinResponder, opiniones: opinionesNuevas },
+    ventas: { tienda: comprasTienda, mostrador: comprasMostrador, total: comprasTienda + comprasMostrador },
     ultimasCompras: compras.slice(0, 6).map((c) => ({
       id: c.id_cmp,
       fecha: formatoFecha(c.fecha),
