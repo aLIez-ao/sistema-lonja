@@ -58,3 +58,18 @@ test("asistente oculta GMAIL_PASS y enmascara el correo en su resumen", async ()
     assert.equal(Buffer.concat(chunksMala).toString("utf8").includes(datos.GMAIL_PASS), false);
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
+
+test("la contraseña de aplicación se acepta con espacios, como la muestra Google, y se guarda sin ellos", async () => {
+  const conEspacios = "abcd efgh ijkl mnop";
+  assert.deepEqual(validarConfiguracionCorreo({ usuario: datos.GMAIL_USER, clave: conEspacios, appUrl: datos.APP_URL }), []);
+  assert.equal(validarConfiguracionCorreo({ usuario: datos.GMAIL_USER, clave: "abcd efgh ijkl", appUrl: datos.APP_URL }).length, 1);
+  const carpeta = await mkdtemp(path.join(os.tmpdir(), "lonja-env-"));
+  try {
+    const env = path.join(carpeta, ".env");
+    await writeFile(env, "PORT=2800\nGMAIL_USER=a@b.co\nGMAIL_PASS=vieja\nAPP_URL=http://x\n");
+    await escribirEnv({ rutaEnv: env, valores: { ...datos, GMAIL_PASS: conEspacios } });
+    const texto = await readFile(env, "utf8");
+    assert.match(texto, /GMAIL_PASS=abcdefghijklmnop\n/);
+    assert.doesNotMatch(texto, /GMAIL_PASS=[^\n]*[ \t]/);
+  } finally { await rm(carpeta, { recursive: true, force: true }); }
+});
