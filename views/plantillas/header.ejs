@@ -34,7 +34,13 @@
           <ul class="navbar-nav me-auto mb-2 mb-xl-0 ms-xl-3">
             <li class="nav-item"><a class="nav-link <%= activo('/compras') %>" href="/compras"><%= t('compras') %></a></li>
             <li class="nav-item"><a class="nav-link <%= activo('/lotes') %>" href="/lotes"><%= t('lotes') %></a></li>
-            <li class="nav-item"><a class="nav-link <%= activo('/especies') %>" href="/especies"><%= t('especies') %></a></li>
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle <%= activo('/especies') || activo('/catalogo') %>" href="/especies" role="button" data-bs-toggle="dropdown" aria-expanded="false"><%= t('especies') %></a>
+              <ul class="dropdown-menu shadow-sm">
+                <li><a class="dropdown-item" href="/especies">Especies por lote</a></li>
+                <li><a class="dropdown-item" href="/catalogo">Catálogo de especies</a></li>
+              </ul>
+            </li>
             <li class="nav-item"><a class="nav-link <%= activo('/compradores') %>" href="/compradores"><%= t('compradores') %></a></li>
             <li class="nav-item"><a class="nav-link <%= activo('/tipos') %>" href="/tipos"><%= t('tipos') %></a></li>
             <li class="nav-item"><a class="nav-link <%= activo('/reportes') %>" href="/reportes/diario"><%= t('reportes') %></a></li>
