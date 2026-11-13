@@ -148,6 +148,7 @@ export const actualizarDatos = async (req, res) => {
     return res.redirect(`/cuenta/datos?${aMensaje(aviso)}`);
   } catch (e) {
     console.error("No se pudieron actualizar los datos de la cuenta:", e);
-    return res.redirect(`/cuenta/datos?${aError("No se pudieron guardar los datos. Revisa la información e inténtalo de nuevo.")}`);
+    const errorImagen = /^(?:La imagen debe ser un archivo JPG, PNG o WebP|La imagen es demasiado grande|El archivo no es una imagen válida)$/.test(String(e?.message || ""));
+    return res.redirect(`/cuenta/datos?${aError(errorImagen ? e.message : "No se pudieron guardar los datos. Revisa la información e inténtalo de nuevo.")}`);
   }
 };
