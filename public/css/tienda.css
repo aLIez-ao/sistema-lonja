@@ -127,18 +127,62 @@
   gap: 0.35rem;
 }
 
-.tienda-heroe__puntos span {
-  width: 8px;
-  height: 8px;
+.tienda-heroe__punto {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.4);
-  transition: width 0.3s ease, background 0.3s ease;
+  background: transparent;
+  cursor: pointer;
 }
 
-.tienda-heroe__puntos span.activo {
-  width: 22px;
+.tienda-heroe__punto::before {
+  content: "";
+  width: 8px;
+  height: 8px;
   border-radius: 999px;
+  background: rgba(255, 255, 255, 0.6);
+  transition: width 0.25s ease, background 0.25s ease;
+}
+
+.tienda-heroe__punto.activo::before {
+  width: 22px;
   background: #FFFFFF;
+}
+
+.tienda-heroe__flecha {
+  position: absolute;
+  top: 50%;
+  z-index: 5;
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 50%;
+  color: #062233;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.22);
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.tienda-heroe__flecha--izq { left: 1rem; }
+.tienda-heroe__flecha--der { right: 1rem; }
+.tienda-heroe__flecha:hover { background: #fff; }
+.tienda-heroe__flecha:focus-visible,
+.tienda-heroe__punto:focus-visible { outline: 3px solid #f8b84e; outline-offset: 2px; }
+
+.tienda-heroe__slides[data-solo] .tienda-heroe__flecha,
+.tienda-heroe__slides[data-solo] .tienda-heroe__puntos { display: none; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tienda-heroe__slide,
+  .tienda-heroe__punto::before { transition: none; }
 }
 
 .tienda-heroe__vacio {
@@ -295,6 +339,15 @@
   max-width: 520px;
 }
 
+.tienda-buscador-header {
+  flex: 0 1 520px;
+  width: min(520px, 30vw);
+  min-width: 260px;
+  margin-left: auto;
+}
+
+.tienda-buscador-header .tienda-buscador { width: 100%; max-width: none; }
+
 .tienda-buscador__caja {
   position: relative;
   display: flex;
@@ -373,6 +426,8 @@
   margin-bottom: 1.75rem;
 }
 
+.tienda-fila__carril { position: relative; }
+
 .tienda-fila__cabecera {
   display: flex;
   align-items: flex-end;
@@ -394,28 +449,49 @@
   font-size: 0.84rem;
 }
 
-.tienda-fila__controles {
-  display: flex;
-  gap: 0.4rem;
+.tienda-fila__flecha {
+  position: absolute;
+  top: 50%;
+  z-index: 4;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--lonja-border);
+  border-radius: 50%;
+  color: var(--lonja-text);
+  background: var(--lonja-surface);
+  box-shadow: var(--lonja-shadow);
+  transform: translateY(-50%);
+  cursor: pointer;
 }
 
-.tienda-fila__controles .btn {
-  width: 34px;
-  height: 34px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
+.tienda-fila__flecha--izq { left: -0.65rem; }
+.tienda-fila__flecha--der { right: -0.65rem; }
+.tienda-fila__flecha[hidden] { display: none; }
+.tienda-fila__flecha:disabled { opacity: 0.45; cursor: default; }
+.tienda-fila__flecha:focus-visible { outline: 3px solid var(--lonja-teal); outline-offset: 2px; }
+
+.tienda-fila__flecha svg { pointer-events: none; }
+
+.tienda-fila__carril { padding-inline: 0.25rem; }
+
+@media (min-width: 576px) {
+  .tienda-fila__pista { overflow-x: hidden; }
 }
 
 .tienda-fila__pista {
   display: flex;
   gap: 1rem;
   overflow-x: auto;
-  scroll-snap-type: x proximity;
+  scroll-snap-type: x mandatory;
   padding: 0.15rem 0.15rem 0.75rem;
-  scrollbar-width: thin;
+  scrollbar-width: none;
+  scroll-behavior: smooth;
 }
+
+.tienda-fila__pista::-webkit-scrollbar { display: none; }
 
 .tienda-fila__pista > .lote-card {
   flex: 0 0 232px;
@@ -1143,6 +1219,10 @@
 
 /* ---------- Responsivo ---------- */
 @media (max-width: 1199.98px) {
+  .navbar-lonja .tienda-buscador-header { width: 100%; max-width: none; min-width: 0; margin: 0 0 0.75rem; }
+  .navbar-lonja .tienda-buscador-header .tienda-buscador { flex: 1 1 auto; }
+  .navbar-lonja .tienda-buscador__caja { width: 100%; }
+
   .tienda-heroe {
     grid-template-columns: minmax(0, 1fr) 280px;
   }

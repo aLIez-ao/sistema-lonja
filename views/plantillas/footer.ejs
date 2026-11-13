@@ -52,8 +52,8 @@
   <script src="/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script src="/js/lonja-app.js"></script>
   <script src="/js/lonja-clics.js"></script>
-  <% if ((rutaActual || '') === '/' || (rutaActual || '').startsWith('/tienda') || (rutaActual || '').startsWith('/carrito') || (rutaActual || '').startsWith('/pedido')) { %>
-    <script src="/js/lonja-tienda.js"></script>
+  <% if ((rutaActual || '') === '/' || (rutaActual || '').startsWith('/tienda') || (rutaActual || '').startsWith('/carrito') || (rutaActual || '').startsWith('/pedido') || (usuario && usuario.rol === 'comprador')) { %>
+    <script type="module" src="/js/lonja-tienda.js"></script>
   <% } %>
 </body>
 </html>

@@ -31,13 +31,13 @@
         <img class="logo-oscuro" src="/img/logo-oscuro.svg" alt="" aria-hidden="true" width="204" height="42">
       </a>
 
-      <% if (usuario) { %>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal" aria-controls="menuPrincipal"
-          aria-expanded="false" aria-label="Abrir menú">
-          <span class="navbar-toggler-icon"></span>
-        </button>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#menuPrincipal" aria-controls="menuPrincipal"
+        aria-expanded="false" aria-label="Abrir menú">
+        <span class="navbar-toggler-icon"></span>
+      </button>
 
-        <div class="collapse navbar-collapse" id="menuPrincipal">
+      <div class="collapse navbar-collapse" id="menuPrincipal">
+        <% if (usuario) { %>
           <ul class="navbar-nav me-auto mb-2 mb-xl-0 ms-xl-3">
             <% if (usuario.rol === 'comprador') { %>
               <li class="nav-item"><a class="nav-link <%= rutaActual === '/' ? 'active' : '' %>" href="/"><%- icono('basket', 15, 'me-1') %><%= t('tienda') %></a></li>
@@ -66,7 +66,13 @@
               <% } %>
             <% } %>
           </ul>
+        <% } %>
 
+        <% if (!usuario || usuario.rol === 'comprador') { %>
+          <div class="tienda-buscador-header"><%- include('buscador-tienda') %></div>
+        <% } %>
+
+        <% if (usuario) { %>
           <div class="d-flex align-items-center gap-2 flex-nowrap">
             <!-- Moneda -->
             <div class="dropdown">
@@ -128,13 +134,13 @@
               </ul>
             </div>
           </div>
-        </div>
-      <% } else { %>
+        <% } else { %>
         <div class="d-flex align-items-center gap-2 ms-auto">
           <a class="btn btn-sm btn-outline-secondary rounded-pill px-3 text-decoration-none" href="/acceso">Iniciar sesión</a>
           <a class="btn btn-sm btn-primary rounded-pill px-3 text-decoration-none" href="/registro">Crear cuenta</a>
         </div>
-      <% } %>
+        <% } %>
+      </div>
     </div>
   </nav>
 

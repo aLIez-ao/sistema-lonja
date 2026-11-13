@@ -8,7 +8,7 @@
   <!-- ===================== HÉROE ===================== -->
   <section class="tienda-heroe" aria-label="Lotes destacados">
     <% if (destacados.length) { %>
-      <div class="tienda-heroe__slides" data-heroe>
+      <div class="tienda-heroe__slides" data-heroe role="region" aria-roledescription="carrusel" aria-label="Lotes destacados" tabindex="0">
         <% destacados.forEach((lote, i) => { %>
           <a class="tienda-heroe__slide <%= i === 0 ? 'activo' : '' %>" href="/tienda/lote/<%= lote.id_lte %>" style="--imagen: url('<%= lote.imagen %>')">
             <span class="tienda-heroe__velo"></span>
@@ -25,8 +25,15 @@
             </span>
           </a>
         <% }) %>
-        <div class="tienda-heroe__puntos" aria-hidden="true">
-          <% destacados.forEach((_, i) => { %><span class="<%= i === 0 ? 'activo' : '' %>"></span><% }) %>
+        <% if (destacados.length > 1) { %>
+          <button class="tienda-heroe__flecha tienda-heroe__flecha--izq" type="button" data-heroe-prev aria-label="Lote anterior"><%- icono('chevron-left', 18) %></button>
+          <button class="tienda-heroe__flecha tienda-heroe__flecha--der" type="button" data-heroe-next aria-label="Lote siguiente"><%- icono('chevron-right', 18) %></button>
+          <div class="tienda-heroe__puntos" aria-label="Elegir lote destacado">
+            <% destacados.forEach((_, i) => { %>
+              <button type="button" class="tienda-heroe__punto <%= i === 0 ? 'activo' : '' %>" data-heroe-punto="<%= i %>" aria-label="Ir al destacado <%= i + 1 %>" aria-current="<%= i === 0 ? 'true' : 'false' %>"></button>
+            <% }) %>
+          </div>
+        <% } %>
         </div>
       </div>
     <% } else { %>
@@ -70,29 +77,6 @@
       <% }) %>
     </nav>
 
-    <form class="tienda-buscador" action="/" method="GET" role="search" data-buscador-tienda>
-      <% restantes.forEach(([clave, valor]) => { %>
-        <input type="hidden" name="<%= clave %>" value="<%= valor %>">
-      <% }) %>
-      <div class="tienda-buscador__caja">
-        <%- icono('search', 17, 'tienda-buscador__icono') %>
-        <input
-          type="search"
-          name="q"
-          value="<%= l.q %>"
-          class="form-control"
-          placeholder="Busca por especie, tipo o número de lote…"
-          autocomplete="off"
-          aria-label="Buscar lotes"
-          aria-autocomplete="list"
-          aria-expanded="false"
-          aria-controls="sugerenciasTienda"
-          data-sugerencias-tienda
-        >
-        <ul id="sugerenciasTienda" class="list-group lista-sugerencias-tienda shadow-sm" role="listbox" hidden data-lista-sugerencias></ul>
-        <button class="btn btn-primary" type="submit">Buscar</button>
-      </div>
-    </form>
   </div>
 
   <!-- ===================== FILAS POR TEMA ===================== -->

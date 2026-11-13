@@ -57,6 +57,7 @@ app.use(async (req, res, next) => {
   res.locals.fechaHora = formatoFechaHora;
   res.locals.icono = icono;
   res.locals.rutaActual = req.path;
+  res.locals.qTienda = String(req.query.q ?? "").slice(0, 60);
   res.locals.usuario = null;
   res.locals.carritoCount = 0;
   req.usuario = null;
