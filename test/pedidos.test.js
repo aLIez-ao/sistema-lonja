@@ -267,3 +267,19 @@ test("cancelar y expirar pedidos libera los lotes; correo sin verificar no inici
   assert.equal(no.status, 302);
   assert.match(no.loc, /^\/cuenta\?/);
 });
+
+test("la pantalla de entrega y resumen (/pedido/nuevo) carga con el carrito lleno, vacío y a domicilio", async () => {
+  const a = await comprador("pantalla.nuevo@example.com");
+  const vacio = await a.web.get("/pedido/nuevo");
+  assert.equal(vacio.status, 200);
+  assert.match(vacio.texto, /Tu carrito está vacío/);
+
+  const l = await lote({ nombre: "Mojarra", kilos: 8, precio: 70 });
+  await agregar(a.web, l.id_lte);
+  const recoger = await a.web.get("/pedido/nuevo");
+  assert.equal(recoger.status, 200, "no debe fallar con un error interno");
+  assert.match(recoger.texto, /Reservar y continuar al pago/);
+  assert.match(recoger.texto, /se reservan 15 minutos/);
+  assert.equal((await a.web.get("/pedido/nuevo?entrega=domicilio")).status, 200);
+  assert.equal((await a.web.get("/carrito")).status, 200);
+});

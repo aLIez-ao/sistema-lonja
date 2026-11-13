@@ -78,6 +78,8 @@
         <% } else if (usuario && usuario.rol === 'comprador') { %>
           <button class="btn btn-primary btn-lg w-100" type="button" data-agregar-lote="<%= lote.id_lte %>"><%- icono('cart-plus', 18, 'me-1') %>Agregar al carrito</button>
           <a class="btn btn-link w-100" href="/carrito">Ver carrito</a>
+        <% } else if (usuario) { %>
+          <button class="btn btn-secondary btn-lg w-100" type="button" disabled title="Las cuentas del personal no compran en la tienda"><%- icono('cart-plus', 18, 'me-1') %>El carrito es solo para cuentas de cliente</button>
         <% } else { %>
           <a class="btn btn-primary btn-lg w-100" href="/acceso?volver=<%= encodeURIComponent(`/tienda/lote/${lote.id_lte}`) %>"><%- icono('cart-plus', 18, 'me-1') %>Agregar al carrito · Iniciar sesión</a>
         <% } %>

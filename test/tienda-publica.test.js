@@ -62,3 +62,22 @@ test("portada y fichas públicas no filtran datos privados del comprador", async
   const cuenta = await sesion.get("/cuenta");
   assert.match(cuenta.texto, /data-buscador-tienda/);
 });
+
+test("el personal ve el buscador en la tienda y no recibe un botón de inicio de sesión para comprar", async () => {
+  const tipo = await Tipo.findOne({ where: { nombre: "Pescado" } });
+  const lote = await Lote.create({ kilos: 12, numero_cajas: 1, precio_kilo_salida: 90 });
+  await Especie.create({ nombre: "Pargo personal", id_lte: lote.id_lte, id_tpo: tipo.id_tpo });
+  const personal = await Usuario.create({ usuario: "tienda-cap", nombre_completo: "Cap Tienda", correo: "tienda-cap@example.test", password: "Clave1234", rol: "capturista", email_verificado: true });
+  const sesion = cliente(srv.base);
+  assert.equal((await sesion.entrar(personal.usuario, "Clave1234")).status, 302);
+  const portada = (await sesion.get("/")).texto;
+  assert.equal((portada.match(/data-buscador-tienda/g) || []).length, 1, "un solo buscador, en el header");
+  assert.doesNotMatch(portada, /Agregar al carrito · Iniciar sesión/);
+  assert.match(portada, /Solo clientes/);
+  const detalle = (await sesion.get(`/tienda/lote/${lote.id_lte}`)).texto;
+  assert.match(detalle, /El carrito es solo para cuentas de cliente/);
+  assert.doesNotMatch(detalle, /Agregar al carrito · Iniciar sesión/);
+
+  const visitante = (await cliente(srv.base).get(`/tienda/lote/${lote.id_lte}`)).texto;
+  assert.match(visitante, /Agregar al carrito · Iniciar sesión/, "el visitante sí es invitado a iniciar sesión");
+});

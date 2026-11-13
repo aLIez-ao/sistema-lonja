@@ -58,6 +58,7 @@ export const verNuevo = async (req, res) => {
     subtotal,
     envio,
     total: redondea(subtotal + envio),
+    minutos: reservaMinutos(),
     mensaje: req.query.mensaje || null,
     error: req.query.error || null,
     entregaSeleccionada: req.query.entrega || "recoger",
