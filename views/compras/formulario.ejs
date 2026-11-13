@@ -1,62 +1,57 @@
 <%- include('../plantillas/header') %>
 
 <div class="row justify-content-center">
-  <div class="col-lg-8">
+  <div class="col-lg-9">
     <div class="card p-4">
-      <h1 class="h3 mb-3 fw-bold"><%= editando ? 'Editar compra del lote ' + compra.id_cmp : 'Registrar Compra en Subasta' %></h1>
-      <p class="text-muted small mb-4">Selecciona el lote adjudicado y el precio final pactado en la subasta. El total se calcula automáticamente en tiempo real.</p>
-      
+      <h1 class="h3 mb-3 fw-bold"><%= editando ? 'Editar compra del lote ' + compra.id_cmp : 'Registrar compra en subasta' %></h1>
+      <p class="text-muted small mb-4">Selecciona el lote adjudicado y el precio final pactado en la subasta. El total se calcula automáticamente.</p>
+
       <%- include('../plantillas/mensajes', { mensaje: null }) %>
 
       <form action="<%= action %>" method="POST">
         <div class="row g-3">
-          
-          <!-- Selección de Lote -->
+
           <div class="col-12">
-            <label class="form-label fw-semibold" for="id_cmp">Lote Adjudicado</label>
+            <span class="form-label fw-semibold d-block">Lote adjudicado</span>
             <% if (editando) { %>
-              <input type="text" class="form-control" value="Lote #<%= compra.id_cmp %>" disabled>
-              <input type="hidden" name="id_cmp" value="<%= compra.id_cmp %>">
+              <input type="hidden" name="id_cmp" id="id_cmp" value="<%= compra.id_cmp %>" data-kilos="<%= compra.lote ? compra.lote.kilos : 0 %>" data-salida="<%= compra.lote ? compra.lote.precio_kilo_salida : 0 %>">
+              <div class="border rounded p-3 bg-body-tertiary">Lote #<%= compra.id_cmp %><% if (compra.lote) { %> · <%= Number(compra.lote.kilos).toFixed(2) %> kg<% } %></div>
+            <% } else if (!lotes.length) { %>
+              <div class="alert alert-warning mb-0">No hay lotes disponibles: todos están vendidos o no hay lotes registrados. <a class="alert-link" href="/lotes/crear">Registrar un lote</a>.</div>
             <% } else { %>
-              <select class="form-select" id="id_cmp" name="id_cmp" required>
-                <option value="">Selecciona un lote disponible…</option>
-                <% lotes.forEach(l => { %>
-                  <option 
-                    value="<%= l.id_lte %>" 
-                    data-kilos="<%= l.kilos %>" 
-                    data-salida="<%= l.precio_kilo_salida %>"
-                    <%= compra && String(compra.id_cmp) === String(l.id_lte) ? 'selected' : '' %>>
-                    Lote #<%= l.id_lte %> · <%= l.especies.map(e => e.nombre).join(', ') || 'Sin especies' %> · <%= Number(l.kilos).toFixed(2) %> kg · <%= l.numero_cajas %> cajas · salida <%= dinero(l.precio_kilo_salida) %>/kg
-                  </option>
+              <div class="lista-seleccion" role="radiogroup" aria-label="Lote adjudicado">
+                <% lotes.forEach(l => { const marcado = compra && String(compra.id_cmp) === String(l.id_lte); %>
+                  <label class="opcion-seleccion <%= marcado ? 'tarjeta-seleccionada' : '' %>" data-tarjeta aria-pressed="<%= marcado ? 'true' : 'false' %>">
+                    <input type="radio" name="id_cmp" id="id_cmp_<%= l.id_lte %>" value="<%= l.id_lte %>" data-kilos="<%= l.kilos %>" data-salida="<%= l.precio_kilo_salida %>" <%= marcado ? 'checked' : '' %> required>
+                    <span class="flex-grow-1">
+                      <span class="fw-bold">Lote #<%= l.id_lte %></span>
+                      <span class="d-block small text-muted"><%= l.especies.map(e => e.nombre).join(', ') || 'Sin especies' %></span>
+                      <span class="d-block small text-muted"><%= Number(l.kilos).toFixed(2) %> kg · <%= l.numero_cajas %> cajas · salida <%= dinero(l.precio_kilo_salida) %>/kg</span>
+                    </span>
+                  </label>
                 <% }) %>
-              </select>
+              </div>
             <% } %>
           </div>
 
-          <!-- Selección de Comprador -->
-          <div class="col-12">
-            <label class="form-label fw-semibold" for="codigo_cpr">Comprador Adjudicatario</label>
+          <div class="col-12" data-combobox data-placeholder="Buscar comprador por nombre o correo…">
+            <label class="form-label fw-semibold" for="codigo_cpr">Comprador adjudicatario</label>
             <select class="form-select" id="codigo_cpr" name="codigo_cpr" required>
               <option value="">Selecciona al comprador…</option>
               <% compradores.forEach(c => { %>
                 <option value="<%= c.codigo_cpr %>" <%= compra && String(compra.codigo_cpr) === String(c.codigo_cpr) ? 'selected' : '' %>>
-                  #<%= c.codigo_cpr %> &bull; <%= c.nombre %> <%= c.apellido_paterno %> <%= c.apellido_materno || '' %> <%= c.correo ? '(' + c.correo + ')' : '' %>
+                  #<%= c.codigo_cpr %> · <%= c.nombre %> <%= c.apellido_paterno %> <%= c.apellido_materno || '' %> <%= c.correo ? '(' + c.correo + ')' : '' %>
                 </option>
               <% }) %>
             </select>
           </div>
 
-          <!-- Precio Final por Kilo -->
           <div class="col-md-6">
-            <label class="form-label fw-semibold" for="precio_kilo_final">Precio Final por Kilo (<%= pref.moneda %>)</label>
-            <div class="input-group">
-              <span class="input-group-text fw-bold">$</span>
-              <input class="form-control" type="number" step="0.01" min="0.01" id="precio_kilo_final" name="precio_kilo_final" value="<%= compra ? (compra.precio_kilo_final || '') : '' %>" placeholder="0.00" required>
-            </div>
-            <div class="form-text">Ingresa el precio acordado al caer el martillo.</div>
+            <label class="form-label fw-semibold" for="precio_kilo_final">Precio final por kilo (<%= pref.moneda %>)</label>
+            <input class="form-control" type="number" step="0.01" min="0.01" id="precio_kilo_final" name="precio_kilo_final" value="<%= compra ? (compra.precio_kilo_final || '') : '' %>" placeholder="0.00" required data-pasos="1" data-rapidos="50,100,150,200" data-teclado>
+            <div class="form-text">Precio acordado al caer el martillo.</div>
           </div>
 
-          <!-- Tarjeta de Cálculo Dinámico en Tiempo Real -->
           <div class="col-md-6">
             <div id="cajaCalculoEnVivo" class="border rounded p-3 bg-body-tertiary h-100 d-flex flex-column justify-content-center">
               <div class="d-flex justify-content-between align-items-center mb-1">
@@ -78,7 +73,7 @@
 
         <div class="mt-4 d-flex gap-2">
           <button class="btn btn-primary" type="submit">
-            <%= editando ? 'Actualizar Compra' : 'Confirmar Compra y Generar Factura' %>
+            <%= editando ? 'Actualizar compra' : 'Confirmar compra y generar factura' %>
           </button>
           <a class="btn btn-outline-secondary" href="/compras">Cancelar</a>
         </div>

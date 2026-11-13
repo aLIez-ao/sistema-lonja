@@ -50,7 +50,7 @@
           <td class="text-end text-muted"><%= dinero(lote.precio_kilo_salida) %></td>
           <td>
             <% if (lote.compra) { %>
-              <span class="badge bg-success">Vendido</span>
+              <span class="badge bg-success"><%- icono('lock', 12, 'me-1') %>Vendido</span>
               <a class="enlace-registro small ms-1" href="/compradores/<%= lote.compra.comprador.codigo_cpr %>">a <%= lote.compra.comprador.nombre %> <%= lote.compra.comprador.apellido_paterno %></a>
               <a class="enlace-registro small ms-1" href="/compras/<%= lote.compra.id_cmp %>/factura">#<%= lote.compra.id_cmp %></a>
             <% } else { %>

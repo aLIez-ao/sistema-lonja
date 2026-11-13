@@ -44,17 +44,23 @@
           </td>
           <td><strong><%= e.nombre %></strong></td>
           <td><a class="enlace-registro" href="/tipos/<%= e.tipo.id_tpo %>"><%= e.tipo.nombre %></a></td>
-          <td><a class="enlace-registro" href="/lotes/<%= e.id_lte %>">#<%= e.id_lte %></a></td>
+          <td><a class="enlace-registro" href="/lotes/<%= e.id_lte %>">#<%= e.id_lte %></a>
+            <% if (e.lote && e.lote.compra) { %><span class="badge bg-success ms-1"><%- icono('lock', 11) %></span><% } %>
+          </td>
           <td class="text-end text-nowrap">
-            <a class="btn btn-sm btn-outline-secondary" href="/especies/<%= e.id_epe %>/editar" title="Editar especie" aria-label="Editar especie">
-              <%- icono('pencil', 14) %>
-            </a>
-            <% if (usuario.rol === 'admin') { %>
-            <form action="/especies/<%= e.id_epe %>?_method=DELETE" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar esta especie?')">
-              <button class="btn btn-sm btn-outline-danger" type="submit" title="Eliminar especie" aria-label="Eliminar especie">
-                <%- icono('trash', 14) %>
-              </button>
-            </form>
+            <% if (e.lote && e.lote.compra) { %>
+              <span class="insignia-vendido" title="El lote está vendido y no puede modificarse"><%- icono('lock', 12, 'me-1') %>Lote vendido</span>
+            <% } else { %>
+              <a class="btn btn-sm btn-outline-secondary" href="/especies/<%= e.id_epe %>/editar" title="Editar especie" aria-label="Editar especie">
+                <%- icono('pencil', 14) %>
+              </a>
+              <% if (usuario.rol === 'admin') { %>
+              <form action="/especies/<%= e.id_epe %>?_method=DELETE" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar esta especie?')">
+                <button class="btn btn-sm btn-outline-danger" type="submit" title="Eliminar especie" aria-label="Eliminar especie">
+                  <%- icono('trash', 14) %>
+                </button>
+              </form>
+              <% } %>
             <% } %>
           </td>
         </tr>
