@@ -138,6 +138,70 @@ import { indiceSiguiente } from './tienda-utils.js';
     });
   }
 
+  // Sliders de precio por kilo y tamaño mínimo de lote.
+  function iniciarFiltrosTienda() {
+    const formulario = qs('form[data-filtros-tienda]');
+    if (!formulario) return;
+
+    const rango = qs('[data-rango-precio]', formulario);
+    const minimo = qs('[data-precio-min]', formulario);
+    const maximo = qs('[data-precio-max]', formulario);
+    const etiquetaMin = qs('[data-etiqueta-precio-min]', formulario);
+    const etiquetaMax = qs('[data-etiqueta-precio-max]', formulario);
+    const kilos = qs('[data-kilos-min]', formulario);
+    const etiquetaKilos = qs('[data-etiqueta-kilos]', formulario);
+    let temporizador;
+    const moneda = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', maximumFractionDigits: 2 });
+
+    const sincronizar = (enviar = false) => {
+      if (rango && minimo && maximo) {
+        const piso = Number(minimo.min);
+        const techo = Number(minimo.max);
+        if (Number(minimo.value) > Number(maximo.value)) {
+          if (document.activeElement === minimo) maximo.value = minimo.value;
+          else minimo.value = maximo.value;
+        }
+        const desde = Number(minimo.value);
+        const hasta = Number(maximo.value);
+        const amplitud = techo - piso;
+        const pDesde = amplitud ? ((desde - piso) / amplitud) * 100 : 0;
+        const pHasta = amplitud ? ((hasta - piso) / amplitud) * 100 : 100;
+        rango.style.setProperty('--rango-inicio', `${pDesde}%`);
+        rango.style.setProperty('--rango-fin', `${pHasta}%`);
+        minimo.setAttribute('aria-valuenow', String(desde));
+        maximo.setAttribute('aria-valuenow', String(hasta));
+        etiquetaMin.textContent = `Desde ${moneda.format(desde)}/kg`;
+        etiquetaMax.textContent = `Hasta ${moneda.format(hasta)}/kg`;
+        minimo.disabled = amplitud === 0;
+        maximo.disabled = amplitud === 0;
+        if (minimo.disabled || desde === piso) minimo.removeAttribute('name');
+        else minimo.setAttribute('name', 'precioMin');
+        if (maximo.disabled || hasta === techo) maximo.removeAttribute('name');
+        else maximo.setAttribute('name', 'precioMax');
+        minimo.style.zIndex = desde >= techo - Number(minimo.step) ? '4' : '2';
+        maximo.style.zIndex = desde >= techo - Number(minimo.step) ? '3' : '4';
+      }
+      if (kilos) {
+        const valor = Number(kilos.value);
+        const piso = Number(kilos.min);
+        etiquetaKilos.textContent = `Al menos ${valor} kg`;
+        kilos.setAttribute('aria-valuenow', String(valor));
+        if (valor === piso) kilos.removeAttribute('name');
+        else kilos.setAttribute('name', 'kilosMin');
+      }
+      if (enviar) {
+        clearTimeout(temporizador);
+        temporizador = setTimeout(() => formulario.requestSubmit(), 400);
+      }
+    };
+
+    [minimo, maximo, kilos].filter(Boolean).forEach((slider) => {
+      slider.addEventListener('input', () => sincronizar(false));
+      slider.addEventListener('change', () => sincronizar(true));
+    });
+    sincronizar();
+  }
+
   // ------------------------------------------------------------------
   // Carrito de compra.
   // ------------------------------------------------------------------
@@ -313,6 +377,7 @@ import { indiceSiguiente } from './tienda-utils.js';
   document.addEventListener('DOMContentLoaded', () => {
     iniciarHeroe();
     iniciarFilas();
+    iniciarFiltrosTienda();
     iniciarAcciones();
     iniciarSugerencias();
   });

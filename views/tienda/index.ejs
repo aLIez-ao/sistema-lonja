@@ -1,7 +1,6 @@
 <%- include('../plantillas/header') %>
 <%
   const primerDestacado = destacados[0] || null;
-  const restantes = l.params ? Object.entries(l.params).filter(([k]) => k !== 'q') : [];
 %>
 
 <div class="tienda">
@@ -96,7 +95,8 @@
   <!-- ===================== CUADRÍCULA Y FILTROS ===================== -->
   <section class="tienda-catalogo" id="catalogo">
     <aside class="tienda-filtros" aria-label="Filtros">
-      <form action="/" method="GET" class="tienda-filtros__form">
+      <form action="/" method="GET" class="tienda-filtros__form" data-filtros-tienda>
+        <% if (l.q) { %><input type="hidden" name="q" value="<%= l.q %>"><% } %>
         <input type="hidden" name="orden" value="<%= l.campo %>">
         <input type="hidden" name="dir" value="<%= l.dir %>">
         <input type="hidden" name="tam" value="<%= l.tam %>">
@@ -131,17 +131,36 @@
         </div>
 
         <div class="tienda-filtros__grupo">
-          <span class="form-label">Precio por kilo</span>
-          <div class="tienda-filtros__rango">
-            <input class="form-control form-control-sm" type="number" name="precioMin" min="0" step="0.5" inputmode="decimal" placeholder="Mín." value="<%= l.filtros.precioMin !== undefined ? l.filtros.precioMin : '' %>" aria-label="Precio mínimo por kilo">
-            <span>–</span>
-            <input class="form-control form-control-sm" type="number" name="precioMax" min="0" step="0.5" inputmode="decimal" placeholder="Máx." value="<%= l.filtros.precioMax !== undefined ? l.filtros.precioMax : '' %>" aria-label="Precio máximo por kilo">
-          </div>
+          <label class="form-label" for="precioMin">Precio por kilo</label>
+          <% if (limites.hayLotes) { %>
+            <div class="tienda-slider" data-rango-precio data-limite-min="<%= limites.precioMin %>" data-limite-max="<%= limites.precioMax %>">
+              <div class="tienda-slider__barra" data-barra-precio></div>
+              <input class="tienda-slider__rango" id="precioMin" type="range" name="precioMin" min="<%= limites.precioMin %>" max="<%= limites.precioMax %>" step="<%= limites.pasoPrecio %>" value="<%= l.filtros.precioMin ?? limites.precioMin %>" aria-label="Precio mínimo por kilo" aria-valuemin="<%= limites.precioMin %>" aria-valuemax="<%= limites.precioMax %>" data-precio-min>
+              <input class="tienda-slider__rango tienda-slider__rango--superior" type="range" name="precioMax" min="<%= limites.precioMin %>" max="<%= limites.precioMax %>" step="<%= limites.pasoPrecio %>" value="<%= l.filtros.precioMax ?? limites.precioMax %>" aria-label="Precio máximo por kilo" aria-valuemin="<%= limites.precioMin %>" aria-valuemax="<%= limites.precioMax %>" data-precio-max>
+            </div>
+            <div class="d-flex justify-content-between small mt-2">
+              <output data-etiqueta-precio-min>Desde <%= dinero(l.filtros.precioMin ?? limites.precioMin) %>/kg</output>
+              <output data-etiqueta-precio-max>Hasta <%= dinero(l.filtros.precioMax ?? limites.precioMax) %>/kg</output>
+            </div>
+            <small class="text-muted" data-conteo-precio><%= l.total %> lotes</small>
+          <% } else { %>
+            <input class="form-range" type="range" disabled aria-label="Precio por kilo">
+            <small class="text-muted">No hay lotes disponibles para filtrar.</small>
+          <% } %>
         </div>
 
         <div class="tienda-filtros__grupo">
           <label class="form-label" for="filtroKilos">Kilos mínimos</label>
-          <input class="form-control form-control-sm" id="filtroKilos" type="number" name="kilosMin" min="0" step="1" inputmode="decimal" placeholder="Por ejemplo, 50" value="<%= l.filtros.kilosMin !== undefined ? l.filtros.kilosMin : '' %>">
+          <% if (limites.hayLotes) { %>
+            <input class="form-range" id="filtroKilos" type="range" name="kilosMin" min="<%= limites.kilosMin %>" max="<%= limites.kilosMax %>" step="1" value="<%= l.filtros.kilosMin ?? limites.kilosMin %>" aria-label="Filtrar por kilos mínimos" aria-valuemin="<%= limites.kilosMin %>" aria-valuemax="<%= limites.kilosMax %>" data-kilos-min>
+            <div class="d-flex justify-content-between small">
+              <output data-etiqueta-kilos>Al menos <%= l.filtros.kilosMin ?? limites.kilosMin %> kg</output>
+              <small class="text-muted" data-conteo-kilos><%= l.total %> lotes</small>
+            </div>
+          <% } else { %>
+            <input class="form-range" id="filtroKilos" type="range" disabled aria-label="Filtrar por kilos mínimos">
+            <small class="text-muted">No hay lotes disponibles para filtrar.</small>
+          <% } %>
         </div>
 
         <button class="btn btn-primary w-100" type="submit">Aplicar filtros</button>
@@ -176,6 +195,19 @@
           <noscript><button class="btn btn-sm btn-outline-secondary" type="submit">Ordenar</button></noscript>
         </form>
       </div>
+
+      <% if (l.filtros.precioMin !== undefined || l.filtros.precioMax !== undefined || l.filtros.kilosMin !== undefined) { %>
+        <div class="tienda-filtros-activos" aria-label="Filtros activos">
+          <% if (l.filtros.precioMin !== undefined || l.filtros.precioMax !== undefined) { %>
+            <a class="badge rounded-pill text-bg-light text-decoration-none" href="<%= l.urlCon({ precioMin: null, precioMax: null }) %>">
+              Precio: <%= dinero(l.filtros.precioMin ?? limites.precioMin) %>–<%= dinero(l.filtros.precioMax ?? limites.precioMax) %>/kg ×
+            </a>
+          <% } %>
+          <% if (l.filtros.kilosMin !== undefined) { %>
+            <a class="badge rounded-pill text-bg-light text-decoration-none" href="<%= l.urlCon({ kilosMin: null }) %>">Desde <%= l.filtros.kilosMin %> kg ×</a>
+          <% } %>
+        </div>
+      <% } %>
 
       <% if (!l.filas.length) { %>
         <div class="tienda-vacio">

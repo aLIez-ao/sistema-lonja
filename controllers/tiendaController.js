@@ -45,6 +45,66 @@ const noReservado = () =>
 
 const disponible = () => combinarWhere(sinCompra(), conEspecies(), noReservado());
 
+/** Límites de precio y peso sobre el universo completo de lotes disponibles. */
+export async function limitesDisponibles() {
+  const fila = await Lote.findOne({
+    attributes: [
+      [fn("MIN", col("precio_kilo_salida")), "precioMin"],
+      [fn("MAX", col("precio_kilo_salida")), "precioMax"],
+      [fn("MIN", col("kilos")), "kilosMin"],
+      [fn("MAX", col("kilos")), "kilosMax"],
+    ],
+    where: disponible(),
+    raw: true,
+  });
+  if (fila?.precioMin == null) {
+    return { hayLotes: false, precioMin: 0, precioMax: 0, kilosMin: 0, kilosMax: 0, pasoPrecio: 1 };
+  }
+
+  const precioRawMin = Number(fila.precioMin);
+  const precioRawMax = Number(fila.precioMax);
+  const pasoPrecio = precioRawMax - precioRawMin < 50 ? 0.5 : 1;
+  return {
+    hayLotes: true,
+    precioMin: Math.floor(precioRawMin / pasoPrecio) * pasoPrecio,
+    precioMax: Math.ceil(precioRawMax / pasoPrecio) * pasoPrecio,
+    kilosMin: Math.floor(Number(fila.kilosMin)),
+    kilosMax: Math.ceil(Number(fila.kilosMax)),
+    pasoPrecio,
+  };
+}
+
+function normalizarFiltrosTienda(l, limites) {
+  const limitar = (valor, minimo, maximo) => Math.min(maximo, Math.max(minimo, Number(valor)));
+  if (!limites.hayLotes) return;
+
+  let minimo = l.filtros.precioMin === undefined ? limites.precioMin : limitar(l.filtros.precioMin, limites.precioMin, limites.precioMax);
+  let maximo = l.filtros.precioMax === undefined ? limites.precioMax : limitar(l.filtros.precioMax, limites.precioMin, limites.precioMax);
+  if (minimo > maximo) [minimo, maximo] = [maximo, minimo];
+  const filtros = { precioMin: minimo, precioMax: maximo };
+  for (const [clave, valor] of Object.entries(filtros)) {
+    const extremo = clave === "precioMin" ? limites.precioMin : limites.precioMax;
+    if (valor === extremo) {
+      delete l.filtros[clave];
+      delete l.params[clave];
+    } else {
+      l.filtros[clave] = valor;
+      l.params[clave] = valor;
+    }
+  }
+
+  if (l.filtros.kilosMin !== undefined) {
+    const kilos = Math.round(limitar(l.filtros.kilosMin, limites.kilosMin, limites.kilosMax));
+    if (kilos === limites.kilosMin) {
+      delete l.filtros.kilosMin;
+      delete l.params.kilosMin;
+    } else {
+      l.filtros.kilosMin = kilos;
+      l.params.kilosMin = kilos;
+    }
+  }
+}
+
 /** Lotes disponibles con sus especies, ordenados y limitados. */
 async function lotesDisponibles(where = {}, order = [["fecha", "DESC"]], limit = 8, hoyInicio = null) {
   const filas = await Lote.findAll({
@@ -125,6 +185,9 @@ export const portada = async (req, res) => {
     },
   });
 
+  const limites = await limitesDisponibles();
+  normalizarFiltrosTienda(l, limites);
+
   const where = await whereDeFiltros(l);
   await consultarListado(l, {
     modelo: Lote,
@@ -193,6 +256,7 @@ export const portada = async (req, res) => {
     pequenos,
     destacados,
     totalDisponibles,
+    limites,
     categoriaActiva: l.filtros.tipo || null,
     hayFiltros: Boolean(l.q || Object.keys(l.filtros).length),
     mensaje: req.query.mensaje || null,
