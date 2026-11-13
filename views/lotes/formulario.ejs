@@ -1,15 +1,128 @@
 <%- include('../plantillas/header') %>
 <h1 class="h3 mb-3"><%= lote && lote.id_lte ? 'Editar lote ' + lote.id_lte : 'Nuevo lote' %></h1>
-<%- include('../plantillas/mensajes', { mensaje: null }) %>
-<form action="<%= action %>" method="POST" class="col-lg-6">
-  <div class="mb-3"><label class="form-label" for="kilos">Kilos</label>
-    <input class="form-control" type="number" step="0.01" min="0.01" id="kilos" name="kilos" value="<%= lote ? lote.kilos : '' %>" required></div>
-  <div class="mb-3"><label class="form-label" for="numero_cajas">Número de cajas</label>
-    <input class="form-control" type="number" step="1" min="0" max="32767" id="numero_cajas" name="numero_cajas" value="<%= lote ? lote.numero_cajas : '' %>" required></div>
-  <div class="mb-3"><label class="form-label" for="precio_kilo_salida">Precio de salida por kilo (MXN)</label>
-    <input class="form-control" type="number" step="0.01" min="0" id="precio_kilo_salida" name="precio_kilo_salida" value="<%= lote ? lote.precio_kilo_salida : '' %>" required></div>
-  <p class="text-muted small">La fecha y hora del lote se registran automáticamente.</p>
-  <button class="btn btn-primary" type="submit">Guardar</button>
-  <a class="btn btn-link" href="/lotes">Cancelar</a>
+<%- include('../plantillas/mensajes', { errores }) %>
+
+<form action="<%= action %>" method="POST" class="row g-4" data-validar novalidate data-requiere-especies>
+  <div class="col-lg-7">
+    <div class="card p-4">
+      <h2 class="h6 fw-bold mb-3">Datos del lote</h2>
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold" for="kilos">Kilos</label>
+          <input class="form-control" type="number" step="0.01" min="0.01" id="kilos" name="kilos" value="<%= lote ? lote.kilos : '' %>" required data-pasos="0.5" data-rapidos="10,25,50,100" data-teclado>
+          <div class="form-text">Ajusta con ± o elige un valor rápido.</div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold" for="numero_cajas">Número de cajas</label>
+          <input class="form-control" type="number" step="1" min="0" max="32767" id="numero_cajas" name="numero_cajas" value="<%= lote ? lote.numero_cajas : '' %>" required data-pasos="1" data-rapidos="5,10,20,50" data-teclado>
+        </div>
+        <div class="col-md-8">
+          <label class="form-label fw-semibold" for="precio_kilo_salida">Precio de salida por kilo (MXN)</label>
+          <input class="form-control" type="number" step="0.01" min="0" id="precio_kilo_salida" name="precio_kilo_salida" value="<%= lote ? lote.precio_kilo_salida : '' %>" required data-pasos="1" data-rapidos="50,100,150,200" data-teclado>
+        </div>
+        <div class="col-md-4 d-flex align-items-end">
+          <p class="text-muted small mb-1">La fecha y hora se registran automáticamente.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card p-4 h-100" data-filtro-tarjetas>
+      <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+        <div>
+          <h2 class="h6 fw-bold mb-0">Especies del lote</h2>
+          <p class="text-muted small mb-0">Un clic en la tarjeta selecciona o quita la especie.</p>
+        </div>
+        <button class="btn btn-sm btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#modalNuevaEspecie">
+          <%- icono('plus-lg', 14, 'me-1') %>Nueva
+        </button>
+      </div>
+
+      <input type="search" class="form-control form-control-sm mb-2" placeholder="Buscar especie…" data-filtro-texto aria-label="Buscar especie en el catálogo">
+      <div class="chips-tipo mb-2" role="group" aria-label="Filtrar por tipo">
+        <button type="button" class="chip-tipo activo" data-filtro-tipo="" aria-pressed="true">Todas</button>
+        <% tipos.forEach(tp => { %>
+          <button type="button" class="chip-tipo" data-filtro-tipo="<%= tp.nombre %>" aria-pressed="false"><%= tp.nombre %></button>
+        <% }) %>
+      </div>
+
+      <% if (!catalogo.length) { %>
+        <div class="alert alert-warning small mb-0">
+          El catálogo está vacío. <a href="/catalogo/crear" class="alert-link">Agrega la primera especie</a> o usa el botón «Nueva».
+        </div>
+      <% } else { %>
+        <div class="tarjetas-especies" data-tarjetas-especies>
+          <% catalogo.forEach(esp => { const marcada = seleccion.includes(String(esp.id_cat)); %>
+            <label class="tarjeta-especie <%= marcada ? 'tarjeta-seleccionada' : '' %>" data-tarjeta data-nombre="<%= esp.nombre %>" data-tipo="<%= esp.tipo.nombre %>" aria-pressed="<%= marcada ? 'true' : 'false' %>">
+              <input class="tarjeta-control" type="checkbox" name="especies" value="<%= esp.id_cat %>" <%= marcada ? 'checked' : '' %>>
+              <span class="tarjeta-imagen">
+                <% if (esp.imagen) { %>
+                  <img src="<%= esp.imagen %>" alt="" onerror="this.style.display='none'">
+                <% } else { %>
+                  <span class="sin-imagen" aria-hidden="true">🐟</span>
+                <% } %>
+              </span>
+              <span class="tarjeta-nombre"><%= esp.nombre %></span>
+              <span class="tarjeta-tipo"><%= esp.tipo.nombre %><% if (!esp.activo) { %> · inactiva<% } %></span>
+            </label>
+          <% }) %>
+        </div>
+        <div class="text-muted small mt-2" data-sin-tarjetas hidden>No hay especies que coincidan con el filtro.</div>
+      <% } %>
+      <div class="alert alert-danger mt-3 mb-0 d-none" data-error-especies role="alert">Selecciona al menos una especie para el lote.</div>
+    </div>
+  </div>
+
+  <div class="col-12 d-flex gap-2">
+    <button class="btn btn-primary" type="submit">Guardar lote</button>
+    <a class="btn btn-link" href="/lotes">Cancelar</a>
+  </div>
 </form>
+
+<!-- Modal: crear una especie nueva sin salir del formulario -->
+<div class="modal fade" id="modalNuevaEspecie" tabindex="-1" aria-labelledby="tituloNuevaEspecie" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title h5" id="tituloNuevaEspecie">Nueva especie del catálogo</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <form data-form-nueva-especie novalidate>
+        <div class="modal-body">
+          <div class="alert alert-danger d-none" data-errores-especie role="alert"></div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold" for="nuevaEspecieNombre">Nombre</label>
+            <input class="form-control" id="nuevaEspecieNombre" name="nombre" maxlength="40" required>
+          </div>
+          <div class="mb-3">
+            <span class="form-label fw-semibold d-block">Tipo</span>
+            <div class="segmentado" role="radiogroup" aria-label="Tipo de la nueva especie">
+              <% tipos.forEach(tp => { %>
+                <label class="segmentado-opcion">
+                  <input type="radio" name="id_tpo" value="<%= tp.id_tpo %>" <%= tipos.length && tp.id_tpo === tipos[0].id_tpo ? 'checked' : '' %> required>
+                  <span><%= tp.nombre %></span>
+                </label>
+              <% }) %>
+            </div>
+          </div>
+          <div class="mb-2">
+            <span class="form-label fw-semibold d-block">Imagen <span class="text-muted fw-normal">(opcional)</span></span>
+            <div class="campo-imagen d-flex align-items-center gap-3" data-campo-imagen>
+              <div class="vista-imagen" data-imagen-vista><span class="text-muted small">Sin imagen</span></div>
+              <div class="flex-grow-1">
+                <input class="form-control form-control-sm" type="file" accept="image/jpeg,image/png,image/webp" data-imagen-archivo aria-label="Imagen de la nueva especie">
+                <input type="hidden" name="imagen_data" data-imagen-data>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Crear y seleccionar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
 <%- include('../plantillas/footer') %>

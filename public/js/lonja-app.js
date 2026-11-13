@@ -98,18 +98,27 @@ async function compartirEnlace(titulo, texto, url) {
 // ==========================================================================
 function inicializarCalculadoraCompra() {
   const selectLote = document.getElementById('id_cmp');
+  const radiosLote = document.querySelectorAll('input[name="id_cmp"]:not([type="hidden"])');
   const inputPrecio = document.getElementById('precio_kilo_final');
   const cajaCalculo = document.getElementById('cajaCalculoEnVivo');
   const spanTotalCalculado = document.getElementById('totalCalculado');
   const spanKilos = document.getElementById('kilosLoteInfo');
   const spanDiferencia = document.getElementById('diferenciaSalida');
 
-  if (!selectLote || !inputPrecio) return;
+  if ((!selectLote && !radiosLote.length) || !inputPrecio) return;
+
+  // La selección puede ser un <select> (versiones anteriores) o tarjetas con radios.
+  const opcionActual = () => {
+    if (selectLote && selectLote.tagName === 'SELECT') return selectLote.options[selectLote.selectedIndex];
+    const elegido = document.querySelector('input[name="id_cmp"]:checked');
+    return elegido ? { value: elegido.value, dataset: elegido.dataset } : null;
+  };
 
   function actualizarCalculo() {
-    const opcion = selectLote.options[selectLote.selectedIndex];
+    const opcion = opcionActual();
     if (!opcion || !opcion.value) {
       if (cajaCalculo) cajaCalculo.classList.add('d-none');
+      if (spanTotalCalculado) spanTotalCalculado.textContent = '$0.00';
       return;
     }
 
@@ -141,13 +150,16 @@ function inicializarCalculadoraCompra() {
     }
   }
 
-  selectLote.addEventListener('change', () => {
-    const opcion = selectLote.options[selectLote.selectedIndex];
+  const alCambiarLote = () => {
+    const opcion = opcionActual();
     if (opcion && opcion.dataset.salida && !inputPrecio.value) {
       inputPrecio.value = opcion.dataset.salida;
     }
     actualizarCalculo();
-  });
+  };
+
+  if (selectLote && selectLote.tagName === 'SELECT') selectLote.addEventListener('change', alCambiarLote);
+  radiosLote.forEach((radio) => radio.addEventListener('change', alCambiarLote));
 
   inputPrecio.addEventListener('input', actualizarCalculo);
 

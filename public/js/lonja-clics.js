@@ -417,6 +417,28 @@
     });
   }
 
+  // ------------------------------------------------------------------
+  // Validación de "al menos una especie" (el servidor también lo valida)
+  // ------------------------------------------------------------------
+  function inicializarRequiereEspecies() {
+    document.querySelectorAll('form[data-requiere-especies]').forEach((form) => {
+      form.addEventListener('submit', (ev) => {
+        const marcadas = form.querySelectorAll('input[name="especies"]:checked');
+        const aviso = form.querySelector('[data-error-especies]');
+        if (marcadas.length) {
+          if (aviso) aviso.classList.add('d-none');
+          return;
+        }
+        ev.preventDefault();
+        ev.stopPropagation();
+        if (aviso) {
+          aviso.classList.remove('d-none');
+          aviso.scrollIntoView({ block: 'center', behavior: 'smooth' });
+        }
+      });
+    });
+  }
+
   document.addEventListener('DOMContentLoaded', () => {
     inicializarCamposImagen();
     inicializarTarjetas();
@@ -425,5 +447,6 @@
     inicializarCombobox();
     inicializarFiltroTarjetas();
     inicializarNuevaEspecie();
+    inicializarRequiereEspecies();
   });
 })();

@@ -16,6 +16,13 @@ const reglas = [
 ];
 const reglasAlta = [body("id_cmp").isInt({ min: 1 }).withMessage("Selecciona un lote"), ...reglas];
 
+const esDeTienda = (compra) => compra?.id_ped !== null && compra?.id_ped !== undefined;
+
+const errorTienda = (res) => res.status(409).render("error", {
+  codigo: 409,
+  mensaje: "Esta compra se generó desde un pedido en línea y no puede editarse ni eliminarse desde la caja.",
+});
+
 const incluye = [
   { model: Comprador, as: "comprador" },
   { model: Lote, as: "lote", include: [{ model: Especie, as: "especies", include: [{ model: Tipo, as: "tipo" }] }] },
@@ -157,14 +164,16 @@ const registrar = async (req, res) => {
 };
 
 const editar = async (req, res) => {
-  const compra = await Compra.findOne({ where: { id_cmp: req.params.id } });
+  const compra = await Compra.findOne({ where: { id_cmp: req.params.id }, include: [{ model: Lote, as: "lote" }] });
   if (!compra) return res.redirect("/compras");
+  if (esDeTienda(compra)) return errorTienda(res);
   res.render("compras/formulario", { compra, editando: true, action: `/compras/${compra.id_cmp}?_method=PUT`, errores: [], ...(await catalogos(compra.id_cmp)) });
 };
 
 const actualizar = async (req, res) => {
   const compra = await Compra.findOne({ where: { id_cmp: req.params.id }, include: [{ model: Lote, as: "lote" }] });
   if (!compra) return res.redirect("/compras");
+  if (esDeTienda(compra)) return errorTienda(res);
   const errs = mensajesError(req);
   if (!errs.length) {
     try {
@@ -183,6 +192,8 @@ const actualizar = async (req, res) => {
 };
 
 const eliminar = async (req, res) => {
+  const compra = await Compra.findOne({ where: { id_cmp: req.params.id } });
+  if (compra && esDeTienda(compra)) return errorTienda(res);
   await Compra.destroy({ where: { id_cmp: req.params.id } });
   res.redirect(`/compras?${aMensaje("Compra eliminada")}`);
 };

@@ -1,26 +1,84 @@
 <%- include('../plantillas/header') %>
-<h1 class="h3 mb-3"><%= especie && especie.id_epe ? 'Editar' : 'Nueva' %> especie</h1>
+<h1 class="h3 mb-1"><%= especie && especie.id_epe ? 'Editar especie del lote' : 'Nueva especie en un lote' %></h1>
+<p class="text-muted small mb-4">Elige el lote (solo aparecen los que no se han vendido) y la especie del catálogo. El tipo se toma del catálogo.</p>
 <%- include('../plantillas/mensajes') %>
-<form action="<%= action %>" method="POST" class="col-lg-6">
-  <div class="mb-3"><label class="form-label" for="nombre">Nombre</label>
-    <input class="form-control" id="nombre" name="nombre" maxlength="25" value="<%= especie ? (especie.nombre || '') : '' %>" required></div>
-  <div class="mb-3"><label class="form-label" for="id_lte">Lote</label>
-    <select class="form-select" id="id_lte" name="id_lte" required>
-      <option value="">Selecciona…</option>
-      <% lotes.forEach(l => { %>
-      <option value="<%= l.id_lte %>" <%= especie && String(especie.id_lte) === String(l.id_lte) ? 'selected' : '' %>>Lote <%= l.id_lte %> · <%= Number(l.kilos).toFixed(2) %> kg · <%= fechaHora(l.fecha) %></option>
-      <% }) %>
-    </select></div>
-  <div class="mb-3"><label class="form-label" for="id_tpo">Tipo</label>
-    <select class="form-select" id="id_tpo" name="id_tpo" required>
-      <option value="">Selecciona…</option>
-      <% tipos.forEach(t => { %>
-      <option value="<%= t.id_tpo %>" <%= especie && String(especie.id_tpo) === String(t.id_tpo) ? 'selected' : '' %>><%= t.nombre %></option>
-      <% }) %>
-    </select></div>
-  <div class="mb-3"><label class="form-label" for="imagen">Imagen (ruta o URL, opcional)</label>
-    <input class="form-control" id="imagen" name="imagen" maxlength="100" value="<%= especie ? (especie.imagen || '') : '' %>"></div>
-  <button class="btn btn-primary" type="submit">Guardar</button>
-  <a class="btn btn-link" href="/especies">Cancelar</a>
+
+<form action="<%= action %>" method="POST" class="row g-4" data-validar novalidate>
+  <div class="col-lg-6">
+    <div class="card p-4 h-100" data-filtro-tarjetas>
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h6 fw-bold mb-0">Lote</h2>
+        <a class="small text-decoration-none" href="/lotes/crear">+ Nuevo lote</a>
+      </div>
+      <input type="search" class="form-control form-control-sm mb-2" placeholder="Buscar lote…" data-filtro-texto aria-label="Buscar lote">
+      <% if (!lotes.length) { %>
+        <div class="alert alert-warning small mb-0">
+          No hay lotes disponibles. <a class="alert-link" href="/lotes/crear">Registra un lote</a> primero.
+        </div>
+      <% } else { %>
+        <div class="lista-seleccion" role="radiogroup" aria-label="Lote">
+          <% lotes.forEach(l => { const marcado = especie && String(especie.id_lte) === String(l.id_lte); %>
+            <label class="opcion-seleccion <%= marcado ? 'tarjeta-seleccionada' : '' %>" data-tarjeta data-nombre="lote <%= l.id_lte %> <%= (l.especies || []).map(e => e.nombre).join(' ') %>" aria-pressed="<%= marcado ? 'true' : 'false' %>">
+              <input type="radio" name="id_lte" value="<%= l.id_lte %>" <%= marcado ? 'checked' : '' %> required>
+              <span class="flex-grow-1">
+                <span class="fw-bold">Lote #<%= l.id_lte %></span>
+                <span class="d-block small text-muted">
+                  <%= Number(l.kilos).toFixed(2) %> kg · <%= l.numero_cajas %> cajas · <%= fechaHora(l.fecha) %>
+                </span>
+                <span class="d-block small text-muted">
+                  <%= (l.especies || []).map(e => e.nombre).join(', ') || 'Sin especies todavía' %>
+                </span>
+              </span>
+            </label>
+          <% }) %>
+        </div>
+        <div class="text-muted small mt-2" data-sin-tarjetas hidden>No hay lotes que coincidan con la búsqueda.</div>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="col-lg-6">
+    <div class="card p-4 h-100" data-filtro-tarjetas>
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h2 class="h6 fw-bold mb-0">Especie del catálogo</h2>
+        <a class="small text-decoration-none" href="/catalogo/crear">+ Nueva especie</a>
+      </div>
+      <input type="search" class="form-control form-control-sm mb-2" placeholder="Buscar especie…" data-filtro-texto aria-label="Buscar especie del catálogo">
+      <div class="chips-tipo mb-2" role="group" aria-label="Filtrar por tipo">
+        <button type="button" class="chip-tipo activo" data-filtro-tipo="" aria-pressed="true">Todas</button>
+        <% tipos.forEach(tp => { %>
+          <button type="button" class="chip-tipo" data-filtro-tipo="<%= tp.nombre %>" aria-pressed="false"><%= tp.nombre %></button>
+        <% }) %>
+      </div>
+      <% if (!catalogo.length) { %>
+        <div class="alert alert-warning small mb-0">
+          El catálogo está vacío. <a class="alert-link" href="/catalogo/crear">Agrega la primera especie</a>.
+        </div>
+      <% } else { %>
+        <div class="tarjetas-especies" role="radiogroup" aria-label="Especie del catálogo">
+          <% catalogo.forEach(c => { const marcada = especie && String(especie.id_cat) === String(c.id_cat); %>
+            <label class="tarjeta-especie <%= marcada ? 'tarjeta-seleccionada' : '' %>" data-tarjeta data-nombre="<%= c.nombre %>" data-tipo="<%= c.tipo.nombre %>" aria-pressed="<%= marcada ? 'true' : 'false' %>">
+              <input class="tarjeta-control" type="radio" name="id_cat" value="<%= c.id_cat %>" <%= marcada ? 'checked' : '' %> required>
+              <span class="tarjeta-imagen">
+                <% if (c.imagen) { %>
+                  <img src="<%= c.imagen %>" alt="" onerror="this.style.display='none'">
+                <% } else { %>
+                  <span class="sin-imagen" aria-hidden="true">🐟</span>
+                <% } %>
+              </span>
+              <span class="tarjeta-nombre"><%= c.nombre %></span>
+              <span class="tarjeta-tipo"><%= c.tipo.nombre %><% if (!c.activo) { %> · inactiva<% } %></span>
+            </label>
+          <% }) %>
+        </div>
+        <div class="text-muted small mt-2" data-sin-tarjetas hidden>No hay especies que coincidan con el filtro.</div>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="col-12 d-flex gap-2">
+    <button class="btn btn-primary" type="submit">Guardar especie</button>
+    <a class="btn btn-link" href="/especies">Cancelar</a>
+  </div>
 </form>
 <%- include('../plantillas/footer') %>

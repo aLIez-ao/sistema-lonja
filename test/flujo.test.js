@@ -13,7 +13,7 @@ const { default: db } = await import("../config/db.js");
 await import("../models/index.js");
 const { default: app } = await import("../app.js");
 const { crearAdministradorInicial, crearTiposIniciales } = await import("../helpers/semillas.js");
-const { Compra, Lote } = await import("../models/index.js");
+const { Compra, Lote, Especie, EspecieCatalogo } = await import("../models/index.js");
 
 let server, base;
 const sesion = (cookie = "") => ({
@@ -86,7 +86,7 @@ test("admin crea capturista; capturista entra pero no administra usuarios ni bor
   assert.equal((await capt.post("/tipos/1?_method=DELETE", {})).status, 403);
 });
 
-let loteId;
+let loteId, catalogoHuachi;
 test("flujo de captura: comprador, lote, especie, compra con total calculado", async () => {
   // validaciones
   const malComp = await capt.post("/compradores", { nombre: "", apellido_paterno: "X", correo: "no-es-correo" });
@@ -98,15 +98,14 @@ test("flujo de captura: comprador, lote, especie, compra con total calculado", a
   assert.equal(dup.status, 400);
   assert.match(dup.texto, /Ya existe/);
 
+  catalogoHuachi = await EspecieCatalogo.create({ nombre: "Huachinango", id_tpo: 1, imagen: "" });
+
   const malLote = await capt.post("/lotes", { kilos: "-3", numero_cajas: "2", precio_kilo_salida: "10" });
   assert.equal(malLote.status, 400);
-  const lote = await capt.post("/lotes", { kilos: "120.50", numero_cajas: "10", precio_kilo_salida: "45.00" });
+  const lote = await capt.post("/lotes", { kilos: "120.50", numero_cajas: "10", precio_kilo_salida: "45.00", especies: String(catalogoHuachi.id_cat) });
   assert.equal(lote.status, 302);
   loteId = (await Lote.findOne({ order: [["id_lte", "DESC"]] })).id_lte;
-  assert.match(lote.loc, new RegExp(`/especies/crear\\?lote=${loteId}`));
-
-  const esp = await capt.post("/especies", { nombre: "Huachinango", id_lte: String(loteId), id_tpo: "1", imagen: "" });
-  assert.equal(esp.status, 302);
+  assert.match(lote.loc, /^\/lotes\?/);
 
   const malCompra = await capt.post("/compras", { id_cmp: String(loteId), codigo_cpr: "1", precio_kilo_final: "0" });
   assert.equal(malCompra.status, 400);
@@ -125,9 +124,13 @@ test("flujo de captura: comprador, lote, especie, compra con total calculado", a
 });
 
 test("un lote comprado no se edita; no se puede borrar el comprador con compras", async () => {
-  const ed = await capt.post(`/lotes/${loteId}?_method=PUT`, { kilos: "1", numero_cajas: "1", precio_kilo_salida: "1" });
-  assert.equal(ed.status, 400);
-  assert.match(ed.texto, /ya fue comprado/);
+  const ed = await capt.post(`/lotes/${loteId}?_method=PUT`, { kilos: "1", numero_cajas: "1", precio_kilo_salida: "1", especies: String(catalogoHuachi.id_cat) });
+  assert.equal(ed.status, 302);
+  assert.match(decodeURIComponent(ed.loc).replace(/\+/g, " "), /ya fue vendido/);
+
+  const form = await capt.get(`/lotes/${loteId}/editar`);
+  assert.equal(form.status, 302);
+  assert.match(decodeURIComponent(form.loc).replace(/\+/g, " "), /ya fue vendido/);
   const del = await admin.post("/compradores/1?_method=DELETE", {});
   assert.equal(del.status, 302);
   assert.match(decodeURIComponent(del.loc), /No se puede eliminar/);
@@ -192,8 +195,11 @@ test("el administrador no puede desactivarse ni borrarse a sí mismo; 404 amigab
 });
 
 test("todas las pantallas del administrador renderizan (200)", async () => {
+  // La especie del lote vendido ya no es editable; se crea un lote libre para esa pantalla.
+  const libre = await Lote.create({ kilos: 5, numero_cajas: 1, precio_kilo_salida: 10 });
+  const espLibre = await Especie.create({ nombre: "Libre", id_lte: libre.id_lte, id_tpo: 1 });
   const rutas = ["/inicio", "/tipos", "/tipos/crear", "/tipos/1/editar", "/compradores", "/compradores/crear", "/compradores/1/editar",
-    "/lotes", "/lotes/crear", "/especies", "/especies/crear", "/especies/1/editar", "/compras", "/compras/crear", `/compras/${loteId}/editar`,
+    "/lotes", "/lotes/crear", "/especies", "/especies/crear", `/especies/${espLibre.id_epe}/editar`, "/compras", "/compras/crear", `/compras/${loteId}/editar`,
     "/reportes/diario", "/usuarios", "/usuarios/crear", "/usuarios/1/editar"];
   for (const ruta of rutas) assert.equal((await admin.get(ruta)).status, 200, ruta);
 });
