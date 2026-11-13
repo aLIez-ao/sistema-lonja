@@ -3,33 +3,92 @@ import dotenv from "dotenv";
 
 dotenv.config({ path: ".env" });
 
+// Transporte inyectable para las pruebas (nunca se envían correos reales desde `npm test`).
+let transportePruebas = null;
+/** Último error técnico de envío, para diagnóstico del administrador. */
+let ultimoError = null;
+let ultimoErrorFecha = null;
+
+export function fijarTransporteParaPruebas(transporte) {
+  transportePruebas = transporte || null;
+}
+
+/** Credenciales normalizadas: sin espacios alrededor y sin espacios internos en la contraseña. */
+function credenciales() {
+  const usuario = String(process.env.GMAIL_USER || process.env.EMAIL_USER || "").trim();
+  const clave = String(process.env.GMAIL_PASS || process.env.EMAIL_PASS || "").replace(/\s+/g, "");
+  return { usuario, clave };
+}
+
 /**
  * Crea el transporte de correo según las variables en .env.
  * Si se especifica GMAIL_USER y GMAIL_PASS, usa el servicio Gmail oficial.
  */
 function obtenerTransporte() {
-  const usuario = process.env.GMAIL_USER || process.env.EMAIL_USER;
-  const clave = process.env.GMAIL_PASS || process.env.EMAIL_PASS;
-
+  if (transportePruebas) return transportePruebas;
+  const { usuario, clave } = credenciales();
   if (usuario && clave) {
-    return nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: usuario,
-        pass: clave,
-      },
-    });
+    return nodemailer.createTransport({ service: "gmail", auth: { user: usuario, pass: clave } });
   }
-
-  // Si no hay credenciales configuradas en .env, transporte de desarrollo (modo consola)
   return null;
+}
+
+const remitenteActual = () =>
+  credenciales().usuario || process.env.GMAIL_USER || process.env.EMAIL_USER || "lonjaveracruz@sistema.local";
+
+/** Estado público del correo (sin revelar la contraseña). */
+export function estadoCorreo() {
+  const { usuario, clave } = credenciales();
+  const configurado = Boolean(transportePruebas || (usuario && clave));
+  return {
+    configurado,
+    simulado: !configurado,
+    remitente: remitenteActual(),
+    remitenteEnmascarado: enmascararCorreo(remitenteActual()),
+    ultimoError: ultimoErrorFecha ? { mensaje: traducirErrorCorreo(ultimoError), fecha: ultimoErrorFecha } : null,
+  };
+}
+
+/** ab***@gmail.com: suficiente para diagnosticar sin publicar la dirección completa. */
+export function enmascararCorreo(correo) {
+  const [local, dominio] = String(correo || "").split("@");
+  if (!dominio) return "—";
+  const visibles = local.slice(0, 2);
+  return `${visibles}${"*".repeat(Math.max(2, local.length - 2))}@${dominio}`;
+}
+
+/** Traduce el error técnico de nodemailer/Gmail a un mensaje entendible. */
+export function traducirErrorCorreo(error) {
+  const texto = String(error?.message || error || "");
+  const codigo = String(error?.code || "");
+  if (/EAUTH|535|Invalid login|Username and Password not accepted/i.test(`${codigo} ${texto}`)) {
+    return "Gmail rechazó el usuario o la contraseña. Usa una contraseña de aplicación de 16 caracteres (requiere verificación en 2 pasos).";
+  }
+  if (/ECONNECTION|ETIMEDOUT|ENOTFOUND|ESOCKET|ECONNREFUSED/i.test(`${codigo} ${texto}`)) {
+    return "No hay conexión con Gmail. Revisa la conexión a internet del servidor.";
+  }
+  return "No se pudo enviar el correo. Revisa la configuración en Configuración › Correo.";
+}
+
+/** Comprueba al arrancar que Gmail acepta las credenciales. Nunca detiene el servidor. */
+export async function verificarTransporte() {
+  const transporte = obtenerTransporte();
+  if (!transporte) return { configurado: false, simulado: true, mensaje: "Correo NO configurado (modo simulador)" };
+  try {
+    if (typeof transporte.verify === "function") await transporte.verify();
+    return { configurado: true, simulado: false, mensaje: "Correo listo" };
+  } catch (error) {
+    ultimoError = error;
+    ultimoErrorFecha = new Date();
+    return { configurado: true, simulado: false, error: traducirErrorCorreo(error), mensaje: "Gmail rechazó las credenciales" };
+  }
 }
 
 /**
  * Función interna para enviar un email de forma segura sin romper la aplicación si faltan credenciales.
  */
 async function enviarCorreo({ para, asunto, html, texto, adjuntos = [] }) {
-  const remitente = process.env.GMAIL_USER || process.env.EMAIL_USER || "lonjaveracruz@sistema.local";
+  const remitente = remitenteActual();
   const transporter = obtenerTransporte();
 
   if (!transporter) {
@@ -48,15 +107,35 @@ async function enviarCorreo({ para, asunto, html, texto, adjuntos = [] }) {
       to: para,
       subject: asunto,
       text: texto || "",
-      html: html,
+      html,
       attachments: adjuntos,
     });
     console.log(`✅ Correo enviado a ${para} (ID: ${info.messageId})`);
     return { ok: true, messageId: info.messageId };
   } catch (error) {
-    console.error(`❌ Error al enviar correo a ${para}:`, error.message);
-    return { ok: false, error: error.message };
+    ultimoError = error;
+    ultimoErrorFecha = new Date();
+    const detalle = traducirErrorCorreo(error);
+    // El detalle técnico completo solo en consola y en la pestaña Correo del administrador.
+    console.error(`❌ Error al enviar correo a ${para}: ${detalle}`);
+    console.error(error);
+    return { ok: false, error: detalle, tecnico: error.message };
   }
+}
+
+/** Para diagnóstico desde la pestaña Correo. */
+export async function enviarCorreoPrueba({ para, usuario }) {
+  const resultado = await enviarCorreo({
+    para,
+    asunto: "Prueba de correo - Lonja de Veracruz",
+    ...plantillaCuenta({
+      subtitulo: "Correo de prueba",
+      usuario: usuario || { nombre_completo: "Administrador" },
+      parrafos: ["Este mensaje confirma que el servidor puede enviar correos con la configuración actual."],
+      pie: "Si recibiste este correo, la verificación de cuentas y los avisos funcionarán.",
+    }),
+  });
+  return resultado;
 }
 
 /** Escapa texto que se inserta en el HTML de un correo. */
@@ -89,17 +168,18 @@ function plantillaCuenta({ subtitulo, usuario, parrafos, boton, pie }) {
 /** Verificación del correo vinculado a la cuenta (el enlace vence en 24 horas). */
 export async function enviarEmailVerificacion({ usuario, correo, token, baseUrl }) {
   const enlace = `${baseUrl}/verificar-email/${token}`;
-  return enviarCorreo({
+  const resultado = await enviarCorreo({
     para: correo,
     asunto: "Confirma tu correo - Lonja de Veracruz",
     ...plantillaCuenta({
       subtitulo: "Verificación de correo",
       usuario,
-      parrafos: ["Para confirmar que este correo te pertenece y poder usarlo para recuperar tu cuenta, verifica tu dirección. El enlace vence en 24 horas."],
+      parrafos: ["Para confirmar que este correo te pertenece y poder usarlo para recuperar tu cuenta y confirmar tus pedidos, verifica tu dirección. El enlace vence en 24 horas.", "Si pediste otro enlace después de este, el más reciente reemplaza a los anteriores."],
       boton: { texto: "Verificar mi correo", enlace },
       pie: "Si no solicitaste esta verificación puedes ignorar este mensaje.",
     }),
   });
+  return { ...resultado, enlace };
 }
 
 /** Enlace para restablecer la contraseña (vence en 1 hora). */
@@ -265,4 +345,35 @@ export async function enviarBoletinClientes({ asunto, titulo, mensaje, tipo = "e
   }
 
   return resultados;
+}
+
+/** Correo de confirmación de un pedido en línea (sin PDF: las facturas van aparte). */
+export async function enviarEmailPedido({ usuario, correo, pedido, items, facturas = [], asunto, titulo, parrafos = [] }) {
+  const filas = items.map((i) => `<tr><td style="padding:6px 0;">Lote #${i.id_lte}</td><td style="text-align:right;">${Number(i.kilos).toFixed(2)} kg</td><td style="text-align:right;">$${Number(i.subtotal).toFixed(2)}</td></tr>`).join("");
+  const html = `
+    <div style="font-family:'Segoe UI',Arial,sans-serif;max-width:640px;margin:0 auto;background:#fff;border:1px solid #e2e8f0;border-radius:12px;overflow:hidden;">
+      <div style="background:linear-gradient(135deg,#0b3954,#087e8b);padding:26px;color:#fff;">
+        <h1 style="margin:0;font-size:22px;">Lonja de Veracruz</h1>
+        <p style="margin:8px 0 0;opacity:.9;">${esc(titulo || "Tu pedido")} · Pedido #${pedido.id_ped}</p>
+      </div>
+      <div style="padding:24px;color:#1e293b;">
+        <p>Hola <strong>${esc(usuario?.nombre_completo || usuario?.usuario || "comprador")}</strong>,</p>
+        ${parrafos.map((p) => `<p>${esc(p)}</p>`).join("")}
+        <table style="width:100%;border-collapse:collapse;font-size:14px;">
+          ${filas}
+          <tr style="border-top:1px solid #cbd5e1;"><td style="padding-top:8px;">Subtotal</td><td></td><td style="text-align:right;">$${Number(pedido.subtotal).toFixed(2)}</td></tr>
+          <tr><td>Envío</td><td></td><td style="text-align:right;">$${Number(pedido.costo_envio).toFixed(2)}</td></tr>
+          <tr><td style="font-weight:700;color:#0b3954;">Total</td><td></td><td style="text-align:right;font-weight:700;color:#087e8b;">$${Number(pedido.total).toFixed(2)}</td></tr>
+        </table>
+        ${pedido.dir_texto ? `<p style="font-size:13px;color:#64748b;">Entrega: ${esc(pedido.dir_texto)}</p>` : ""}
+      </div>
+    </div>`;
+  const adjuntos = facturas.map((f) => ({ filename: `Factura-Lonja-${f.folio}.pdf`, content: f.pdf, contentType: "application/pdf" }));
+  return enviarCorreo({
+    para: correo,
+    asunto: `${asunto || "Pedido"} #${pedido.id_ped} - Lonja de Veracruz`,
+    html,
+    texto: parrafos.join("\n\n"),
+    adjuntos,
+  });
 }

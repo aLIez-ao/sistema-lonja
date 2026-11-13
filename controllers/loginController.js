@@ -8,6 +8,7 @@ import { mensajesError, aMensaje } from "../helpers/utiles.js";
 import { enviarEmailPasswordCambiada } from "../helpers/email.js";
 import { crearLimite, hashToken, problemasPassword } from "../helpers/seguridad.js";
 import { enviarEnlacePassword } from "../helpers/cuentas.js";
+import { destinoTrasEntrar, inicioSegun, rutaVolver } from "../helpers/navegacion.js";
 
 const reglasLogin = [
   body("usuario").trim().notEmpty().withMessage("El usuario no debe estar vacío"),
@@ -20,35 +21,38 @@ const HASH_FALSO = bcrypt.hashSync("no-existe", 10);
 export const limiteLogin = crearLimite({ max: 5, ventanaMs: 15 * 60 * 1000 });
 export const limiteRecuperacion = crearLimite({ max: 5, ventanaMs: 60 * 60 * 1000 });
 
-const vistaLogin = (res, errores = [], usuario = "", mensaje = null, estado) =>
-  res.status(estado ?? (errores.length ? 401 : 200)).render("login/login", { errores, usuario, mensaje });
+const vistaLogin = (res, errores = [], usuario = "", mensaje = null, estado, volver = "") =>
+  res.status(estado ?? (errores.length ? 401 : 200)).render("login/login", { errores, usuario, mensaje, volver });
 
 const login = (req, res) => {
   // Con sesión vigente no tiene sentido mostrar el formulario
-  if (req.usuario) return res.redirect("/inicio");
-  vistaLogin(res, [], "", req.query.mensaje);
+  if (req.usuario) return res.redirect(inicioSegun(req.usuario));
+  vistaLogin(res, [], "", req.query.mensaje, undefined, rutaVolver(req.query.volver) || "");
 };
 
 const credenciales = async (req, res) => {
   const errs = mensajesError(req);
-  if (errs.length) return vistaLogin(res, errs, req.body.usuario);
+  if (errs.length) return vistaLogin(res, errs, req.body.usuario, null, undefined, req.body.volver);
 
   const { usuario, password } = req.body;
   const clave = `${req.ip}|${String(usuario).toLowerCase()}`;
   if (limiteLogin.bloqueado(clave)) {
-    return vistaLogin(res, [`Demasiados intentos fallidos. Intenta de nuevo en ${limiteLogin.minutosRestantes(clave)} min o recupera tu contraseña.`], usuario, null, 429);
+    return vistaLogin(res, [`Demasiados intentos fallidos. Intenta de nuevo en ${limiteLogin.minutosRestantes(clave)} min o recupera tu contraseña.`], usuario, null, 429, req.body.volver);
   }
 
-  const us = await Usuario.findOne({ where: { usuario } });
+  // Se acepta el nombre de usuario o el correo electrónico
+  const us = await Usuario.findOne({
+    where: { [Op.or]: [{ usuario }, { correo: String(usuario).trim().toLowerCase() }, { correo: String(usuario).trim() }] },
+  });
   const coincide = await bcrypt.compare(password, us ? us.password : HASH_FALSO);
 
   if (!us || !coincide || !us.activo) {
     limiteLogin.fallo(clave);
-    return vistaLogin(res, ["Revisa las credenciales"], usuario);
+    return vistaLogin(res, ["Revisa las credenciales"], usuario, null, undefined, req.body.volver);
   }
 
   limiteLogin.limpiar(clave);
-  return res.cookie("_token", JWTGenera(us), opcionesCookieSesion()).redirect("/inicio");
+  return res.cookie("_token", JWTGenera(us), opcionesCookieSesion()).redirect(destinoTrasEntrar(us, req.body.volver));
 };
 
 const principal = async (req, res) => {
@@ -115,13 +119,30 @@ const restablecerPassword = async (req, res) => {
   enviarEmailPasswordCambiada({ usuario: us, correo: us.correo }).catch(() => {});
 
   res.clearCookie("_token", opcionesCookieSesion());
-  res.redirect(`/?${aMensaje("Tu contraseña quedó guardada. Ya puedes iniciar sesión.")}`);
+  res.redirect(`/acceso?${aMensaje("Tu contraseña quedó guardada. Ya puedes iniciar sesión.")}`);
 };
 
 const verificarEmailToken = async (req, res) => {
-  const us = await Usuario.findOne({ where: { token_verificacion: hashToken(req.params.token), token_verificacion_expira: { [Op.gt]: new Date() } } });
+  const hash = hashToken(req.params.token);
+  const us = await Usuario.findOne({ where: { token_verificacion: hash } });
+
   if (!us) {
-    return res.status(400).render("error", { codigo: 400, mensaje: "El enlace de verificación no es válido, ya se usó o caducó. Solicita uno nuevo en Configuración." });
+    return res.status(400).render("error", {
+      codigo: 400,
+      mensaje: "El enlace de verificación no existe o ya se usó. Si pediste un enlace nuevo, el más reciente reemplaza a todos los anteriores.",
+      accion: req.usuario && req.usuario.correo && !req.usuario.email_verificado
+        ? { texto: "Enviar un enlace nuevo", url: "/configuracion#pane-cuenta", metodo: "enlace" }
+        : null,
+    });
+  }
+  if (new Date(us.token_verificacion_expira) <= new Date()) {
+    return res.status(400).render("error", {
+      codigo: 400,
+      mensaje: "El enlace de verificación caducó (vence a las 24 horas). Solicita uno nuevo para continuar.",
+      accion: req.usuario && req.usuario.id === us.id
+        ? { texto: "Enviar un enlace nuevo", url: "/configuracion/solicitar-verificacion", metodo: "form" }
+        : null,
+    });
   }
 
   us.email_verificado = true;
@@ -129,8 +150,10 @@ const verificarEmailToken = async (req, res) => {
   us.token_verificacion_expira = null;
   await us.save();
 
-  if (req.usuario) return res.redirect(`/configuracion?${aMensaje("Correo verificado")}#pane-cuenta`);
-  res.redirect(`/?${aMensaje("Tu correo quedó verificado. Ya puedes iniciar sesión.")}`);
+  if (req.usuario) {
+    return res.redirect(`${inicioSegun(req.usuario)}?${aMensaje("Correo verificado correctamente")}`);
+  }
+  res.redirect(`/acceso?${aMensaje("Tu correo quedó verificado. Ya puedes iniciar sesión.")}`);
 };
 
 export {

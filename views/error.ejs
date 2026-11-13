@@ -2,6 +2,15 @@
 <div class="text-center py-5">
   <h1 class="display-4"><%= codigo %></h1>
   <p class="lead"><%= mensaje %></p>
-  <a class="btn btn-primary" href="/inicio">Ir al inicio</a>
+  <% if (typeof accion !== 'undefined' && accion) { %>
+    <% if (accion.metodo === 'form') { %>
+      <form action="<%= accion.url %>" method="POST" class="d-inline-block me-2">
+        <button type="submit" class="btn btn-primary"><%= accion.texto %></button>
+      </form>
+    <% } else { %>
+      <a class="btn btn-primary me-2" href="<%= accion.url %>"><%= accion.texto %></a>
+    <% } %>
+  <% } %>
+  <a class="btn btn-outline-primary" href="<%= usuario ? (usuario.rol === 'comprador' ? '/' : '/inicio') : '/' %>">Ir al inicio</a>
 </div>
 <%- include('plantillas/footer') %>

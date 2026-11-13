@@ -8,6 +8,7 @@ import {
   guardarCookies,
   cambiarPasswordCuenta,
   enviarAvisoClientes,
+  probarCorreo,
 } from "../controllers/configuracionController.js";
 
 import { permitir } from "../middleware/protegerRutas.js";
@@ -23,5 +24,6 @@ router.post("/solicitar-verificacion", solicitarVerificacionEmail);
 router.post("/cambiar-password", cambiarPasswordCuenta);
 // El correo masivo a compradores es solo para administradores
 router.post("/enviar-aviso-clientes", permitir("admin"), enviarAvisoClientes);
+router.post("/correo/prueba", permitir("admin"), probarCorreo);
 
 export default router;

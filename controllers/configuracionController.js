@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import { Usuario, Comprador } from "../models/index.js";
-import { enviarBoletinClientes, enviarEmailPasswordCambiada } from "../helpers/email.js";
-import { enviarVerificacionCorreo } from "../helpers/cuentas.js";
+import { enviarBoletinClientes, enviarEmailPasswordCambiada, estadoCorreo, enviarCorreoPrueba } from "../helpers/email.js";
+import { enviarVerificacionCorreo, limiteVerificacion, segundosEsperaVerificacion, urlBase } from "../helpers/cuentas.js";
 import { aplicarFoto } from "../helpers/avatar.js";
 import { problemasPassword } from "../helpers/seguridad.js";
 import { JWTGenera, opcionesCookieSesion } from "../helpers/tokens.js";
@@ -15,6 +15,8 @@ export const verConfiguracion = async (req, res) => {
   res.render("configuracion/index", {
     us,
     totalCompradores,
+    estadoCorreo: estadoCorreo(),
+    appUrl: urlBase(req),
     mensaje: req.query.mensaje,
     error: req.query.error,
   });
@@ -101,8 +103,17 @@ export const actualizarCuenta = async (req, res) => {
 
     let aviso = "Datos de la cuenta actualizados.";
     if (correoCambio) {
-      const envio = await enviarVerificacionCorreo(req, us);
-      aviso += envio.ok ? ` Te enviamos un enlace a ${correo} para verificarlo.` : " Falta verificar el correo nuevo.";
+      const espera = segundosEsperaVerificacion(us);
+      if (espera > 0) {
+        aviso += ` Ya se envió un enlace de verificación hace poco; espera ${espera} s o reenvíalo desde Mi cuenta.`;
+      } else {
+        const envio = await enviarVerificacionCorreo(req, us);
+        if (envio.ok) aviso += ` Te enviamos un enlace a ${correo} para verificarlo.`;
+        else if (envio.simulado && process.env.NODE_ENV !== "production") {
+          aviso += ` Modo desarrollo: el correo no está configurado. Abre este enlace para verificar: ${envio.enlace}`;
+        } else if (envio.simulado) aviso += " No pudimos enviar el correo. Avisa al administrador.";
+        else aviso += " No pudimos enviar el correo; inténtalo más tarde.";
+      }
     }
     res.redirect(`/configuracion?${aMensaje(aviso)}#pane-cuenta`);
   } catch (err) {
@@ -115,13 +126,39 @@ export const solicitarVerificacionEmail = async (req, res) => {
   if (!us?.correo) return res.redirect(`/configuracion?${aError("Primero registra un correo en tu cuenta")}#pane-cuenta`);
   if (us.email_verificado) return res.redirect(`/configuracion?${aMensaje("Tu correo ya está verificado")}#pane-cuenta`);
 
+  const espera = segundosEsperaVerificacion(us);
+  if (espera > 0) {
+    return res.redirect(`/configuracion?${aError(`Espera ${espera} segundos antes de pedir otro enlace; el anterior sigue vigente`)}#pane-cuenta`);
+  }
+  const clave = `verificacion:${us.id}`;
+  if (limiteVerificacion.bloqueado(clave)) {
+    return res.status(429).render("error", {
+      codigo: 429,
+      mensaje: "Se enviaron demasiados enlaces de verificación en la última hora. Inténtalo más tarde.",
+    });
+  }
+  limiteVerificacion.fallo(clave);
+
   const envio = await enviarVerificacionCorreo(req, us);
-  const aviso = envio.ok
-    ? `Enviamos un enlace de verificación a ${us.correo}. Vence en 24 horas.`
-    : envio.simulado
-      ? "El servidor no tiene configurado el envío de correo (GMAIL_USER/GMAIL_PASS); el enlace se imprimió en la consola del servidor."
-      : null;
-  res.redirect(aviso ? `/configuracion?${aMensaje(aviso)}#pane-cuenta` : `/configuracion?${aError("No se pudo enviar el correo de verificación")}#pane-cuenta`);
+  let aviso;
+  if (envio.ok) aviso = `Se envió un enlace nuevo a ${us.correo}; los enlaces anteriores dejan de servir. Vence en 24 horas.`;
+  else if (envio.simulado && process.env.NODE_ENV !== "production") {
+    aviso = `Modo desarrollo: el correo no está configurado. Abre este enlace para verificar: ${envio.enlace}`;
+  } else if (envio.simulado) aviso = "No pudimos enviar el correo. Avisa al administrador.";
+  else aviso = "No pudimos enviar el correo; inténtalo más tarde.";
+  res.redirect(`/configuracion?${aMensaje(aviso)}#pane-cuenta`);
+};
+
+/** Envía un correo de prueba al propio administrador (pestaña Correo). */
+export const probarCorreo = async (req, res) => {
+  const us = await Usuario.findByPk(req.usuario.id);
+  if (!us?.correo) return res.redirect(`/configuracion?${aError("Tu cuenta no tiene correo registrado")}#pane-correo`);
+  const resultado = await enviarCorreoPrueba({ para: us.correo, usuario: us });
+  if (resultado.ok) return res.redirect(`/configuracion?${aMensaje(`Correo de prueba enviado a ${us.correo}`)}#pane-correo`);
+  const detalle = resultado.simulado
+    ? "El correo está en modo simulador: configura GMAIL_USER y GMAIL_PASS en .env"
+    : resultado.error || "No se pudo enviar el correo de prueba";
+  res.redirect(`/configuracion?${aError(detalle)}#pane-correo`);
 };
 
 export const cambiarPasswordCuenta = async (req, res) => {

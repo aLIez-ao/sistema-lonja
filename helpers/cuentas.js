@@ -1,9 +1,16 @@
 // Operaciones de cuenta compartidas por login, configuración y administración de usuarios.
-import { nuevoToken, hashToken } from "./seguridad.js";
+import { nuevoToken, hashToken, crearLimite } from "./seguridad.js";
 import { enviarEmailInvitacion, enviarEmailRecuperacion, enviarEmailVerificacion } from "./email.js";
 
 const HORA = 60 * 60 * 1000;
-export const urlBase = (req) => `${req.protocol}://${req.get("host")}`;
+const SEGUNDO = 1000;
+
+/** URL pública de la app: APP_URL si está definida; si no, el host de la petición. */
+export const urlBase = (req) => {
+  const configurada = String(process.env.APP_URL || "").trim().replace(/\/+$/, "");
+  if (configurada) return configurada;
+  return `${req.protocol}://${req.get("host")}`;
+};
 
 /**
  * Genera un enlace de un solo uso para definir la contraseña y lo envía por correo.
@@ -24,13 +31,29 @@ export async function enviarEnlacePassword(req, usuario, tipo = "recuperacion") 
   return { ...resultado, enlace: `${datos.baseUrl}/recuperar-password/${token}` };
 }
 
-/** Envía el enlace de verificación del correo (24 h). */
+/** Envío de verificación: 60 s de enfriamiento y máximo 5 por hora y usuario. */
+export const limiteVerificacion = crearLimite({ max: 5, ventanaMs: HORA });
+
+/** Segundos que faltan para poder reenviar (0 si ya se puede). */
+export function segundosEsperaVerificacion(usuario) {
+  if (!usuario?.token_verificacion_envio) return 0;
+  const transcurrido = Date.now() - new Date(usuario.token_verificacion_envio).getTime();
+  return Math.max(0, Math.ceil((60 * SEGUNDO - transcurrido) / SEGUNDO));
+}
+
+/**
+ * Envía el enlace de verificación del correo (24 h).
+ * Guarda también la fecha del envío para aplicar el enfriamiento de 60 s.
+ */
 export async function enviarVerificacionCorreo(req, usuario) {
   const token = nuevoToken();
+  const baseUrl = urlBase(req);
   usuario.token_verificacion = hashToken(token);
   usuario.token_verificacion_expira = new Date(Date.now() + 24 * HORA);
+  usuario.token_verificacion_envio = new Date();
   await usuario.save();
-  return enviarEmailVerificacion({ usuario, correo: usuario.correo, token, baseUrl: urlBase(req) });
+  const resultado = await enviarEmailVerificacion({ usuario, correo: usuario.correo, token, baseUrl });
+  return { ...resultado, enlace: `${baseUrl}/verificar-email/${token}` };
 }
 
 /** Texto para el administrador según cómo salió el envío. */

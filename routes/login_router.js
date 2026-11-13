@@ -16,6 +16,7 @@ import rutaProteger from "../middleware/protegerRutas.js";
 const router = express.Router();
 
 router.get("/", login);
+router.get("/acceso", login);
 router.post("/credenciales", reglasLogin, credenciales);
 router.get("/inicio", rutaProteger, principal);
 router.post("/cerrarsesion", cerrarsesion);

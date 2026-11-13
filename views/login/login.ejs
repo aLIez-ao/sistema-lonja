@@ -13,6 +13,9 @@
         <%- include('../plantillas/mensajes', { mensaje: typeof mensaje !== 'undefined' ? mensaje : null }) %>
 
         <form action="/credenciales" method="POST">
+          <% if (typeof volver !== 'undefined' && volver) { %>
+            <input type="hidden" name="volver" value="<%= volver %>">
+          <% } %>
           <div class="mb-3">
             <label for="usuario" class="form-label fw-semibold">Usuario</label>
             <input type="text" class="form-control" id="usuario" name="usuario" value="" autocomplete="username" required autofocus placeholder="Nombre de usuario">

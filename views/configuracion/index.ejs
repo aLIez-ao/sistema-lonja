@@ -46,6 +46,10 @@
         <%- icono('megaphone', 16, 'me-2') %>
         Avisos a compradores
       </a>
+      <a class="list-group-item list-group-item-action py-3 fw-semibold" id="tab-correo" data-bs-toggle="list" href="#pane-correo" role="tab">
+        <%- icono('envelope', 16, 'me-2') %>
+        Correo
+      </a>
       <% } %>
     </div>
   </div>
@@ -295,6 +299,53 @@
               </button>
             </div>
           </form>
+        </div>
+      </div>
+
+      <!-- PESTAÑA: CORREO (SOLO ADMIN) -->
+      <div class="tab-pane fade" id="pane-correo" role="tabpanel">
+        <div class="card p-4">
+          <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-3">
+            <div>
+              <h4 class="h5 fw-bold mb-1 text-primary">Diagnóstico del correo</h4>
+              <p class="text-muted small mb-0">Estado del envío de verificaciones, recuperaciones y avisos.</p>
+            </div>
+            <span class="badge <%= estadoCorreo.configurado ? 'bg-success' : 'bg-warning text-dark' %>">
+              <%= estadoCorreo.configurado ? 'Configurado' : 'Modo simulador' %>
+            </span>
+          </div>
+
+          <dl class="row small mb-4">
+            <dt class="col-sm-4">Remitente</dt>
+            <dd class="col-sm-8"><code><%= estadoCorreo.remitenteEnmascarado %></code></dd>
+            <dt class="col-sm-4">URL de la aplicación (APP_URL)</dt>
+            <dd class="col-sm-8"><code><%= appUrl %></code></dd>
+            <dt class="col-sm-4">Último error técnico</dt>
+            <dd class="col-sm-8">
+              <% if (estadoCorreo.ultimoError) { %>
+                <span class="text-danger"><%= estadoCorreo.ultimoError.mensaje %></span>
+                <div class="text-muted"><%= fechaHora(estadoCorreo.ultimoError.fecha) %></div>
+              <% } else { %>
+                <span class="text-muted">Sin errores registrados.</span>
+              <% } %>
+            </dd>
+          </dl>
+
+          <% if (!estadoCorreo.configurado) { %>
+            <div class="alert alert-warning">
+              El correo está en <strong>modo simulador</strong>: los enlaces solo se imprimen en la consola y, en desarrollo, se muestran en pantalla. Configura <code>GMAIL_USER</code> y <code>GMAIL_PASS</code> en <code>.env</code> y reinicia el servidor.
+            </div>
+          <% } %>
+
+          <form action="/configuracion/correo/prueba" method="POST" class="d-flex align-items-center gap-2 flex-wrap">
+            <button type="submit" class="btn btn-primary"><%- icono('send', 16, 'me-1') %>Enviar correo de prueba</button>
+            <span class="small text-muted">Se envía a tu propio correo (<%= us.correo || 'sin correo' %>).</span>
+          </form>
+
+          <hr class="my-4">
+          <p class="small text-muted mb-0">
+            Para usar Gmail: activa la verificación en 2 pasos, crea una <strong>contraseña de aplicación</strong> de 16 caracteres y colócala en <code>GMAIL_PASS</code>. Define también <code>APP_URL</code> (por ejemplo <code>http://localhost:2800</code>) para que los enlaces funcionen desde otros dispositivos.
+          </p>
         </div>
       </div>
 
