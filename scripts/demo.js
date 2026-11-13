@@ -1,13 +1,47 @@
 // Generador de datos de prueba ampliados para el Sistema Lonja
 import db from "../config/db.js";
-import { Tipo, Comprador, Lote, Especie, Compra } from "../models/index.js";
-import { crearTiposIniciales } from "../helpers/semillas.js";
-import { asegurarColumnasUsuario } from "../helpers/migraciones.js";
+import { Tipo, Comprador, Lote, Especie, Compra, EspecieCatalogo, Usuario, DireccionEntrega, Pedido, PedidoItem, CarritoItem, Lista, ListaItem, Pregunta, Opinion } from "../models/index.js";
+import { crearTiposIniciales, crearAdministradorInicial } from "../helpers/semillas.js";
+import { asegurarEsquema } from "../helpers/migraciones.js";
 import { redondea } from "../helpers/fechas.js";
+import { resolve } from "node:path";
+import { pathToFileURL } from "node:url";
+import { DataTypes, Op } from "sequelize";
 
-await db.sync();
-await asegurarColumnasUsuario();
-await crearTiposIniciales();
+const DemoRegistro = db.define("DemoRegistro", {
+  tipo: { type: DataTypes.STRING(24), primaryKey: true },
+  id_registro: { type: DataTypes.STRING(40), primaryKey: true },
+}, { tableName: "demo_registro", timestamps: false });
+
+export async function cargarDemo(database = db, { limpio = false } = {}) {
+  if (database !== db) throw new Error("cargarDemo requiere la conexión configurada del proyecto.");
+  await db.sync();
+  await asegurarEsquema();
+  await crearTiposIniciales();
+  await crearAdministradorInicial();
+
+  if (limpio) {
+    const marcas = await DemoRegistro.findAll({ raw: true });
+    const ids = (tipo) => marcas.filter((m) => m.tipo === tipo).map((m) => m.id_registro);
+    const idsNum = (tipo) => ids(tipo).map(Number).filter(Number.isFinite);
+    const pedidoIds = idsNum("pedido"); const listaIds = idsNum("lista"); const loteIds = idsNum("lote");
+    await PedidoItem.destroy({ where: { id_ped: { [Op.in]: pedidoIds } } });
+    await Compra.destroy({ where: { id_cmp: { [Op.in]: [...idsNum("compra"), ...loteIds] } } });
+    await Pedido.destroy({ where: { id_ped: { [Op.in]: pedidoIds } } });
+    await Pregunta.destroy({ where: { id_usuario: { [Op.in]: idsNum("usuario") } } });
+    await Opinion.destroy({ where: { id_usuario: { [Op.in]: idsNum("usuario") } } });
+    await ListaItem.destroy({ where: { id_lista: { [Op.in]: listaIds } } });
+    await Lista.destroy({ where: { id_lista: { [Op.in]: listaIds } } });
+    await CarritoItem.destroy({ where: { id_usuario: { [Op.in]: idsNum("usuario") } } });
+    await DireccionEntrega.destroy({ where: { id_dir: { [Op.in]: idsNum("direccion") } } });
+    await Usuario.destroy({ where: { id: { [Op.in]: idsNum("usuario") } } });
+    await Comprador.destroy({ where: { codigo_cpr: { [Op.in]: idsNum("comprador") } } });
+    await Especie.destroy({ where: { id_lte: { [Op.in]: loteIds } } });
+    await Lote.destroy({ where: { id_lte: { [Op.in]: loteIds } } });
+    await EspecieCatalogo.destroy({ where: { id_cat: { [Op.in]: idsNum("catalogo") } } });
+    await DemoRegistro.destroy({ where: {} });
+    console.log("Datos demo identificados eliminados.");
+  }
 
 const [pescado, marisco, molusco] = await Promise.all([
   Tipo.findOne({ where: { nombre: "Pescado" } }),
@@ -45,6 +79,7 @@ for (const c of listaCompradores) {
     defaults: c,
   });
   compradoresCreados.push(comprador);
+  await DemoRegistro.findOrCreate({ where: { tipo: "comprador", id_registro: String(comprador.codigo_cpr) } });
 }
 
 // Fechas relativas de prueba para el calendario.
@@ -52,7 +87,7 @@ for (const c of listaCompradores) {
 // - diasAtras: fecha de hace N días con hora y minutos específicos
 //   (simula las subastas de la madrugada y variación horaria real).
 // - fechaPasada: fecha exacta de años anteriores para variar el año.
-const haceMinutos = (m) => new Date(Date.now() - m * 60 * 1000);
+const haceMinutos = (m) => { const d = new Date(); d.setHours(5, 0, 0, 0); d.setMinutes(d.getMinutes() + m); return d; };
 const diasAtras = (dias, hora = 6, minuto = 0) => {
   const f = new Date();
   f.setDate(f.getDate() - dias);
@@ -540,29 +575,110 @@ const lotesPrueba = [
 console.log("Cargando lotes y compras de prueba...");
 
 for (const item of lotesPrueba) {
-  const lote = await Lote.create({
-    kilos: item.kilos,
-    numero_cajas: item.numero_cajas,
-    precio_kilo_salida: item.precio_kilo_salida,
-    fecha: item.fecha,
-  });
+  let lote = await Lote.findOne({ where: { kilos: item.kilos, numero_cajas: item.numero_cajas, precio_kilo_salida: item.precio_kilo_salida, fecha: item.fecha } });
+  if (!lote) lote = await Lote.create({ kilos: item.kilos, numero_cajas: item.numero_cajas, precio_kilo_salida: item.precio_kilo_salida, fecha: item.fecha });
+  await DemoRegistro.findOrCreate({ where: { tipo: "lote", id_registro: String(lote.id_lte) } });
 
   for (const [nombre, tipo] of item.especies) {
-    await Especie.create({
-      nombre,
-      id_lte: lote.id_lte,
-      id_tpo: tipo.id_tpo,
-    });
+    const catalogo = await EspecieCatalogo.findOne({ where: { nombre } });
+    const [especie] = await Especie.findOrCreate({ where: { nombre, id_lte: lote.id_lte }, defaults: { id_tpo: tipo.id_tpo, id_cat: catalogo?.id_cat } });
+    if (catalogo) await especie.update({ id_cat: catalogo.id_cat });
   }
 
   if (item.comprador) {
-    await Compra.create({
-      id_cmp: lote.id_lte,
-      codigo_cpr: item.comprador.codigo_cpr,
-      precio_kilo_final: item.final,
-      precio_total: redondea(item.kilos * item.final),
-      fecha: item.fecha,
-    });
+    const [compra] = await Compra.findOrCreate({ where: { id_cmp: lote.id_lte }, defaults: { codigo_cpr: item.comprador.codigo_cpr, precio_kilo_final: item.final, precio_total: redondea(item.kilos * item.final), fecha: item.fecha } });
+    await DemoRegistro.findOrCreate({ where: { tipo: "compra", id_registro: String(compra.id_cmp) } });
+  }
+}
+
+// A catalog item for every historical species, with a predictable short description.
+const tiposPorNombre = new Map(lotesPrueba.flatMap((l) => l.especies.map(([nombre, tipo]) => [nombre, tipo])));
+const catalogos = new Map();
+const lotesDemoIds = (await DemoRegistro.findAll({ where: { tipo: "lote" }, attributes: ["id_registro"], raw: true })).map((r) => Number(r.id_registro));
+for (const [nombre, tipo] of tiposPorNombre) {
+  let catalogo = await EspecieCatalogo.findOne({ where: { nombre } });
+  const propio = !catalogo;
+  if (!catalogo) catalogo = await EspecieCatalogo.create({ nombre, id_tpo: tipo.id_tpo, descripcion: `${nombre} de las costas del Golfo de México.`, activo: true });
+  catalogos.set(nombre, catalogo);
+  await Especie.update({ id_cat: catalogo.id_cat }, { where: { nombre, id_cat: null, id_lte: { [Op.in]: lotesDemoIds } } });
+  if (propio) await DemoRegistro.findOrCreate({ where: { tipo: "catalogo", id_registro: String(catalogo.id_cat) } });
+}
+
+// Six deterministic online buyers (the last one remains unverified) and addresses.
+const compradoresWeb = [];
+let capturistaDemo = await Usuario.findOne({ where: { usuario: "demo_capturista" } });
+if (!capturistaDemo) capturistaDemo = await Usuario.create({ usuario: "demo_capturista", nombre_completo: "Capturista Demo", correo: "capturista@demo.lonja.test", password: "LonjaDemo2026", rol: "capturista", email_verificado: true });
+await DemoRegistro.findOrCreate({ where: { tipo: "usuario", id_registro: String(capturistaDemo.id) } });
+for (let i = 0; i < 6; i += 1) {
+  const correo = `comprador${i + 1}@demo.lonja.test`;
+  let comprador = await Comprador.findOne({ where: { correo } });
+  if (!comprador) comprador = await Comprador.create({ nombre: ["Marina", "Carlos", "Lucía", "Jorge", "Elena", "Noé"][i], apellido_paterno: "Demo", apellido_materno: "Lonja", correo, direccion: "Veracruz, Veracruz" });
+  await DemoRegistro.findOrCreate({ where: { tipo: "comprador", id_registro: String(comprador.codigo_cpr) } });
+  let usuario = await Usuario.findOne({ where: { usuario: `demo_comprador${i + 1}` } });
+  if (!usuario) usuario = await Usuario.create({ usuario: `demo_comprador${i + 1}`, nombre_completo: `${comprador.nombre} Demo`, correo, password: "LonjaDemo2026", rol: "comprador", codigo_cpr: comprador.codigo_cpr, email_verificado: i < 5 });
+  await DemoRegistro.findOrCreate({ where: { tipo: "usuario", id_registro: String(usuario.id) } });
+  let direccion = await DireccionEntrega.findOne({ where: { id_usuario: usuario.id, alias: "Principal" } });
+  if (!direccion) direccion = await DireccionEntrega.create({ id_usuario: usuario.id, alias: "Principal", destinatario: usuario.nombre_completo, telefono: "2291000000", calle: "Muelle Fiscal", num_ext: String(i + 1), colonia: "Centro", cp: "91700", municipio: "Veracruz", estado: "Veracruz", principal: true });
+  await DemoRegistro.findOrCreate({ where: { tipo: "direccion", id_registro: String(direccion.id_dir) } });
+  compradoresWeb.push({ comprador, usuario, direccion });
+}
+
+// At least 40 available lots, on the same deterministic daily schedule.
+const lotesDisponiblesDemo = [];
+for (let i = 0; i < 40; i += 1) {
+  const fecha = haceMinutos(20 + i * 3);
+  const kilos = 20 + ((i * 17) % 180);
+  const cajas = 2 + (i % 18);
+  const precio = 35 + ((i * 13) % 125);
+  const existente = await Lote.findOne({ where: { fecha, kilos, numero_cajas: cajas, precio_kilo_salida: precio } });
+  const lote = existente || await Lote.create({ fecha, kilos, numero_cajas: cajas, precio_kilo_salida: precio });
+  await DemoRegistro.findOrCreate({ where: { tipo: "lote", id_registro: String(lote.id_lte) } });
+  const especie = [...catalogos.values()][i % catalogos.size];
+  await Especie.findOrCreate({ where: { id_lte: lote.id_lte, id_cat: especie.id_cat }, defaults: { nombre: especie.nombre, id_tpo: tiposPorNombre.get(especie.nombre).id_tpo } });
+  lotesDisponiblesDemo.push(lote);
+}
+
+// Orders covering all lifecycle states with matching snapshots and purchases.
+const estadosDemo = ["pendiente_pago", "pagado", "preparando", "enviado", "entregado", "expirado"];
+for (let i = 0; i < estadosDemo.length; i += 1) {
+  const lote = lotesDisponiblesDemo[40 - estadosDemo.length + i];
+  const cuenta = compradoresWeb[i % compradoresWeb.length];
+  const estado = estadosDemo[i];
+  const [pedido] = await Pedido.findOrCreate({ where: { id_usuario: cuenta.usuario.id, notas: `DEMO-${estado}` }, defaults: {
+    id_usuario: cuenta.usuario.id, codigo_cpr: cuenta.comprador.codigo_cpr, estado, entrega: i % 2 ? "recoger" : "domicilio",
+    id_dir: i % 2 ? null : cuenta.direccion.id_dir, dir_destinatario: i % 2 ? null : cuenta.direccion.destinatario,
+    dir_telefono: i % 2 ? null : cuenta.direccion.telefono, dir_texto: i % 2 ? "Muelle Fiscal de Veracruz" : `${cuenta.direccion.calle} ${cuenta.direccion.num_ext}, ${cuenta.direccion.colonia}, Veracruz`,
+    subtotal: redondea(Number(lote.kilos) * Number(lote.precio_kilo_salida)), costo_envio: 0, total: redondea(Number(lote.kilos) * Number(lote.precio_kilo_salida)),
+    reservado_hasta: estado === "pendiente_pago" ? new Date(Date.now() + 15 * 60000) : null,
+    fecha_pago: ["pagado", "preparando", "enviado", "entregado"].includes(estado) ? new Date() : null, notas: `DEMO-${estado}`,
+  } });
+  await DemoRegistro.findOrCreate({ where: { tipo: "pedido", id_registro: String(pedido.id_ped) } });
+  await PedidoItem.findOrCreate({ where: { id_ped: pedido.id_ped, id_lte: lote.id_lte }, defaults: { id_ped: pedido.id_ped, id_lte: lote.id_lte, kilos: lote.kilos, precio_kilo: lote.precio_kilo_salida, subtotal: pedido.subtotal } });
+  if (["pagado", "preparando", "enviado", "entregado"].includes(estado)) {
+    const [compra] = await Compra.findOrCreate({ where: { id_cmp: lote.id_lte }, defaults: { id_cmp: lote.id_lte, codigo_cpr: cuenta.comprador.codigo_cpr, id_ped: pedido.id_ped, precio_kilo_final: lote.precio_kilo_salida, precio_total: pedido.total } });
+    await DemoRegistro.findOrCreate({ where: { tipo: "compra", id_registro: String(compra.id_cmp) } });
+  }
+}
+
+// A small deterministic social graph, with opinions backed by purchases above.
+for (let i = 0; i < compradoresWeb.length; i += 1) {
+  const cuenta = compradoresWeb[i];
+  let lista = await Lista.findOne({ where: { id_usuario: cuenta.usuario.id, nombre: "Favoritos" } });
+  if (!lista) lista = await Lista.create({ id_usuario: cuenta.usuario.id, nombre: "Favoritos" });
+  await DemoRegistro.findOrCreate({ where: { tipo: "lista", id_registro: String(lista.id_lista) } });
+  const favorito = lotesDisponiblesDemo[i];
+  await ListaItem.findOrCreate({ where: { id_lista: lista.id_lista, tipo: "lote", id_ref: favorito.id_lte }, defaults: { fecha: new Date() } });
+  const especieFavorita = [...catalogos.values()][i % catalogos.size];
+  await ListaItem.findOrCreate({ where: { id_lista: lista.id_lista, tipo: "especie", id_ref: especieFavorita.id_cat }, defaults: { fecha: new Date() } });
+  const carros = lotesDisponiblesDemo.slice(i, i + 2).filter((l) => ![lotesDisponiblesDemo[34].id_lte, lotesDisponiblesDemo[35].id_lte, lotesDisponiblesDemo[36].id_lte, lotesDisponiblesDemo[37].id_lte, lotesDisponiblesDemo[38].id_lte].includes(l.id_lte));
+  for (const lote of carros) await CarritoItem.findOrCreate({ where: { id_usuario: cuenta.usuario.id, id_lte: lote.id_lte }, defaults: { fecha: new Date() } });
+  await Pregunta.findOrCreate({ where: { id_usuario: cuenta.usuario.id, texto: `Pregunta demo ${i + 1}` }, defaults: { id_usuario: cuenta.usuario.id, id_lte: favorito.id_lte, texto: `Pregunta demo ${i + 1}`, estado: i === 5 ? "oculta" : i % 3 === 0 ? "respondida" : "pendiente", respuesta: i % 3 === 0 ? "Respuesta de demostración." : null } });
+  if (i < 4) {
+    const compra = await Compra.findOne({ where: { codigo_cpr: cuenta.comprador.codigo_cpr, id_ped: { [Op.ne]: null } } });
+    if (compra) {
+      const especie = await Especie.findOne({ where: { id_lte: compra.id_cmp }, order: [["id_epe", "ASC"]] });
+      if (especie?.id_cat) await Opinion.findOrCreate({ where: { id_usuario: cuenta.usuario.id, id_cat: especie.id_cat }, defaults: { id_usuario: cuenta.usuario.id, id_cat: especie.id_cat, estrellas: 3 + (i % 3), titulo: "Opinión de demostración", texto: "Producto recibido en buenas condiciones.", visible: true } });
+    }
   }
 }
 
@@ -575,5 +691,20 @@ console.log("\x1b[32mDatos de prueba ampliados cargados exitosamente.\x1b[0m");
 console.log(`- ${listaCompradores.length} compradores registrados.`);
 console.log(`- ${lotesPrueba.length} lotes generados (${comprasGeneradas} compras en múltiples fechas y años, ${lotesPrueba.length - comprasGeneradas} lotes libres).`);
 console.log(`- ${especiesDistintas} especies distintas registradas.`);
+console.log("- Personal demo: demo_capturista / LonjaDemo2026 (solo desarrollo).");
+console.log("- 6 cuentas comprador: demo_comprador1–6 / LonjaDemo2026 (solo desarrollo); la sexta no está verificada.");
+console.log(`- ${await Lote.count()} lotes totales, ${await Pedido.count()} pedidos y ${await Opinion.count()} opiniones en la base.`);
+return { compradores: listaCompradores.length + compradoresWeb.length, lotes: await Lote.count(), pedidos: await Pedido.count(), opiniones: await Opinion.count() };
+}
 
-await db.close();
+const esPrincipal = process.argv[1] && pathToFileURL(resolve(process.argv[1])).href === import.meta.url;
+if (esPrincipal) {
+  const args = new Set(process.argv.slice(2));
+  if (args.has("--limpio") && (!args.has("--confirmar") || process.env.NODE_ENV === "production")) {
+    console.error("--limpio requiere --confirmar y no puede ejecutarse en NODE_ENV=production.");
+    process.exitCode = 1;
+  } else {
+    try { await cargarDemo(db, { limpio: args.has("--limpio") }); }
+    finally { await db.close(); }
+  }
+}
