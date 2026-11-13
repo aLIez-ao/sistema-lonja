@@ -16,7 +16,9 @@ test("carga demo idempotente, con pedidos coherentes y opiniones verificadas", a
   assert.deepEqual(await contar(), primero);
   await cargarDemo(db, { limpio: true });
   assert.deepEqual(await contar(), primero, "el modo limpio reemplaza solo los elementos marcados como demo");
-  assert.ok(primero[1] >= 80, "conserva históricos y añade al menos 40 lotes disponibles");
+  const vendidos = await modelos.Compra.count();
+  const reservados = await modelos.PedidoItem.findAll({ include: [{ model: modelos.Pedido, as: "pedido", where: { estado: "pendiente_pago", reservado_hasta: { [Op.gt]: new Date() } }, attributes: [] }], attributes: ["id_lte"] });
+  assert.ok(primero[1] - vendidos - new Set(reservados.map((r) => r.id_lte)).size >= 40, "la tienda mantiene al menos 40 lotes disponibles");
   const pagados = await modelos.Pedido.findAll({ where: { estado: ["pagado", "preparando", "enviado", "entregado"] }, include: [{ model: modelos.Compra, as: "compras" }] });
   assert.ok(pagados.length >= 4);
   for (const pedido of pagados) {
