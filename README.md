@@ -53,13 +53,13 @@ En `/usuarios`, el administrador consulta por separado trabajadores y clientes. 
 ## Estructura
 ```
 index.js · app.js · config/ · models/ · controllers/ · routes/ · middleware/ · helpers/
-views/ · public/ · scripts/ · test/ · doc/ · reports/
+views/ · public/ · scripts/ · test/ · doc/ · doc/resolver/
 ```
 
 ## Documentación
-- [Guía del código](docs/README.md): guía numerada por archivo, capas y recorridos para lectores técnicos y no técnicos.
+- [Guía del código](doc/resolver/README.md): guía numerada por archivo, capas y recorridos para lectores técnicos y no técnicos.
 - [Documentación operativa](doc/README.md): arquitectura, base de datos, rutas y permisos, instalación, seguridad y pruebas.
-- [reports/](reports/README.md): qué se hizo y el flujo de desarrollo.
+- [Informe de ejecución del plan 05](doc/08-informe-plan-05.md): cambios, commits, pruebas y verificaciones pendientes.
 
 ## Estado y advertencias
 - 145 pruebas automáticas pasan sobre SQLite; **la migración y los flujos no se verificaron contra MariaDB real**.

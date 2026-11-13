@@ -9,7 +9,7 @@
 | [05-seguridad.md](05-seguridad.md) | Medidas implementadas y límites conocidos |
 | [06-pruebas.md](06-pruebas.md) | Qué cubren las pruebas automáticas y qué NO se probó |
 
-Reportes de trabajo: [qué se hizo](reports/01-que-se-hizo.md), [flujo de desarrollo](reports/02-flujo-de-desarrollo.md) y [rediseño visual](reports/03-redisenio-visual.md). El listado de pendientes de desarrollo está en [reports/TODO.md](reports/TODO.md).
+Informe de ejecución: [plan 05](08-informe-plan-05.md). Las tareas pendientes se mantienen en [TODO.md](TODO.md).
 
 Ver también el [README principal](../README.md).
-Para una explicación archivo por archivo del código, consulta la [guía numerada](../docs/README.md).
+Para una explicación archivo por archivo del código, consulta la [guía numerada](resolver/README.md).
