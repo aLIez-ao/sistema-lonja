@@ -10,6 +10,7 @@ import { rangoDelDia, hoy, dinero } from "../helpers/fechas.js";
 import { crearLimite } from "../helpers/seguridad.js";
 import { prepararLote, imagenDeEspecie, precioMinimo } from "../helpers/tienda.js";
 import { liberarPedidosVencidos, reservasActivas } from "../helpers/pedidos.js";
+import { ponerOpinionesEnFicha, preguntasPublicas } from "./socialController.js";
 
 // 30 sugerencias por minuto y por IP (se reinicia en las pruebas).
 export const limiteSugerencias = crearLimite({ max: 30, ventanaMs: 60 * 1000 });
@@ -243,7 +244,7 @@ export const detalleLote = async (req, res) => {
     parecidos = (await lotesDisponibles({ id_lte: { [Op.in]: ids.filter((x) => x !== plano.id_lte) } }, [["fecha", "DESC"]], 4, hoyInicio));
   }
 
-  res.render("tienda/lote", { lote: plano, parecidos, preguntas: [] });
+  res.render("tienda/lote", { lote: plano, parecidos, preguntas: await preguntasPublicas({ id_lte: plano.id_lte }) });
 };
 
 /** GET /tienda/especie/:id — ficha pública de una especie del catálogo. */
@@ -286,6 +287,7 @@ export const fichaEspecie = async (req, res) => {
     });
   }
 
+  const social = await ponerOpinionesEnFicha(catalogo.id_cat);
   res.render("tienda/especie", {
     especie: {
       id: catalogo.id_cat,
@@ -295,9 +297,7 @@ export const fichaEspecie = async (req, res) => {
       imagen,
     },
     lotes,
-    // Las opiniones y la distribución de estrellas llegan en la Fase 5.
-    resumenOpiniones: { total: 0, media: 0, distribucion: [0, 0, 0, 0, 0] },
-    opiniones: [],
+    ...social,
   });
 };
 

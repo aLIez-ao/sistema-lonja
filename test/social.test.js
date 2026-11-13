@@ -1,0 +1,71 @@
+import { test, before, after } from "node:test";
+import assert from "node:assert/strict";
+import { arrancar, cliente, modelos } from "./ayuda.js";
+
+const { Usuario, Comprador, Tipo, Lote, Especie, EspecieCatalogo, Compra, Lista, ListaItem, Pregunta, Opinion } = modelos;
+let srv;
+before(async () => { srv = await arrancar(); });
+after(async () => srv.cerrar());
+
+async function comprador(alias) {
+  const correo = `${alias}@example.com`;
+  const c = await Comprador.create({ nombre: "Ana", apellido_paterno: "Prueba", correo });
+  const u = await Usuario.create({ usuario: alias, nombre_completo: "Ana Prueba", correo, password: "Clave1234", rol: "comprador", codigo_cpr: c.codigo_cpr, email_verificado: true });
+  const web = cliente(srv.base); await web.entrar(alias, "Clave1234"); return { c, u, web };
+}
+async function articulo() {
+  const tipo = await Tipo.findOne({ where: { nombre: "Pescado" } });
+  const catalogo = await EspecieCatalogo.create({ nombre: `Especie${Date.now()}${Math.random().toString(36).slice(2, 5)}`, id_tpo: tipo.id_tpo, activo: true });
+  const lote = await Lote.create({ kilos: 5, numero_cajas: 1, precio_kilo_salida: 20 });
+  await Especie.create({ nombre: catalogo.nombre, id_cat: catalogo.id_cat, id_lte: lote.id_lte, id_tpo: tipo.id_tpo });
+  return { catalogo, lote };
+}
+
+test("listas privadas: creación, duplicados y control de acceso al detalle", async () => {
+  const a = await comprador("lista_a"), b = await comprador("lista_b");
+  const { lote, catalogo } = await articulo();
+  assert.equal((await a.web.post("/cuenta/listas", { nombre: "Mariscos" })).status, 302);
+  const lista = await Lista.findOne({ where: { id_usuario: a.u.id, nombre: "Mariscos" } });
+  await a.web.post(`/cuenta/listas/${lista.id_lista}/items`, { tipo: "lote", id_ref: lote.id_lte });
+  await a.web.post(`/cuenta/listas/${lista.id_lista}/items`, { tipo: "lote", id_ref: lote.id_lte });
+  assert.equal(await ListaItem.count({ where: { id_lista: lista.id_lista } }), 1);
+  assert.equal((await b.web.get(`/cuenta/listas/${lista.id_lista}`)).status, 404);
+  await a.web.post(`/cuenta/listas/${lista.id_lista}/items`, { tipo: "especie", id_ref: catalogo.id_cat });
+  assert.equal(await ListaItem.count({ where: { id_lista: lista.id_lista } }), 2);
+});
+
+test("las preguntas pendientes y ocultas nunca se publican; responder envía correo", async () => {
+  const a = await comprador("pregunta_a");
+  const { lote } = await articulo();
+  await a.web.post("/tienda/preguntas", { id_lte: lote.id_lte, texto: "¿Cuándo se captura?" });
+  const p = await Pregunta.findOne({ where: { id_usuario: a.u.id } });
+  assert.equal((await a.web.get(`/tienda/lote/${lote.id_lte}`)).texto.includes("¿Cuándo se captura?"), false);
+  const admin = cliente(srv.base); await admin.entrar("admin", "AdminPrueba123");
+  await admin.post(`/preguntas/${p.id_preg}`, { respuesta: "Hoy temprano" });
+  assert.equal((await a.web.get(`/tienda/lote/${lote.id_lte}`)).texto.includes("Hoy temprano"), true);
+  assert.equal((await admin.get("/preguntas")).status, 200);
+  const { lote: loteOculto } = await articulo();
+  await a.web.post("/tienda/preguntas", { id_lte: loteOculto.id_lte, texto: "¿Está disponible?" });
+  const segunda = await Pregunta.findOne({ where: { id_usuario: a.u.id, id_lte: loteOculto.id_lte } });
+  await admin.post(`/preguntas/${segunda.id_preg}`, { estado: "oculta" });
+  assert.equal((await a.web.get(`/tienda/lote/${loteOculto.id_lte}`)).texto.includes("¿Está disponible?"), false);
+});
+
+test("el límite de preguntas es cinco por hora por cuenta", async () => {
+  const a = await comprador("limite_pregunta"); const { lote } = await articulo();
+  for (let i = 0; i < 5; i += 1) assert.equal((await a.web.post("/tienda/preguntas", { id_lte: lote.id_lte, texto: `Pregunta ${i}` })).status, 302);
+  assert.equal((await a.web.post("/tienda/preguntas", { id_lte: lote.id_lte, texto: "Pregunta excedente" })).status, 429);
+});
+
+test("opiniones requieren compra vinculada, se editan y el público muestra promedio escapado", async () => {
+  const a = await comprador("opinion_a"); const { catalogo, lote } = await articulo();
+  const sinCompra = await a.web.post(`/tienda/especie/${catalogo.id_cat}/opiniones`, { estrellas: "5", titulo: "Bueno", texto: "Excelente" });
+  assert.equal(sinCompra.status, 403);
+  await Compra.create({ id_cmp: lote.id_lte, codigo_cpr: a.c.codigo_cpr, precio_kilo_final: 20, precio_total: 100 });
+  await a.web.post(`/tienda/especie/${catalogo.id_cat}/opiniones`, { estrellas: "4", titulo: "Fresco", texto: "Pargo <script>alert(1)</script>" });
+  await a.web.post(`/tienda/especie/${catalogo.id_cat}/opiniones`, { estrellas: "5", titulo: "Muy fresco", texto: "Buen producto" });
+  assert.equal(await Opinion.count({ where: { id_usuario: a.u.id, id_cat: catalogo.id_cat } }), 1);
+  const ficha = await a.web.get(`/tienda/especie/${catalogo.id_cat}`);
+  assert.match(ficha.texto, /5\.0 de 5/);
+  assert.equal(ficha.texto.includes("<script>alert(1)</script>"), false);
+});
