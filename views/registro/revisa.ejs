@@ -1,0 +1,28 @@
+<%- include('../plantillas/header') %>
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <div class="card p-4 text-center">
+      <div class="card-body">
+        <div class="text-primary mb-3"><%- icono('envelope', 42) %></div>
+        <h1 class="h4 fw-bold mb-2">Revisa tu correo</h1>
+        <p class="text-muted mb-3">
+          Si los datos son válidos, enviamos un enlace de verificación<%= correo ? ` a ${correo}` : '' %>.
+          Ábrelo para activar tu cuenta (el enlace vence en 24 horas).
+        </p>
+        <p class="small text-muted mb-4">
+          Si no llega en unos minutos, revisa la carpeta de spam. Por seguridad, no confirmamos si un correo ya estaba registrado.
+        </p>
+
+        <% if (enlace) { %>
+          <div class="alert alert-info text-start small">
+            <strong>Modo desarrollo:</strong> el correo no está configurado, así que puedes abrir este enlace directamente:
+            <div class="mt-2 text-break"><a href="<%= enlace %>"><%= enlace %></a></div>
+          </div>
+        <% } %>
+
+        <a class="btn btn-primary" href="/acceso">Ir a iniciar sesión</a>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('../plantillas/footer') %>

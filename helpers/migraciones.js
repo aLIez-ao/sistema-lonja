@@ -17,6 +17,10 @@ const COLUMNAS_USUARIO = {
   puesto: { type: DataTypes.STRING(60), allowNull: true },
   foto: { type: DataTypes.STRING(120), allowNull: true },
   sesion_version: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+  // Vínculo de la cuenta en línea con su comprador (Fase 2)
+  codigo_cpr: { type: DataTypes.SMALLINT, allowNull: true, unique: true },
+  rfc: { type: DataTypes.STRING(13), allowNull: true },
+  razon_social: { type: DataTypes.STRING(100), allowNull: true },
 };
 
 /** Agrega la columna si falta; no falla si la tabla no existe todavía. */

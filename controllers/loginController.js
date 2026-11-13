@@ -8,6 +8,7 @@ import { mensajesError, aMensaje } from "../helpers/utiles.js";
 import { enviarEmailPasswordCambiada } from "../helpers/email.js";
 import { crearLimite, hashToken, problemasPassword } from "../helpers/seguridad.js";
 import { enviarEnlacePassword } from "../helpers/cuentas.js";
+import { vincularComprador } from "../helpers/comprador.js";
 import { destinoTrasEntrar, inicioSegun, rutaVolver } from "../helpers/navegacion.js";
 
 const reglasLogin = [
@@ -26,7 +27,16 @@ const vistaLogin = (res, errores = [], usuario = "", mensaje = null, estado, vol
 
 const login = (req, res) => {
   // Con sesión vigente no tiene sentido mostrar el formulario
-  if (req.usuario) return res.redirect(inicioSegun(req.usuario));
+  if (req.usuario) {
+    // La tienda pública llega en la Fase 3; mientras tanto el comprador ve una portada.
+    if (req.usuario.rol === "comprador") {
+      return res.render("tienda/proximamente", {
+        mensaje: req.query.mensaje,
+        error: req.query.error,
+      });
+    }
+    return res.redirect("/inicio");
+  }
   vistaLogin(res, [], "", req.query.mensaje, undefined, rutaVolver(req.query.volver) || "");
 };
 
@@ -149,6 +159,9 @@ const verificarEmailToken = async (req, res) => {
   us.token_verificacion = null;
   us.token_verificacion_expira = null;
   await us.save();
+
+  // El comprador hereda el historial del mostrador solo ahora que demostró el correo.
+  if (us.rol === "comprador" && !us.codigo_cpr) await vincularComprador(us);
 
   if (req.usuario) {
     return res.redirect(`${inicioSegun(req.usuario)}?${aMensaje("Correo verificado correctamente")}`);

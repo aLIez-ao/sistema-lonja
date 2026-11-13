@@ -51,10 +51,16 @@
       </div>
       <div class="mb-3">
         <label class="form-label fw-semibold" for="rol">Rol</label>
-        <select class="form-select" id="rol" name="rol">
-          <% roles.forEach(r => { %><option value="<%= r %>" <%= (us ? us.rol === r : r === 'capturista') ? 'selected' : '' %>><%= nombreRol[r] || r %></option><% }) %>
-        </select>
-        <div class="form-text">El administrador gestiona usuarios y puede eliminar registros; el capturista registra y consulta.</div>
+        <% if (bloqueadoRol) { %>
+          <input type="hidden" name="rol" value="comprador">
+          <input class="form-control" value="Comprador" disabled>
+          <div class="form-text">Las cuentas de comprador se crean desde el registro público. Aquí solo puedes desactivarla.</div>
+        <% } else { %>
+          <select class="form-select" id="rol" name="rol">
+            <% roles.forEach(r => { %><option value="<%= r %>" <%= (us ? us.rol === r : r === 'capturista') ? 'selected' : '' %>><%= nombreRol[r] || r %></option><% }) %>
+          </select>
+          <div class="form-text">El administrador gestiona usuarios y puede eliminar registros; el capturista registra y consulta.</div>
+        <% } %>
       </div>
       <% if (editando) { %>
         <div class="form-check form-switch">

@@ -1,0 +1,67 @@
+<%- include('../plantillas/header') %>
+<div class="row justify-content-center">
+  <div class="col-lg-8 col-xl-7">
+    <div class="card p-4">
+      <div class="card-body">
+        <div class="text-center mb-4">
+          <img class="logo-claro" src="/img/logo.svg" alt="Lonja de Veracruz" style="max-height: 48px;">
+          <img class="logo-oscuro" src="/img/logo-oscuro.svg" alt="" aria-hidden="true" style="max-height: 48px;">
+          <h1 class="h4 fw-bold mt-3 mb-1">Crea tu cuenta de comprador</h1>
+          <p class="text-muted small mb-0">Compra en línea en la Lonja de Veracruz. Al terminar te enviaremos un enlace para verificar tu correo.</p>
+        </div>
+
+        <%- include('../plantillas/mensajes', { mensaje: null, errores }) %>
+
+        <form action="/registro" method="POST" novalidate data-validar>
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="nombre">Nombre</label>
+              <input class="form-control" id="nombre" name="nombre" maxlength="40" value="<%= datos.nombre %>" required autocomplete="given-name">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="apellido_paterno">Apellido paterno</label>
+              <input class="form-control" id="apellido_paterno" name="apellido_paterno" maxlength="40" value="<%= datos.apellido_paterno %>" required autocomplete="family-name">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold" for="apellido_materno">Apellido materno <span class="text-muted fw-normal">(opcional)</span></label>
+              <input class="form-control" id="apellido_materno" name="apellido_materno" maxlength="40" value="<%= datos.apellido_materno %>" autocomplete="additional-name">
+            </div>
+            <div class="col-md-7">
+              <label class="form-label fw-semibold" for="correo">Correo electrónico</label>
+              <input class="form-control" type="email" id="correo" name="correo" maxlength="80" value="<%= datos.correo %>" required autocomplete="email" placeholder="nombre@ejemplo.com">
+              <div class="form-text">Aquí recibirás el enlace para verificar tu cuenta y recuperar tu contraseña.</div>
+            </div>
+            <div class="col-md-5">
+              <label class="form-label fw-semibold" for="telefono">Teléfono <span class="text-muted fw-normal">(opcional)</span></label>
+              <input class="form-control" type="tel" id="telefono" name="telefono" maxlength="20" value="<%= datos.telefono %>" autocomplete="tel" placeholder="229 123 4567">
+            </div>
+          </div>
+
+          <hr class="my-4">
+          <%- include('../plantillas/campo-password', { nombre: 'password', etiqueta: 'Contraseña', requerido: true }) %>
+
+          <!-- Campo trampa para bots: las personas no lo ven ni lo llenan. -->
+          <div class="d-none" aria-hidden="true">
+            <label for="sitio_web">Sitio web</label>
+            <input tabindex="-1" autocomplete="off" type="text" id="sitio_web" name="sitio_web">
+            <input tabindex="-1" autocomplete="off" type="text" name="empresa_web">
+          </div>
+
+          <div class="form-check mb-4">
+            <input class="form-check-input" type="checkbox" id="aviso_privacidad" name="aviso_privacidad" required>
+            <label class="form-check-label small" for="aviso_privacidad">
+              Acepto el aviso de privacidad y el tratamiento de mis datos para gestionar mi cuenta, mis pedidos y las entregas.
+            </label>
+          </div>
+
+          <button class="btn btn-primary w-100 py-2" type="submit">Crear mi cuenta</button>
+        </form>
+
+        <p class="text-center small text-muted mt-3 mb-0">
+          ¿Ya tienes cuenta? <a href="/acceso" class="text-decoration-none">Inicia sesión</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('../plantillas/footer') %>

@@ -33,10 +33,12 @@
         <%- icono('cookie', 16, 'me-2') %>
         Cookies y privacidad
       </a>
+      <% if (usuario.rol !== 'comprador') { %>
       <a class="list-group-item list-group-item-action py-3 fw-semibold" id="tab-cuenta" data-bs-toggle="list" href="#pane-cuenta" role="tab">
         <%- icono('person', 16, 'me-2') %>
         Mi cuenta
       </a>
+      <% } %>
       <a class="list-group-item list-group-item-action py-3 fw-semibold" id="tab-seguridad" data-bs-toggle="list" href="#pane-seguridad" role="tab">
         <%- icono('shield-lock', 16, 'me-2') %>
         Seguridad
@@ -182,7 +184,7 @@
             <%- include('../plantillas/avatar', { u: us, clase: 'avatar-lg' }) %>
             <div>
               <h4 class="h5 fw-bold mb-0"><%= us.nombre_completo %></h4>
-              <div class="text-muted small">@<%= us.usuario %> &bull; <%= us.rol === 'admin' ? 'Administrador' : 'Capturista' %><% if (us.puesto) { %> &bull; <%= us.puesto %><% } %></div>
+              <div class="text-muted small">@<%= us.usuario %> &bull; <%= us.rol === 'admin' ? 'Administrador' : us.rol === 'comprador' ? 'Comprador' : 'Capturista' %><% if (us.puesto) { %> &bull; <%= us.puesto %><% } %></div>
             </div>
           </div>
 

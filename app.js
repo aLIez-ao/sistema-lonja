@@ -17,6 +17,8 @@ import router_reporte from "./routes/reporte_router.js";
 import router_usuario from "./routes/usuario_router.js";
 import router_configuracion from "./routes/configuracion_router.js";
 import router_busqueda from "./routes/busqueda_router.js";
+import router_registro from "./routes/registro_router.js";
+import router_cuenta from "./routes/cuenta_router.js";
 import { dinero, formatoFechaHora } from "./helpers/fechas.js";
 import { icono } from "./helpers/iconos.js";
 
@@ -63,19 +65,26 @@ app.use(async (req, res, next) => {
 // Middleware de Preferencias y Cookies
 app.use(middlewarePreferencias);
 
-// Rutas públicas: login y recuperación
+// Rutas públicas: acceso, recuperación y registro de compradores
 app.use("/", router_login);
+app.use("/registro", router_registro);
 
-// Rutas protegidas: requieren sesión (JWT)
-app.use("/tipos", rutaProteger, router_tipo);
-app.use("/compradores", rutaProteger, router_comprador);
-app.use("/lotes", rutaProteger, router_lote);
-app.use("/especies", rutaProteger, router_especie);
-app.use("/catalogo", rutaProteger, router_catalogo);
-app.use("/compras", rutaProteger, router_compra);
-app.use("/reportes", rutaProteger, router_reporte);
+// Solo personal de la lonja (admin y capturista): pantallas de administración
+const soloPersonal = [rutaProteger, permitir("admin", "capturista")];
+app.use("/tipos", soloPersonal, router_tipo);
+app.use("/compradores", soloPersonal, router_comprador);
+app.use("/lotes", soloPersonal, router_lote);
+app.use("/especies", soloPersonal, router_especie);
+app.use("/catalogo", soloPersonal, router_catalogo);
+app.use("/compras", soloPersonal, router_compra);
+app.use("/reportes", soloPersonal, router_reporte);
+app.use("/buscar", soloPersonal, router_busqueda);
+
+// Cuenta de comprador: solo el rol comprador, siempre filtrado por su id
+app.use("/cuenta", rutaProteger, permitir("comprador"), router_cuenta);
+
+// Configuración: todos los roles (las pestañas de administración se ocultan)
 app.use("/configuracion", rutaProteger, router_configuracion);
-app.use("/buscar", rutaProteger, router_busqueda);
 
 // Solo administrador
 app.use("/usuarios", rutaProteger, permitir("admin"), router_usuario);

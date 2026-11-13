@@ -17,10 +17,21 @@ const reglas = [
   body("rol").isIn(ROLES).withMessage("Rol inválido"),
 ];
 
-const NOMBRE_ROL = { admin: "Administrador", capturista: "Capturista" };
+const NOMBRE_ROL = { admin: "Administrador", capturista: "Capturista", comprador: "Comprador" };
+
+/** Roles que el administrador puede asignar a mano. El comprador nace en /registro. */
+const rolesAsignables = (us) =>
+  us?.rol === "comprador" ? ["comprador"] : ROLES.filter((r) => r !== "comprador");
 
 const vistaFormulario = (res, { us, action, errores = [], estado = 200 }) =>
-  res.status(estado).render("usuarios/formulario", { us, roles: ROLES, nombreRol: NOMBRE_ROL, action, errores });
+  res.status(estado).render("usuarios/formulario", {
+    us,
+    roles: rolesAsignables(us),
+    nombreRol: NOMBRE_ROL,
+    bloqueadoRol: us?.rol === "comprador",
+    action,
+    errores,
+  });
 
 /** Valida la contraseña escrita a mano (si la hay) y su confirmación. */
 function erroresPassword(req) {
@@ -106,6 +117,7 @@ const verCrear = (req, res) => vistaFormulario(res, { us: null, action: "/usuari
 const registrar = async (req, res) => {
   const errs = mensajesError(req);
   const manual = req.body.acceso === "manual";
+  if (req.body.rol === "comprador") errs.push("Las cuentas de comprador solo se crean desde el registro público (/registro)");
   if (manual) errs.push(...erroresPassword(req));
 
   if (!errs.length) {
@@ -150,6 +162,9 @@ const actualizar = async (req, res) => {
   const activo = req.body.activo === "on";
   // Evita que el administrador se quite a sí mismo el acceso y deje el sistema sin admin
   if (us.id === req.usuario.id && (!activo || req.body.rol !== "admin")) errs.push("No puedes desactivarte ni quitarte el rol de administrador a ti mismo");
+  // Una cuenta de comprador no cambia de rol: su vínculo con el comprador de la lonja depende de ello
+  if (us.rol === "comprador" && req.body.rol !== "comprador") errs.push("El rol de una cuenta de comprador no se puede cambiar; solo puedes desactivarla");
+  if (us.rol !== "comprador" && req.body.rol === "comprador") errs.push("Las cuentas de comprador solo se crean desde el registro público (/registro)");
   if (req.body.password) errs.push(...erroresPassword(req));
 
   if (!errs.length) {
@@ -169,7 +184,7 @@ const actualizar = async (req, res) => {
       return res.redirect(`/usuarios?${aMensaje("Usuario actualizado")}`);
     } catch (e) { errs.push(e.name?.startsWith("Sequelize") ? mensajeBD(e) : e.message); }
   }
-  vistaFormulario(res, { us: { ...req.body, id: us.id, activo, foto: us.foto, email_verificado: us.email_verificado, password: "" }, action: `/usuarios/${us.id}?_method=PUT`, errores: errs, estado: 400 });
+  vistaFormulario(res, { us: { ...req.body, id: us.id, rol: us.rol, activo, foto: us.foto, email_verificado: us.email_verificado, password: "" }, action: `/usuarios/${us.id}?_method=PUT`, errores: errs, estado: 400 });
 };
 
 /** El administrador envía un enlace para que el usuario defina una contraseña nueva. */

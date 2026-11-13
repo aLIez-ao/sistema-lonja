@@ -1,0 +1,20 @@
+<%- include('../plantillas/header') %>
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+    <%- include('../plantillas/mensajes', { mensaje: typeof mensaje !== 'undefined' ? mensaje : null, errores: (typeof error !== 'undefined' && error) ? [error] : [] }) %>
+    <div class="card p-5 text-center">
+      <div class="text-primary mb-3"><%- icono('basket', 48) %></div>
+      <h1 class="h3 fw-bold mb-2">La tienda en línea está por abrir</h1>
+      <p class="text-muted mb-4">
+        Muy pronto podrás ver los lotes disponibles del día, armar tu carrito y recibir tu pedido en casa.
+        Mientras tanto, ya puedes completar tus datos y guardar tus direcciones de entrega.
+      </p>
+      <div class="d-flex flex-wrap justify-content-center gap-2">
+        <a class="btn btn-primary" href="/cuenta/datos"><%- icono('person', 16, 'me-1') %>Completar mis datos</a>
+        <a class="btn btn-outline-primary" href="/cuenta/direcciones"><%- icono('box-seam', 16, 'me-1') %>Mis direcciones</a>
+        <a class="btn btn-outline-secondary" href="/configuracion"><%- icono('gear', 16, 'me-1') %>Configuración</a>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('../plantillas/footer') %>

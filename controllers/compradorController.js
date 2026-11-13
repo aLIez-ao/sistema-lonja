@@ -1,6 +1,6 @@
 import { body } from "express-validator";
 import { literal } from "sequelize";
-import { Comprador, Compra, Lote, Especie, Tipo } from "../models/index.js";
+import { Comprador, Compra, Lote, Especie, Tipo, Usuario } from "../models/index.js";
 import { mensajesError, mensajeBD, aMensaje, aError } from "../helpers/utiles.js";
 import { leerListado, consultarListado, combinarWhere } from "../helpers/listado.js";
 import { condicionBusqueda } from "../helpers/busqueda.js";
@@ -112,6 +112,11 @@ const detalle = async (req, res) => {
             include: [{ model: Especie, as: "especies", include: [{ model: Tipo, as: "tipo" }] }],
           },
         ],
+      },
+      {
+        model: Usuario,
+        as: "cuenta",
+        attributes: ["id", "usuario", "correo", "email_verificado", "activo"],
       },
     ],
   });

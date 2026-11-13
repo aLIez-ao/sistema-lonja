@@ -1,0 +1,140 @@
+<%- include('../plantillas/header') %>
+<%
+  const nombre = us.nombre_completo || us.usuario;
+%>
+
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <div>
+    <h1 class="h3 mb-1 fw-bold">Mi cuenta</h1>
+    <p class="text-muted small mb-0">Hola, <%= nombre %>. Aquí ves tus datos y tus compras.</p>
+  </div>
+  <a class="btn btn-outline-primary" href="/cuenta/datos"><%- icono('person', 16, 'me-1') %>Editar mis datos</a>
+</div>
+
+<%- include('../plantillas/mensajes', { mensaje: typeof mensaje !== 'undefined' ? mensaje : null, errores: (typeof error !== 'undefined' && error) ? [error] : [] }) %>
+
+<% if (!us.email_verificado) { %>
+  <div class="alert alert-warning d-flex flex-wrap justify-content-between align-items-center gap-2" role="alert">
+    <div>
+      <strong><%- icono('exclamation-triangle', 15, 'me-1') %>Tu correo aún no está verificado.</strong>
+      <div class="small">Puedes navegar y llenar tu carrito, pero para pagar necesitas confirmar tu correo. Revisa el enlace que enviamos a <strong><%= us.correo %></strong>.</div>
+    </div>
+    <form action="/configuracion/solicitar-verificacion" method="POST" class="m-0">
+      <button class="btn btn-sm btn-outline-dark" type="submit"><%- icono('envelope', 14, 'me-1') %>Reenviar verificación</button>
+    </form>
+  </div>
+<% } else { %>
+  <div class="alert alert-success d-flex align-items-center gap-2" role="status">
+    <%- icono('check-circle', 16) %>
+    <span class="small">Tu correo <strong><%= us.correo %></strong> está verificado.</span>
+  </div>
+<% } %>
+
+<div class="row g-3 mb-4">
+  <div class="col-6 col-lg-3">
+    <div class="metric-card">
+      <div class="metric-label">Compras recientes</div>
+      <div class="metric-value"><%= compras.length %></div>
+      <div class="small text-muted">Últimas 5</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="metric-card">
+      <div class="metric-label">Gasto reciente</div>
+      <div class="metric-value metric-fecha"><%= dinero(total) %></div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="metric-card">
+      <div class="metric-label">Direcciones</div>
+      <div class="metric-value"><%= direcciones.length %></div>
+      <div class="small text-muted">de 10 posibles</div>
+    </div>
+  </div>
+  <div class="col-6 col-lg-3">
+    <div class="metric-card">
+      <div class="metric-label">Comprador</div>
+      <div class="metric-value metric-fecha"><%= comprador ? `#${comprador.codigo_cpr}` : '—' %></div>
+      <div class="small text-muted"><%= comprador ? 'Vinculado a la lonja' : 'Sin vincular' %></div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-7">
+    <div class="card h-100">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h2 class="h6 mb-0 fw-bold">Compras recientes</h2>
+        <% if (comprador) { %>
+          <a class="small text-decoration-none" href="/compras?comprador=<%= comprador.codigo_cpr %>">Ver historial</a>
+        <% } %>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Fecha</th>
+              <th>Lote</th>
+              <th class="text-end">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% if (!compras.length) { %>
+              <tr><td colspan="3" class="text-center py-4 text-muted">Todavía no tienes compras registradas.</td></tr>
+            <% } %>
+            <% compras.forEach((c) => { %>
+              <tr>
+                <td class="text-nowrap"><%= fechaHora(c.fecha) %></td>
+                <td>
+                  <% if (c.lote) { %>
+                    <a class="enlace-registro" href="/lotes/<%= c.lote.id_lte %>">Lote #<%= c.lote.id_lte %></a>
+                    <div class="small text-muted">
+                      <% (c.lote.especies || []).forEach((e, i) => { %><%= e.nombre %><%= i < c.lote.especies.length - 1 ? ', ' : '' %><% }) %>
+                      · <%= Number(c.lote.kilos || 0).toLocaleString('es-MX', { maximumFractionDigits: 2 }) %> kg
+                    </div>
+                  <% } else { %>—<% } %>
+                </td>
+                <td class="text-end fw-semibold"><%= dinero(c.precio_total) %></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-5">
+    <div class="card mb-4">
+      <div class="card-header"><h2 class="h6 mb-0 fw-bold">Direcciones de entrega</h2></div>
+      <div class="card-body">
+        <% if (!direcciones.length) { %>
+          <p class="small text-muted mb-3">Aún no guardas direcciones. Agrega una para recibir tus pedidos.</p>
+        <% } else { %>
+          <ul class="list-unstyled mb-3">
+            <% direcciones.slice(0, 3).forEach((d) => { %>
+              <li class="mb-3 pb-3 border-bottom">
+                <div class="d-flex justify-content-between align-items-start gap-2">
+                  <strong><%= d.alias %></strong>
+                  <% if (d.principal) { %><span class="badge bg-primary">Principal</span><% } %>
+                </div>
+                <div class="small text-muted"><%= d.destinatario %> · <%= d.telefono %></div>
+                <div class="small"><%= d.calle %> <%= d.num_ext %><%= d.num_int ? ` int. ${d.num_int}` : '' %>, <%= d.colonia %>, <%= d.municipio %>, <%= d.estado %>, C.P. <%= d.cp %></div>
+              </li>
+            <% }) %>
+          </ul>
+        <% } %>
+        <a class="btn btn-sm btn-outline-primary" href="/cuenta/direcciones"><%- icono('plus-lg', 14, 'me-1') %>Administrar direcciones</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h2 class="h6 mb-0 fw-bold">Accesos rápidos</h2></div>
+      <div class="list-group list-group-flush">
+        <a class="list-group-item list-group-item-action d-flex align-items-center gap-2" href="/cuenta/datos"><%- icono('person', 16) %>Datos personales y facturación</a>
+        <a class="list-group-item list-group-item-action d-flex align-items-center gap-2" href="/cuenta/direcciones"><%- icono('box-seam', 16) %>Direcciones de entrega</a>
+        <a class="list-group-item list-group-item-action d-flex align-items-center gap-2" href="/configuracion"><%- icono('gear', 16) %>Apariencia, cookies y seguridad</a>
+      </div>
+    </div>
+  </div>
+</div>
+<%- include('../plantillas/footer') %>
