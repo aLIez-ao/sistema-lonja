@@ -6,10 +6,10 @@
 // LIKE. El texto del usuario siempre viaja como parámetro enlazado, nunca
 // concatenado en el SQL.
 import { Op, fn, col, where as sqlWhere } from "sequelize";
-import { Compra, Lote, Especie, Comprador, Tipo, Usuario } from "../models/index.js";
+import { Compra, Lote, Especie, EspecieCatalogo, Comprador, Tipo, Usuario } from "../models/index.js";
 import { formatoFechaHora, dinero } from "./fechas.js";
 
-export const ENTIDADES = ["compras", "lotes", "especies", "compradores", "tipos", "usuarios"];
+export const ENTIDADES = ["compras", "lotes", "especies", "catalogo", "compradores", "tipos", "usuarios"];
 
 const LIMITE_SUGERENCIAS = 8;
 
@@ -98,6 +98,17 @@ export async function condicionBusqueda(entidad, q) {
         raw: true,
       });
       const conds = [contiene("Especie.nombre", t)];
+      if (tipos.length) conds.push({ id_tpo: { [Op.in]: tipos.map((tp) => tp.id_tpo) } });
+      return { [Op.or]: conds };
+    }
+
+    case "catalogo": {
+      const tipos = await Tipo.findAll({
+        attributes: ["id_tpo"],
+        where: contiene("Tipo.nombre", t),
+        raw: true,
+      });
+      const conds = [contiene("EspecieCatalogo.nombre", t), contiene("EspecieCatalogo.descripcion", t)];
       if (tipos.length) conds.push({ id_tpo: { [Op.in]: tipos.map((tp) => tp.id_tpo) } });
       return { [Op.or]: conds };
     }
@@ -193,6 +204,21 @@ export async function sugerencias(entidad, q, usuario) {
         titulo: e.nombre,
         subtitulo: `${e.tipo.nombre} · Lote #${e.id_lte}`,
         url: `/especies/${e.id_epe}`,
+      }));
+    }
+
+    case "catalogo": {
+      const filas = await EspecieCatalogo.findAll({
+        where,
+        include: [{ model: Tipo, as: "tipo" }],
+        order: [["nombre", "ASC"]],
+        limit: LIMITE_SUGERENCIAS,
+      });
+      return filas.map((e) => ({
+        id: e.id_cat,
+        titulo: e.nombre,
+        subtitulo: `${e.tipo.nombre}${e.activo ? "" : " · inactiva"}`,
+        url: `/catalogo/${e.id_cat}/editar`,
       }));
     }
 

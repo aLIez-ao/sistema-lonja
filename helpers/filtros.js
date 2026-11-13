@@ -90,6 +90,13 @@ export async function condicionFiltros(entidad, f) {
       break;
     }
 
+    case "catalogo": {
+      if (f.tipo) conds.push({ id_tpo: f.tipo });
+      if (f.activo === "activo") conds.push({ activo: true });
+      if (f.activo === "inactivo") conds.push({ activo: false });
+      break;
+    }
+
     case "usuarios": {
       if (f.rol) conds.push({ rol: f.rol });
       if (f.activo === "activo") conds.push({ activo: true });
