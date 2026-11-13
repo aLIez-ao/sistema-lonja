@@ -19,6 +19,7 @@ Roles: **admin** (todo), **capturista** (captura y consulta; no borra ni adminis
 | GET/POST | `/recuperar-password/:token` | Definir una contraseña nueva con el enlace recibido |
 | GET | `/verificar-email/:token` | Confirmar el correo de la cuenta (después enlaza al comprador de mostrador si aún no lo está) |
 | GET | `/inicio` | Redirección permanente 301 a `/dashboard` para enlaces anteriores |
+| GET | `/dashboard` | Panel de admin/capturista; comprador: 403 |
 
 La tienda nunca expone nombres, correos ni montos de compradores: solo muestra lotes sin `Compra` que tengan al menos una especie y el catálogo activo.
 
@@ -34,11 +35,14 @@ La tienda nunca expone nombres, correos ni montos de compradores: solo muestra l
 | DELETE | `/cuenta/direcciones/:id` | Eliminar una dirección propia |
 | POST | `/cuenta/direcciones/:id/principal` | Marcar una dirección como principal |
 | GET/POST | `/carrito`, `/carrito/agregar/:id_lte`, `/carrito/quitar/:id_lte`, `/carrito/vaciar` | Consultar y cambiar el carrito propio |
-| GET/POST | `/pedido`, `/pedido/:id/pago`, `/pedido/:id/pagar`, `/pedido/:id/cancelar` | Checkout, pago simulado, cancelación del pedido propio |
+| GET/POST | `/pedido`, `/pedido/:id/pago`, `/pedido/:id/pagar`, `/pedido/:id/cancelar` | Checkout y pago simulado: tarjeta o SPEI; efectivo/terminal al recoger deja el pedido pendiente y amplía la reserva |
 | GET | `/cuenta/pedidos`, `/cuenta/pedidos/:id`, `/cuenta/pedidos/:id/factura/:id_cmp[.pdf]` | Historial, detalle y factura propia |
 | GET | `/cuenta/opiniones` | Opiniones propias y especies compradas pendientes de calificar |
 | DELETE | `/cuenta/opiniones/:id` | Eliminar una opinión propia (una ajena responde 404) |
 | GET/POST/PUT/DELETE | `/cuenta/listas`, `/cuenta/listas/:id`, `/cuenta/listas/:id/items`, `/cuenta/favoritos` | Listas y favoritos privados |
+| GET | `/cuenta/listas.json` | Listas propias e identificadores de sus elementos (JSON) |
+| POST | `/cuenta/favoritos/alternar` | Agrega o quita lote/especie de Favoritos; JSON `{ tipo, id_ref }` |
+| POST | `/cuenta/listas/:id/carrito` | Agrega lotes disponibles de una lista al carrito y devuelve el conteo; omite vendidos/reservados |
 | GET/POST | `/cuenta/preguntas`, `/tienda/preguntas` | Consultar o enviar preguntas (máximo 5 por hora) |
 | POST | `/tienda/especie/:id/opiniones` | Crear o editar una opinión solo tras una compra verificada |
 
@@ -54,6 +58,7 @@ El `:id` de otra persona responde **404**. `/dashboard` exige rol `admin` o `cap
 | GET | `/reportes/diario?anio=AAAA` | **Reporte anual** con selector de año, gráficas y compras por mes (año actual si falta o es inválido) |
 | GET | `/pedidos`, `/pedidos/:id` | Búsqueda, filtro, orden, paginación y detalle de pedidos de tienda |
 | POST | `/pedidos/:id/estado` | Transición de una etapa: pagado → preparando → enviado → entregado; correo al enviar y entregar |
+| POST | `/pedidos/:id/confirmar-cobro` | Confirma el pago pendiente en efectivo de un pedido para recoger; registra la compra y su referencia |
 | GET/POST | `/preguntas`, `/preguntas/:id` | Revisar, responder u ocultar preguntas |
 | GET/POST | `/opiniones`, `/opiniones/:id` | Moderar visibilidad de opiniones |
 | GET | `/reportes/anual.pdf?anio=AAAA` | Reporte anual oficial en PDF |
@@ -112,11 +117,11 @@ Las fechas (`AAAA-MM-DD`) se interpretan en la zona horaria de la aplicación (`
 
 | Método | Ruta | Acción |
 |---|---|---|
-| GET/POST | `/usuarios`, `/usuarios/crear` | Listar / crear usuarios |
+| GET/POST | `/usuarios`, `/usuarios/crear` | Dos listados independientes: trabajadores (admin/capturista) y clientes (comprador), cada uno con búsqueda y paginación. Crear usuario solo está disponible para trabajadores |
 | GET/PUT/DELETE | `/usuarios/:id…` | Editar (rol, activo, contraseña opcional) / eliminar |
 | POST | `/usuarios/:id/restablecer` | Envía al usuario un enlace para definir su contraseña |
 
-Un capturista que entra a `/usuarios` recibe **403**. Un admin no puede desactivarse, quitarse el rol ni eliminarse a sí mismo.
+Un capturista que entra a `/usuarios` recibe **403**. Los parámetros `qT`/`paginaT`/`ordenT` y `qC`/`paginaC`/`ordenC` controlan cada sección sin afectarse entre sí. Un admin no puede desactivarse, quitarse el rol ni eliminarse a sí mismo.
 
 ## Validaciones principales
 

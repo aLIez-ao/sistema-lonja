@@ -18,7 +18,9 @@
 | Secreto sin configurar | La app no arranca sin `SC_JWT` |
 | Datos de compradores expuestos | Carrito, pedidos, listas, direcciones y preguntas personales se consultan con el ID de sesión; recurso ajeno responde 404 |
 | Lote tomado por dos compradores | Reserva con vencimiento y revalidación al pagar; índice único de venta por lote |
-| Datos de tarjeta persistidos | Pasarela de desarrollo simulada; solo referencia y últimos cuatro dígitos se guardan |
+| Datos de tarjeta persistidos | Pasarela de desarrollo simulada; solo referencia y últimos cuatro dígitos se guardan. SPEI es una simulación (la CLABE mostrada es ficticia); el efectivo solo se confirma desde el panel del personal |
+| Reservas de pago en efectivo | Disponibles solo al recoger; vencen según `RESERVA_EFECTIVO_MINUTOS` (120 por defecto, máximo 24 h) y hay un máximo de tres pedidos pendientes por comprador |
+| Favoritos entre compradores | Listas y rutas JSON siempre buscan la lista con `id_usuario` de la sesión; un identificador ajeno responde 404 |
 | Opinión sin experiencia de compra | El servidor verifica la compra del catálogo por el comprador autenticado |
 | Identidad del autor de opiniones públicas | Se muestra únicamente el nombre abreviado; el panel privado filtra opiniones por la sesión |
 | Reintentos de pago rechazado | Al quinto rechazo de un mismo pedido, se cancela y se liberan sus reservas; un pago aprobado limpia el contador en memoria |
