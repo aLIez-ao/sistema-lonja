@@ -4,7 +4,7 @@ import { arrancar, cliente, modelos } from "./ayuda.js";
 import { nombrePublico } from "../helpers/tienda.js";
 import { rutaReferer } from "../helpers/navegacion.js";
 
-const { Usuario, Comprador, Tipo, Lote, Especie, EspecieCatalogo, Compra, Lista, ListaItem, Pregunta, Opinion } = modelos;
+const { Usuario, Comprador, Tipo, Lote, Especie, EspecieCatalogo, Compra, Lista, ListaItem, Pregunta, Opinion, CarritoItem, Pedido, PedidoItem } = modelos;
 let srv;
 before(async () => { srv = await arrancar(); });
 after(async () => srv.cerrar());
@@ -45,6 +45,44 @@ test("listas privadas: creación, duplicados y control de acceso al detalle", as
     assert.ok(r.headers.get("location").startsWith("/cuenta/listas"));
     assert.equal(r.headers.get("location").includes("evil"), false);
   }
+});
+
+test("favoritos alternan por comprador, persisten en la tienda y las listas JSON son privadas", async () => {
+  const a = await comprador("favorito_a"), b = await comprador("favorito_b");
+  const { lote, catalogo } = await articulo();
+  const anon = cliente(srv.base);
+  const heart = await anon.get(`/tienda/lote/${lote.id_lte}`);
+  assert.match(heart.texto, new RegExp(`/acceso\\?volver=.*tienda%2Flote%2F${lote.id_lte}`));
+  assert.equal((await a.web.postJSON("/cuenta/favoritos/alternar", { tipo: "lote", id_ref: lote.id_lte })).status, 200);
+  let estado = await a.web.postJSON("/cuenta/favoritos/alternar", { tipo: "especie", id_ref: catalogo.id_cat });
+  assert.deepEqual(JSON.parse(estado.texto), { ok: true, favorito: true, total: 2 });
+  assert.match((await a.web.get(`/tienda/lote/${lote.id_lte}`)).texto, /aria-pressed="true"/);
+  assert.equal((await b.web.get("/cuenta/listas.json")).status, 200);
+  const bListas = JSON.parse((await b.web.get("/cuenta/listas.json")).texto).listas;
+  assert.equal(bListas[0].items.length, 0);
+  estado = await a.web.postJSON("/cuenta/favoritos/alternar", { tipo: "lote", id_ref: lote.id_lte });
+  assert.deepEqual(JSON.parse(estado.texto), { ok: true, favorito: false, total: 1 });
+  assert.equal((await a.web.postJSON("/cuenta/favoritos/alternar", { tipo: "lote", id_ref: 999999 })).status, 404);
+  const listaAjena = await Lista.findOne({ where: { id_usuario: b.u.id, nombre: "Favoritos" } });
+  assert.equal((await a.web.postJSON(`/cuenta/listas/${listaAjena.id_lista}/items`, { tipo: "lote", id_ref: lote.id_lte })).status, 404);
+  const admin = cliente(srv.base); await admin.entrar("admin", "AdminPrueba123");
+  assert.equal((await admin.postJSON("/cuenta/favoritos/alternar", { tipo: "lote", id_ref: lote.id_lte })).status, 403);
+  assert.equal((await anon.postJSON("/cuenta/favoritos/alternar", { tipo: "lote", id_ref: lote.id_lte })).status, 302);
+});
+
+test("agregar disponibles desde lista omite lotes vendidos y reservados y devuelve el conteo", async () => {
+  const a = await comprador("lista_carrito"), otro = await comprador("lista_reserva");
+  const disponibles = await articulo(), vendido = await articulo(), reservado = await articulo();
+  const lista = await Lista.create({ id_usuario: a.u.id, nombre: "Para carrito" });
+  for (const { lote } of [disponibles, vendido, reservado]) await ListaItem.create({ id_lista: lista.id_lista, tipo: "lote", id_ref: lote.id_lte });
+  await Compra.create({ id_cmp: vendido.lote.id_lte, codigo_cpr: otro.c.codigo_cpr, precio_kilo_final: 20, precio_total: 100 });
+  const pedido = await Pedido.create({ id_usuario: otro.u.id, codigo_cpr: otro.c.codigo_cpr, entrega: "recoger", subtotal: 100, costo_envio: 0, total: 100, estado: "pendiente_pago", reservado_hasta: new Date(Date.now() + 60_000) });
+  await PedidoItem.create({ id_ped: pedido.id_ped, id_lte: reservado.lote.id_lte, kilos: 5, precio_kilo: 20, subtotal: 100 });
+  const respuesta = await a.web.postJSON(`/cuenta/listas/${lista.id_lista}/carrito`, {});
+  assert.equal(respuesta.status, 200);
+  const datos = JSON.parse(respuesta.texto);
+  assert.equal(datos.agregados, 1); assert.equal(datos.omitidos, 2);
+  assert.equal(await CarritoItem.count({ where: { id_usuario: a.u.id } }), 1);
 });
 
 test("las preguntas pendientes y ocultas nunca se publican; responder envía correo", async () => {

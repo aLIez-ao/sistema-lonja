@@ -1,4 +1,14 @@
 <%- include('../plantillas/header') %>
-<main class="container py-4"><h1>Mis listas</h1><p class="text-muted">Guarda especies y lotes para encontrarlos después.</p>
-<form action="/cuenta/listas" method="post" class="d-flex gap-2 mb-4"><label class="visually-hidden" for="nombre-lista">Nombre de lista</label><input id="nombre-lista" class="form-control" name="nombre" maxlength="40" required placeholder="Nombre de lista"><button class="btn btn-primary">Crear lista</button></form>
-<ul class="list-group"><% listas.forEach((l) => { %><li class="list-group-item"><a href="/cuenta/listas/<%= l.id_lista %>"><%= l.nombre %></a></li><% }) %></ul></main><%- include('../plantillas/footer') %>
+<main class="container py-4">
+  <h1>Mis listas</h1><p class="text-muted">Guarda especies y lotes para encontrarlos después.</p>
+  <form action="/cuenta/listas" method="post" class="d-flex gap-2 mb-4"><label class="visually-hidden" for="nombre-lista">Nombre de lista</label><input id="nombre-lista" class="form-control" name="nombre" maxlength="40" required placeholder="Nombre de lista"><button class="btn btn-primary">Crear lista</button></form>
+  <% if (!listas.length) { %><p class="text-muted">Aún no hay listas.</p><% } %>
+  <div class="row g-3">
+    <% listas.forEach((lista) => { %>
+      <div class="col-md-6 col-lg-4"><a class="card h-100 text-decoration-none text-reset" href="/cuenta/listas/<%= lista.id_lista %>">
+        <div class="d-flex gap-2 p-3"><% lista.vistaPrevia.forEach((item) => { %><img src="<%= item.imagen %>" alt="" width="72" height="64" class="rounded object-fit-cover"><% }) %></div>
+        <div class="card-body pt-0"><h2 class="h5"><%= lista.nombre %></h2><p class="text-muted mb-0"><%= lista.total %> elemento<%= lista.total === 1 ? '' : 's' %></p></div>
+      </a></div>
+    <% }) %>
+  </div>
+</main><%- include('../plantillas/footer') %>

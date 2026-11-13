@@ -43,7 +43,7 @@
               <li class="nav-item"><a class="nav-link <%= rutaActual === '/' ? 'active' : '' %>" href="/"><%- icono('basket', 15, 'me-1') %><%= t('tienda') %></a></li>
               <li class="nav-item"><a class="nav-link <%= activo('/carrito') %>" href="/carrito"><%- icono('cart-plus', 15, 'me-1') %>Carrito <span class="badge text-bg-primary" data-carrito-count><%= typeof carritoCount === 'number' ? carritoCount : 0 %></span></a></li>
               <li class="nav-item"><a class="nav-link <%= activo('/cuenta') %>" href="/cuenta"><%- icono('person', 15, 'me-1') %>Mi cuenta</a></li>
-              <li class="nav-item"><a class="nav-link <%= activo('/cuenta/listas') %>" href="/cuenta/listas"><%- icono('heart', 15, 'me-1') %>Favoritos</a></li>
+              <li class="nav-item"><a class="nav-link <%= activo('/cuenta/listas') %>" href="/cuenta/listas"><%- icono('heart', 15, 'me-1') %>Favoritos <span class="badge text-bg-secondary" data-favoritos-count><%= favoritosCount || 0 %></span></a></li>
               <li class="nav-item"><a class="nav-link <%= activo('/cuenta/opiniones') %>" href="/cuenta/opiniones"><%- icono('star', 15, 'me-1') %>Mis opiniones</a></li>
             <% } else { %>
               <li class="nav-item"><a class="nav-link <%= activo('/dashboard') %>" href="/dashboard"><%- icono('speedometer2', 15, 'me-1') %>Dashboard</a></li>

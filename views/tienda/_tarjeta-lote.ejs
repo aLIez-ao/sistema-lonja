@@ -15,9 +15,7 @@
     <span class="lote-card__vista">Vista rápida <%- icono('arrow-right', 13, 'ms-1') %></span>
   </a>
 
-  <button class="lote-card__corazon" type="button" data-favorito="<%= lote.id_lte %>" aria-pressed="false" aria-label="Guardar <%= _nombre %> en una lista" title="Guardar en una lista">
-    <%- icono('heart', 16) %>
-  </button>
+  <%- include('_control-favorito', { tipoFavorito: 'lote', idFavorito: lote.id_lte, retornoFavorito: _url, claseFavorito: 'lote-card__corazon' }) %>
 
   <div class="lote-card__cuerpo">
     <div class="lote-card__tipo"><%= lote.tipoPrincipal %></div>
@@ -39,7 +37,6 @@
     <div class="lote-card__acciones">
       <% if (usuario && usuario.rol === 'comprador') { %>
         <button class="btn btn-sm btn-primary flex-grow-1" type="button" data-agregar-lote="<%= lote.id_lte %>"><%- icono('cart-plus', 14, 'me-1') %>Agregar</button>
-        <form action="/cuenta/favoritos" method="post"><input type="hidden" name="tipo" value="lote"><input type="hidden" name="id_ref" value="<%= lote.id_lte %>"><button class="btn btn-sm btn-outline-secondary" aria-label="Guardar lote en Favoritos" title="Guardar en Favoritos"><%- icono('heart', 14) %></button></form>
       <% } else { %>
         <a class="btn btn-sm btn-primary flex-grow-1" href="/acceso?volver=<%= encodeURIComponent(`/tienda/lote/${lote.id_lte}`) %>"><%- icono('cart-plus', 14, 'me-1') %>Agregar al carrito · Iniciar sesión</a>
       <% } %>

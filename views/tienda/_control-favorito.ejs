@@ -1,0 +1,18 @@
+<%
+  const _tipoFav = tipoFavorito || 'lote';
+  const _idFav = String(idFavorito);
+  const _urlFav = retornoFavorito || rutaActual || '/';
+  const _guardadoFav = Boolean(favoritos?.[_tipoFav]?.has(_idFav));
+  const _claseFav = claseFavorito || 'btn btn-sm btn-outline-secondary';
+%>
+<% if (usuario?.rol === 'comprador') { %>
+  <form action="/cuenta/favoritos" method="post" class="d-inline" data-favorito-form>
+    <input type="hidden" name="tipo" value="<%= _tipoFav %>"><input type="hidden" name="id_ref" value="<%= _idFav %>">
+    <button type="submit" class="<%= _claseFav %> <%= _guardadoFav ? 'activo' : '' %>" data-favorito data-tipo="<%= _tipoFav %>" data-id-ref="<%= _idFav %>" aria-pressed="<%= _guardadoFav %>" aria-label="<%= _guardadoFav ? 'Quitar de Favoritos' : 'Guardar en Favoritos' %>" title="<%= _guardadoFav ? 'Quitar de Favoritos' : 'Guardar en Favoritos' %>"><%- icono(_guardadoFav ? 'heart-fill' : 'heart', 15) %><span class="visually-hidden">Favoritos</span></button>
+  </form>
+  <button type="button" class="<%= _claseFav === 'lote-card__corazon' ? 'lote-card__elegir-lista' : 'btn btn-sm btn-outline-secondary ms-1' %>" data-elegir-lista data-tipo="<%= _tipoFav %>" data-id-ref="<%= _idFav %>" aria-label="Guardar en otra lista" title="Guardar en otra lista"><%= _claseFav === 'lote-card__corazon' ? '⋯' : '⋯ Guardar en lista' %></button>
+<% } else if (!usuario) { %>
+  <a class="<%= _claseFav %>" href="/acceso?volver=<%= encodeURIComponent(_urlFav) %>" aria-label="Inicia sesión para guardar en Favoritos" title="Inicia sesión para guardar"><%- icono('heart', 15) %><span class="visually-hidden">Guardar en Favoritos</span></a>
+<% } else { %>
+  <button type="button" class="<%= _claseFav %>" disabled aria-label="Solo cuentas de cliente" title="Solo cuentas de cliente"><%- icono('heart', 15) %></button>
+<% } %>

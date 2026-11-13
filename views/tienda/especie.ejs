@@ -24,7 +24,7 @@
           <%= resumenOpiniones.total ? `${resumenOpiniones.media.toFixed(1)} de 5 · ${resumenOpiniones.total} opiniones` : 'Sin opiniones todavía' %>
         </span>
       </div>
-      <% if (usuario && usuario.rol === 'comprador') { %><form action="/cuenta/favoritos" method="post" class="mt-2"><input type="hidden" name="tipo" value="especie"><input type="hidden" name="id_ref" value="<%= especie.id %>"><button class="btn btn-outline-secondary btn-sm"><%- icono('heart', 14, 'me-1') %>Guardar especie en Favoritos</button></form><% } %>
+      <div class="mt-2"><%- include('_control-favorito', { tipoFavorito: 'especie', idFavorito: especie.id, retornoFavorito: rutaActual, claseFavorito: 'btn btn-outline-secondary btn-sm' }) %></div>
     </div>
   </header>
 
