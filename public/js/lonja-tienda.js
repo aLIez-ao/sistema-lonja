@@ -3,7 +3,7 @@
  * y avisos flotantes. El carrito usa peticiones JSON y conserva el flujo
  * accesible por formulario cuando JavaScript no está disponible.
  */
-import { indiceSiguiente } from './tienda-utils.js';
+import { indiceSiguiente, extremosDeFila } from './tienda-utils.js';
 
 (function () {
   'use strict';
@@ -117,10 +117,9 @@ import { indiceSiguiente } from './tienda-utils.js';
         const hayMas = pista.scrollWidth > pista.clientWidth + 2;
         anterior.hidden = siguiente.hidden = !hayMas;
         if (!hayMas) return;
-        const indice = indiceVisible();
-        const fin = indiceSiguiente(indice, tarjetas.length, 4, 1);
-        anterior.disabled = indice <= 0;
-        siguiente.disabled = fin === indice;
+        const { alInicio, alFinal } = extremosDeFila(pista.scrollLeft, pista.scrollWidth, pista.clientWidth);
+        anterior.disabled = alInicio;
+        siguiente.disabled = alFinal;
         anterior.setAttribute('aria-disabled', String(anterior.disabled));
         siguiente.setAttribute('aria-disabled', String(siguiente.disabled));
       };

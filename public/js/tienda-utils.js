@@ -6,3 +6,10 @@ export function indiceSiguiente(indiceActual, total, paso = 4, direccion = 1) {
   const salto = Math.max(1, Math.floor(Number(paso) || 4));
   return Math.max(0, Math.min(ultimo, actual + (direccion < 0 ? -salto : salto)));
 }
+
+/** Indica si la pista está en su inicio o en su final real de desplazamiento. */
+export function extremosDeFila(scrollLeft, scrollWidth, clientWidth, tolerancia = 2) {
+  const maximo = Math.max(0, Number(scrollWidth) - Number(clientWidth));
+  const actual = Math.max(0, Number(scrollLeft) || 0);
+  return { alInicio: actual <= tolerancia, alFinal: actual >= maximo - tolerancia };
+}
