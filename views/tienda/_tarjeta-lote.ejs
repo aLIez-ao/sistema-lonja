@@ -37,6 +37,8 @@
     <div class="lote-card__acciones">
       <% if (usuario && usuario.rol === 'comprador') { %>
         <button class="btn btn-sm btn-primary flex-grow-1" type="button" data-agregar-lote="<%= lote.id_lte %>"><%- icono('cart-plus', 14, 'me-1') %>Agregar</button>
+      <% } else if (usuario) { %>
+        <button class="btn btn-sm btn-secondary flex-grow-1" type="button" disabled title="Las cuentas del personal no compran en la tienda"><%- icono('cart-plus', 14, 'me-1') %>Solo clientes</button>
       <% } else { %>
         <a class="btn btn-sm btn-primary flex-grow-1" href="/acceso?volver=<%= encodeURIComponent(`/tienda/lote/${lote.id_lte}`) %>"><%- icono('cart-plus', 14, 'me-1') %>Agregar al carrito · Iniciar sesión</a>
       <% } %>

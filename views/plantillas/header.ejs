@@ -68,9 +68,7 @@
           </ul>
         <% } %>
 
-        <% if (!usuario || usuario.rol === 'comprador') { %>
-          <div class="tienda-buscador-header"><%- include('buscador-tienda') %></div>
-        <% } %>
+        <div class="tienda-buscador-header"><%- include('buscador-tienda') %></div>
 
         <% if (usuario) { %>
           <div class="d-flex align-items-center gap-2 flex-nowrap">
