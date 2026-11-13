@@ -1,0 +1,94 @@
+<%- include('../plantillas/header') %>
+<%
+  const d = direccion || {};
+  const editando = Boolean(d.id_dir);
+%>
+<div class="mb-4">
+  <a href="/cuenta/direcciones" class="btn btn-sm btn-outline-secondary mb-2"><%- icono('arrow-left', 14, 'me-1') %>Volver a direcciones</a>
+  <h1 class="h3 mb-0 fw-bold"><%= editando ? 'Editar dirección' : 'Nueva dirección' %></h1>
+  <p class="text-muted small mb-0">Estos datos se usan solo para entregar tus pedidos.</p>
+</div>
+
+<%- include('../plantillas/mensajes', { mensaje: null, errores }) %>
+
+<form action="<%= action %>" method="POST" class="row g-4" novalidate data-validar>
+  <div class="col-lg-8">
+    <div class="card p-4">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label fw-semibold" for="alias">Alias</label>
+          <input class="form-control" id="alias" name="alias" maxlength="30" value="<%= d.alias || '' %>" required placeholder="Casa, Oficina…">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold" for="destinatario">Quién recibe</label>
+          <input class="form-control" id="destinatario" name="destinatario" maxlength="60" value="<%= d.destinatario || '' %>" required autocomplete="name">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold" for="telefono">Teléfono</label>
+          <input class="form-control" type="tel" id="telefono" name="telefono" maxlength="20" value="<%= d.telefono || '' %>" required autocomplete="tel" placeholder="229 123 4567">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold" for="cp">Código postal</label>
+          <input class="form-control" id="cp" name="cp" maxlength="5" minlength="5" inputmode="numeric" pattern="[0-9]{5}" value="<%= d.cp || '' %>" required autocomplete="postal-code" placeholder="91700">
+          <div class="form-text">5 dígitos.</div>
+        </div>
+        <div class="col-md-8">
+          <label class="form-label fw-semibold" for="calle">Calle</label>
+          <input class="form-control" id="calle" name="calle" maxlength="80" value="<%= d.calle || '' %>" required autocomplete="address-line1">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold" for="num_ext">Número exterior</label>
+          <input class="form-control" id="num_ext" name="num_ext" maxlength="10" value="<%= d.num_ext || '' %>" required autocomplete="address-line2">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold" for="num_int">Número interior <span class="text-muted fw-normal">(opcional)</span></label>
+          <input class="form-control" id="num_int" name="num_int" maxlength="10" value="<%= d.num_int || '' %>">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label fw-semibold" for="colonia">Colonia</label>
+          <input class="form-control" id="colonia" name="colonia" maxlength="60" value="<%= d.colonia || '' %>" required autocomplete="address-level3">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold" for="estado">Estado</label>
+          <div data-combobox data-placeholder="Buscar estado…">
+            <select class="form-select" id="estado" name="estado" required autocomplete="address-level1">
+              <option value="">Selecciona un estado…</option>
+              <% estados.forEach((e) => { %>
+                <option value="<%= e %>" <%= d.estado === e ? 'selected' : '' %>><%= e %></option>
+              <% }) %>
+            </select>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label fw-semibold" for="municipio">Municipio</label>
+          <input class="form-control" id="municipio" name="municipio" maxlength="60" list="municipiosVeracruz" value="<%= d.municipio || '' %>" required autocomplete="address-level2" placeholder="Escribe o elige de la lista">
+          <datalist id="municipiosVeracruz">
+            <% municipios.forEach((m) => { %><option value="<%= m %>"></option><% }) %>
+          </datalist>
+          <div class="form-text">Sugerencias de Veracruz; puedes escribir otro municipio.</div>
+        </div>
+        <div class="col-12">
+          <label class="form-label fw-semibold" for="referencias">Referencias <span class="text-muted fw-normal">(opcional)</span></label>
+          <textarea class="form-control" id="referencias" name="referencias" rows="2" maxlength="200" placeholder="Entre calles, color de la casa, indicaciones para el repartidor…"><%= d.referencias || '' %></textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card p-4">
+      <h2 class="h6 fw-bold mb-2"><%- icono('check-circle', 16, 'me-1') %>Dirección principal</h2>
+      <div class="form-check form-switch">
+        <input class="form-check-input" type="checkbox" role="switch" id="principal" name="principal" <%= d.principal ? 'checked' : '' %>>
+        <label class="form-check-label" for="principal">Usar como dirección principal</label>
+      </div>
+      <p class="small text-muted mt-2 mb-0">Solo puede haber una principal. Si marcas esta, las demás dejarán de serlo.</p>
+    </div>
+  </div>
+
+  <div class="col-12 d-flex gap-2">
+    <button class="btn btn-primary" type="submit"><%= editando ? 'Guardar cambios' : 'Guardar dirección' %></button>
+    <a class="btn btn-outline-secondary" href="/cuenta/direcciones">Cancelar</a>
+  </div>
+</form>
+<%- include('../plantillas/footer') %>

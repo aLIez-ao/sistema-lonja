@@ -1,0 +1,58 @@
+<%- include('../plantillas/header') %>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <div>
+    <a href="/cuenta" class="btn btn-sm btn-outline-secondary mb-2"><%- icono('arrow-left', 14, 'me-1') %>Volver a Mi cuenta</a>
+    <h1 class="h3 mb-0 fw-bold">Direcciones de entrega</h1>
+    <p class="text-muted small mb-0">Hasta <%= maximo %> direcciones. La primera que guardes será la principal.</p>
+  </div>
+  <% if (direcciones.length < maximo) { %>
+    <a class="btn btn-primary" href="/cuenta/direcciones/nueva"><%- icono('plus-lg', 16, 'me-1') %>Nueva dirección</a>
+  <% } else { %>
+    <span class="badge bg-secondary align-self-center">Límite de <%= maximo %> direcciones alcanzado</span>
+  <% } %>
+</div>
+
+<%- include('../plantillas/mensajes', { mensaje: typeof mensaje !== 'undefined' ? mensaje : null, errores: (typeof error !== 'undefined' && error) ? [error] : [] }) %>
+
+<% if (!direcciones.length) { %>
+  <div class="card p-5 text-center">
+    <div class="text-muted mb-2"><%- icono('box-seam', 40) %></div>
+    <h2 class="h5 fw-bold">Todavía no tienes direcciones</h2>
+    <p class="text-muted small mb-3">Agrega una para recibir tus pedidos en casa u oficina.</p>
+    <div><a class="btn btn-primary" href="/cuenta/direcciones/nueva">Agregar mi primera dirección</a></div>
+  </div>
+<% } else { %>
+  <div class="row g-3">
+    <% direcciones.forEach((d) => { %>
+      <div class="col-md-6">
+        <div class="card h-100 p-3">
+          <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+            <div>
+              <h2 class="h6 fw-bold mb-1"><%= d.alias %></h2>
+              <div class="small text-muted"><%= d.destinatario %> · <%= d.telefono %></div>
+            </div>
+            <% if (d.principal) { %><span class="badge bg-primary">Principal</span><% } %>
+          </div>
+          <p class="small mb-3">
+            <%= d.calle %> <%= d.num_ext %><%= d.num_int ? ` int. ${d.num_int}` : '' %><br>
+            Col. <%= d.colonia %>, <%= d.municipio %>, <%= d.estado %><br>
+            C.P. <%= d.cp %>
+            <% if (d.referencias) { %><br><span class="text-muted">Referencias: <%= d.referencias %></span><% } %>
+          </p>
+          <div class="mt-auto d-flex flex-wrap gap-2">
+            <a class="btn btn-sm btn-outline-secondary" href="/cuenta/direcciones/<%= d.id_dir %>/editar"><%- icono('pencil', 14, 'me-1') %>Editar</a>
+            <% if (!d.principal) { %>
+              <form action="/cuenta/direcciones/<%= d.id_dir %>/principal" method="POST" class="m-0">
+                <button class="btn btn-sm btn-outline-primary" type="submit"><%- icono('check-circle', 14, 'me-1') %>Hacer principal</button>
+              </form>
+            <% } %>
+            <form action="/cuenta/direcciones/<%= d.id_dir %>?_method=DELETE" method="POST" class="m-0" onsubmit="return confirm('¿Eliminar la dirección «<%= d.alias %>»?')">
+              <button class="btn btn-sm btn-outline-danger" type="submit"><%- icono('trash', 14, 'me-1') %>Eliminar</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+<% } %>
+<%- include('../plantillas/footer') %>

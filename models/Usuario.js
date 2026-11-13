@@ -2,9 +2,9 @@ import { DataTypes } from "sequelize";
 import bcrypt from "bcryptjs";
 import db from "../config/db.js";
 
-// Personal autorizado a entrar al sistema (no es el "comprador" de la lonja).
 // Roles: admin (todo, incluye usuarios y borrados) | capturista (captura y consulta)
-export const ROLES = ["admin", "capturista"];
+// | comprador (tienda en línea; solo se crea desde el registro público).
+export const ROLES = ["admin", "capturista", "comprador"];
 
 const Usuario = db.define(
   "Usuario",
@@ -37,6 +37,19 @@ const Usuario = db.define(
     foto: { type: DataTypes.STRING(120), allowNull: true },
     // Se incrementa al cambiar la contraseña: los tokens de sesión anteriores dejan de valer
     sesion_version: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
+    // Vínculo con el comprador de la lonja (historial de compras). Único por cuenta.
+    codigo_cpr: { type: DataTypes.SMALLINT, allowNull: true, unique: true },
+    // Datos de facturación opcionales del comprador
+    rfc: {
+      type: DataTypes.STRING(13),
+      allowNull: true,
+      validate: {
+        rfcValido(val) {
+          if (val && !/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/i.test(val)) throw new Error("El RFC no tiene un formato válido");
+        },
+      },
+    },
+    razon_social: { type: DataTypes.STRING(100), allowNull: true },
     password: { type: DataTypes.STRING(100), allowNull: false },
     rol: { type: DataTypes.STRING(20), allowNull: false, defaultValue: "capturista", validate: { isIn: [ROLES] } },
     activo: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },

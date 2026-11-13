@@ -57,7 +57,21 @@
       <dt class="col-sm-3">Correo</dt>
       <dd class="col-sm-9"><a class="enlace-registro" href="mailto:<%= comprador.correo %>"><%= comprador.correo %></a></dd>
       <dt class="col-sm-3">Dirección</dt>
-      <dd class="col-sm-9 mb-0"><%= comprador.direccion || '—' %></dd>
+      <dd class="col-sm-9"><%= comprador.direccion || '—' %></dd>
+      <dt class="col-sm-3">Cuenta en línea</dt>
+      <dd class="col-sm-9 mb-0">
+        <% if (comprador.cuenta) { %>
+          <span class="badge bg-success me-1">Sí</span>
+          <a class="enlace-registro" href="/usuarios/<%= comprador.cuenta.id %>/editar">@<%= comprador.cuenta.usuario %></a>
+          <span class="small text-muted">
+            &bull; <%= comprador.cuenta.email_verificado ? 'correo verificado' : 'correo sin verificar' %>
+            <%= comprador.cuenta.activo ? '' : ' · cuenta desactivada' %>
+          </span>
+        <% } else { %>
+          <span class="badge bg-secondary me-1">No</span>
+          <span class="small text-muted">Este comprador solo existe en mostrador.</span>
+        <% } %>
+      </dd>
     </dl>
   </div>
 </div>

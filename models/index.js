@@ -5,6 +5,7 @@ import EspecieCatalogo from "./EspecieCatalogo.js";
 import Comprador from "./Comprador.js";
 import Compra from "./Compra.js";
 import Usuario from "./Usuario.js";
+import DireccionEntrega from "./DireccionEntrega.js";
 
 // Tipo 1 --- N Especie
 Tipo.hasMany(Especie, { foreignKey: { name: "id_tpo", allowNull: false }, as: "especies", onDelete: "RESTRICT" });
@@ -30,5 +31,13 @@ Compra.belongsTo(Lote, { foreignKey: "id_cmp", as: "lote" });
 Comprador.hasMany(Compra, { foreignKey: "codigo_cpr", as: "compras", onDelete: "RESTRICT" });
 Compra.belongsTo(Comprador, { foreignKey: "codigo_cpr", as: "comprador" });
 
-export { Tipo, Lote, Especie, EspecieCatalogo, Comprador, Compra, Usuario };
+// Usuario 1 --- 1 Comprador (la cuenta en línea se vincula por codigo_cpr)
+Usuario.belongsTo(Comprador, { foreignKey: "codigo_cpr", as: "comprador", onDelete: "SET NULL" });
+Comprador.hasOne(Usuario, { foreignKey: "codigo_cpr", as: "cuenta" });
+
+// Usuario 1 --- N DireccionEntrega
+Usuario.hasMany(DireccionEntrega, { foreignKey: { name: "id_usuario", allowNull: false }, as: "direcciones", onDelete: "CASCADE" });
+DireccionEntrega.belongsTo(Usuario, { foreignKey: { name: "id_usuario", allowNull: false }, as: "usuario" });
+
+export { Tipo, Lote, Especie, EspecieCatalogo, Comprador, Compra, Usuario, DireccionEntrega };
 export { ROLES } from "./Usuario.js";

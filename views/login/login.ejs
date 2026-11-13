@@ -8,7 +8,7 @@
           <img class="logo-oscuro" src="/img/logo-oscuro.svg" alt="" aria-hidden="true" style="max-height: 56px;">
         </div>
         <h1 class="h4 text-center mb-1 fw-bold">Sistema Lonja</h1>
-        <p class="text-center text-muted small mb-4">Acceso solo para personal autorizado</p>
+        <p class="text-center text-muted small mb-4">Acceso para personal de la lonja y compradores</p>
         
         <%- include('../plantillas/mensajes', { mensaje: typeof mensaje !== 'undefined' ? mensaje : null }) %>
 
@@ -17,8 +17,8 @@
             <input type="hidden" name="volver" value="<%= volver %>">
           <% } %>
           <div class="mb-3">
-            <label for="usuario" class="form-label fw-semibold">Usuario</label>
-            <input type="text" class="form-control" id="usuario" name="usuario" value="" autocomplete="username" required autofocus placeholder="Nombre de usuario">
+            <label for="usuario" class="form-label fw-semibold">Usuario o correo</label>
+            <input type="text" class="form-control" id="usuario" name="usuario" value="" autocomplete="username" required autofocus placeholder="Nombre de usuario o correo">
           </div>
           <div class="mb-3">
             <div class="d-flex justify-content-between align-items-center">
@@ -29,6 +29,10 @@
           </div>
           <button class="btn btn-primary w-100 py-2 mt-2" type="submit">Iniciar Sesión</button>
         </form>
+
+        <p class="text-center small text-muted mt-3 mb-0">
+          ¿Eres comprador y aún no tienes cuenta? <a href="/registro" class="text-decoration-none">Regístrate</a>
+        </p>
       </div>
     </div>
   </div>

@@ -1,0 +1,85 @@
+<%- include('../plantillas/header') %>
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <div>
+    <a href="/cuenta" class="btn btn-sm btn-outline-secondary mb-2"><%- icono('arrow-left', 14, 'me-1') %>Volver a Mi cuenta</a>
+    <h1 class="h3 mb-0 fw-bold">Datos personales</h1>
+    <p class="text-muted small mb-0">Tu nombre, contacto y datos de facturación opcionales.</p>
+  </div>
+</div>
+
+<%- include('../plantillas/mensajes', { mensaje: typeof mensaje !== 'undefined' ? mensaje : null, errores }) %>
+
+<div class="row g-4">
+  <div class="col-lg-8">
+    <div class="card p-4">
+      <form action="/cuenta/datos" method="POST" novalidate data-validar>
+        <div class="mb-3"><%- include('../plantillas/campo-foto', { u: us }) %></div>
+
+        <h2 class="h6 fw-bold text-primary mb-3"><%- icono('person', 16, 'me-1') %>Datos de contacto</h2>
+        <div class="row g-3">
+          <div class="col-md-4">
+            <label class="form-label fw-semibold" for="nombre">Nombre</label>
+            <input class="form-control" id="nombre" name="nombre" maxlength="40" value="<%= datos.nombre %>" required autocomplete="given-name">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold" for="apellido_paterno">Apellido paterno</label>
+            <input class="form-control" id="apellido_paterno" name="apellido_paterno" maxlength="40" value="<%= datos.apellido_paterno %>" required autocomplete="family-name">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold" for="apellido_materno">Apellido materno <span class="text-muted fw-normal">(opcional)</span></label>
+            <input class="form-control" id="apellido_materno" name="apellido_materno" maxlength="40" value="<%= datos.apellido_materno %>" autocomplete="additional-name">
+          </div>
+          <div class="col-md-7">
+            <label class="form-label fw-semibold" for="correo">Correo electrónico</label>
+            <input class="form-control" type="email" id="correo" name="correo" maxlength="80" value="<%= datos.correo %>" required autocomplete="email">
+            <div class="form-text">Si lo cambias, tendrás que verificarlo de nuevo.</div>
+          </div>
+          <div class="col-md-5">
+            <label class="form-label fw-semibold" for="telefono">Teléfono <span class="text-muted fw-normal">(opcional)</span></label>
+            <input class="form-control" type="tel" id="telefono" name="telefono" maxlength="20" value="<%= datos.telefono %>" autocomplete="tel">
+          </div>
+        </div>
+
+        <hr class="my-4">
+        <h2 class="h6 fw-bold text-primary mb-1"><%- icono('receipt', 16, 'me-1') %>Datos de facturación <span class="text-muted fw-normal">(opcional)</span></h2>
+        <p class="small text-muted">Si necesitas factura, escribe tu RFC y razón social. Puedes dejarlos vacíos.</p>
+        <div class="row g-3">
+          <div class="col-md-5">
+            <label class="form-label fw-semibold" for="rfc">RFC</label>
+            <input class="form-control text-uppercase" id="rfc" name="rfc" maxlength="13" value="<%= datos.rfc %>" placeholder="XAXX010101000" autocomplete="off">
+          </div>
+          <div class="col-md-7">
+            <label class="form-label fw-semibold" for="razon_social">Razón social</label>
+            <input class="form-control" id="razon_social" name="razon_social" maxlength="100" value="<%= datos.razon_social %>" autocomplete="organization">
+          </div>
+        </div>
+
+        <button class="btn btn-primary mt-4" type="submit">Guardar cambios</button>
+        <a class="btn btn-outline-secondary mt-4" href="/cuenta">Cancelar</a>
+      </form>
+    </div>
+  </div>
+
+  <div class="col-lg-4">
+    <div class="card p-4 mb-4">
+      <h2 class="h6 fw-bold mb-3"><%- icono('envelope', 16, 'me-1') %>Estado del correo</h2>
+      <% if (us.email_verificado) { %>
+        <span class="badge bg-success mb-2"><%- icono('check-circle', 12, 'me-1') %>Verificado</span>
+        <p class="small text-muted mb-0">Tu correo está confirmado. Puedes recuperar tu contraseña y recibir avisos.</p>
+      <% } else { %>
+        <span class="badge bg-warning text-dark mb-2">Sin verificar</span>
+        <p class="small text-muted">Confirma que el correo es tuyo con el enlace que enviamos. Sin verificarlo no podrás pagar tus pedidos.</p>
+        <form action="/configuracion/solicitar-verificacion" method="POST" class="m-0">
+          <button class="btn btn-sm btn-outline-primary" type="submit">Reenviar verificación</button>
+        </form>
+      <% } %>
+    </div>
+
+    <div class="card p-4">
+      <h2 class="h6 fw-bold mb-3"><%- icono('box-seam', 16, 'me-1') %>Direcciones</h2>
+      <p class="small text-muted">Tienes <%= direcciones %> de 10 direcciones guardadas.</p>
+      <a class="btn btn-sm btn-outline-primary" href="/cuenta/direcciones">Administrar direcciones</a>
+    </div>
+  </div>
+</div>
+<%- include('../plantillas/footer') %>
