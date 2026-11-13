@@ -25,11 +25,11 @@ const port = process.env.PORT || 2800;
     await crearAdministradorInicial();
     await crearTiposIniciales();
 
-    // Diagnóstico del correo: informa sin detener el servidor
+// Diagnóstico del correo: informa sin detener el servidor
     const correo = await verificarTransporte();
-    if (correo.configurado && !correo.error) console.log("✅ Correo listo");
-    else if (correo.error) console.warn(`❌ Gmail rechazó las credenciales: ${correo.error}`);
-    else console.warn("⚠️ Correo NO configurado (modo simulador). Define GMAIL_USER y GMAIL_PASS en .env");
+    if (correo.configurado && !correo.error) console.log("\x1b[32mCorreo listo\x1b[0m");
+    else if (correo.error) console.warn(`\x1b[31mGmail rechazó las credenciales: ${correo.error}\x1b[0m`);
+    else console.warn("\x1b[33mCorreo NO configurado (modo simulador). Define GMAIL_USER y GMAIL_PASS en .env\x1b[0m");
 
     const barridoReservas = setInterval(() => {
       liberarPedidosVencidos().catch((error) => console.warn("No se pudieron limpiar reservas vencidas:", error.message));
