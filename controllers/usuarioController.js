@@ -1,12 +1,11 @@
 import { body } from "express-validator";
-import { Usuario, ROLES } from "../models/index.js";
+import { Op, fn, col } from "sequelize";
+import { Usuario, Pedido, ROLES } from "../models/index.js";
 import { mensajesError, mensajeBD, aMensaje } from "../helpers/utiles.js";
 import { problemasPassword, passwordInutilizable } from "../helpers/seguridad.js";
 import { aplicarFoto, borrarFoto } from "../helpers/avatar.js";
 import { enviarEnlacePassword, enviarVerificacionCorreo, resumenEnvio } from "../helpers/cuentas.js";
-import { leerListado, consultarListado, combinarWhere } from "../helpers/listado.js";
 import { condicionBusqueda } from "../helpers/busqueda.js";
-import { condicionFiltros, filtroLista } from "../helpers/filtros.js";
 
 const reglas = [
   body("usuario").trim().isLength({ min: 3, max: 40 }).withMessage("El usuario debe tener entre 3 y 40 caracteres").matches(/^[\w.-]+$/).withMessage("El usuario solo admite letras, números, punto, guion y guion bajo"),
@@ -41,70 +40,44 @@ function erroresPassword(req) {
   return errs;
 }
 
-const ORDEN = {
-  id: "id",
-  usuario: "usuario",
-  nombre: "nombre_completo",
-  rol: "rol",
-  estado: "activo",
-};
-
-const FILTROS = {
-  rol: filtroLista(...ROLES),
-  activo: filtroLista("activo", "inactivo"),
-  verificado: filtroLista("verificado", "sin"),
-};
-
 const lista = async (req, res) => {
-  const l = leerListado(req, {
-    orden: ORDEN,
-    ordenDefecto: { campo: "id", dir: "asc" },
-    filtros: FILTROS,
-  });
-  await consultarListado(l, {
-    modelo: Usuario.scope("sinClave"),
-    pk: "id",
-    include: [],
-    includeOrden: [],
-    where: combinarWhere(
-      await condicionBusqueda("usuarios", l.q),
-      await condicionFiltros("usuarios", l.filtros),
-    ),
-    orden: ORDEN,
-  });
-  res.render("usuarios/index", {
-    l,
-    usuarios: l.filas,
-    nombreRol: NOMBRE_ROL,
-    filtros: [
-      {
-        clave: "rol",
-        etiqueta: "Rol",
-        tipo: "select",
-        opciones: ROLES.map((r) => ({ valor: r, texto: NOMBRE_ROL[r] || r })),
-      },
-      {
-        clave: "activo",
-        etiqueta: "Estado",
-        tipo: "select",
-        opciones: [
-          { valor: "activo", texto: "Activo" },
-          { valor: "inactivo", texto: "Inactivo" },
-        ],
-      },
-      {
-        clave: "verificado",
-        etiqueta: "Correo",
-        tipo: "select",
-        opciones: [
-          { valor: "verificado", texto: "Verificado" },
-          { valor: "sin", texto: "Sin verificar" },
-        ],
-      },
-    ],
-    mensaje: req.query.mensaje,
-    error: req.query.error,
-  });
+  const porSeccion = async (prefijo, roles) => {
+    const q = String(req.query[`q${prefijo}`] ?? req.query.q ?? "").trim().slice(0, 60);
+    const pagina = Math.max(1, Math.min(10000, Number.parseInt(req.query[`pagina${prefijo}`], 10) || 1));
+    const ordenPermitido = { id: "id", usuario: "usuario", nombre: "nombre_completo", estado: "activo", rol: "rol" };
+    const orden = ordenPermitido[req.query[`orden${prefijo}`]] || "nombre_completo";
+    const dir = String(req.query[`dir${prefijo}`]).toUpperCase() === "DESC" ? "DESC" : "ASC";
+    const condiciones = [{ rol: { [Op.in]: roles } }];
+    if (q) condiciones.push(await condicionBusqueda("usuarios", q));
+    if (prefijo === "T" && ["admin", "capturista"].includes(req.query.rol)) condiciones.push({ rol: req.query.rol });
+    const verificado = req.query[`verificado${prefijo}`] || (prefijo === "T" ? req.query.verificado : "");
+    if (verificado === "verificado") condiciones.push({ email_verificado: true });
+    if (verificado === "sin") condiciones.push({ email_verificado: false });
+    const { count, rows } = await Usuario.scope("sinClave").findAndCountAll({
+      where: { [Op.and]: condiciones }, order: [[orden, dir], ["id", "ASC"]], limit: 20, offset: (pagina - 1) * 20,
+    });
+    return { filas: rows, q, pagina, paginas: Math.max(1, Math.ceil(count / 20)), total: count, orden, dir };
+  };
+  const trabajadores = await porSeccion("T", ["admin", "capturista"]);
+  const clientes = await porSeccion("C", ["comprador"]);
+  const ids = clientes.filas.map((u) => u.id);
+  const conteos = ids.length ? await Pedido.findAll({ attributes: ["id_usuario", [fn("COUNT", col("id_ped")), "total"]], where: { id_usuario: { [Op.in]: ids } }, group: ["id_usuario"], raw: true }) : [];
+  const pedidosPorUsuario = Object.fromEntries(conteos.map((x) => [x.id_usuario, Number(x.total)]));
+  const paginaUrl = (prefijo, pagina) => {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(req.query)) if (!key.startsWith(`pagina${prefijo}`) && !["mensaje", "error"].includes(key)) params.set(key, value);
+    params.set(`pagina${prefijo}`, String(pagina));
+    return `/usuarios?${params.toString()}`;
+  };
+  const ordenUrl = (prefijo, campo) => {
+    const params = new URLSearchParams();
+    for (const [key, value] of Object.entries(req.query)) if (!key.startsWith(`pagina${prefijo}`) && !key.startsWith(`orden${prefijo}`) && !key.startsWith(`dir${prefijo}`) && !["mensaje", "error"].includes(key)) params.set(key, value);
+    const actual = req.query[`orden${prefijo}`] || "nombre";
+    params.set(`orden${prefijo}`, campo);
+    params.set(`dir${prefijo}`, actual === campo && String(req.query[`dir${prefijo}`]).toUpperCase() !== "DESC" ? "DESC" : "ASC");
+    return `/usuarios?${params.toString()}`;
+  };
+  res.render("usuarios/index", { trabajadores, clientes, pedidosPorUsuario, nombreRol: NOMBRE_ROL, paginaUrl, ordenUrl, query: req.query, mensaje: req.query.mensaje, error: req.query.error });
 };
 
 const verCrear = (req, res) => vistaFormulario(res, { us: null, action: "/usuarios" });
