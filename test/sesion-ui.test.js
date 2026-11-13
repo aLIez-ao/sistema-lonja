@@ -13,7 +13,7 @@ before(async () => {
 after(() => srv.cerrar());
 
 test("el login no simula una contraseña escrita", async () => {
-  const r = await c.get("/");
+  const r = await c.get("/acceso");
   assert.equal(r.status, 200);
   assert.match(r.texto, /placeholder="Tu contraseña"/);
   assert.doesNotMatch(r.texto, /placeholder="••••••••"/);

@@ -1,18 +1,39 @@
 # Rutas y permisos
 
-Roles: **admin** (todo) y **capturista** (captura y consulta; no borra ni administra usuarios).
-"Sesión" = cookie `_token` válida de un usuario activo. Sin sesión, cualquier ruta privada redirige a `/`.
+Roles: **admin** (todo), **capturista** (captura y consulta; no borra ni administra usuarios) y **comprador** (tienda y cuenta propia).
+"Sesión" = cookie `_token` válida de un usuario activo. Sin sesión, una ruta privada redirige a `/acceso?volver=…` (la ruta original solo si es interna); un POST redirige a `/acceso`.
 
 ## Públicas
 
 | Método | Ruta | Acción |
 |---|---|---|
-| GET | `/` | Formulario de acceso |
-| POST | `/credenciales` | Valida usuario y contraseña, crea la cookie y redirige a `/inicio` (401 si fallan; 429 tras 5 fallos seguidos) |
-| POST | `/cerrarsesion` | Borra la cookie (un `GET /cerrarsesion` solo redirige) |
+| GET | `/` | Portada de la tienda: héroe, categorías, lotes disponibles, filtros y búsqueda |
+| GET | `/tienda/lote/:id` | Detalle público de un lote (avisa si ya se vendió y sugiere lotes parecidos) |
+| GET | `/tienda/especie/:id` | Ficha pública de una especie del catálogo |
+| GET | `/tienda/sugerencias?q=…` | Sugerencias del buscador público (JSON, máximo 8; 30 por minuto y por IP) |
+| GET | `/acceso` | Formulario de acceso |
+| POST | `/credenciales` | Valida usuario y contraseña, crea la cookie y redirige a la ruta pedida (`volver`) o al inicio del rol (401 si fallan; 429 tras 5 fallos seguidos) |
+| POST | `/cerrarsesion` | Borra la cookie (un `GET /cerrarsesion` solo redirige a `/`) |
+| GET/POST | `/registro` | Alta pública de comprador: crea la cuenta sin verificar y envía el correo de verificación |
 | GET/POST | `/olvide-password` | Solicitar el enlace de recuperación (por correo o usuario) |
 | GET/POST | `/recuperar-password/:token` | Definir una contraseña nueva con el enlace recibido |
-| GET | `/verificar-email/:token` | Confirmar el correo de la cuenta |
+| GET | `/verificar-email/:token` | Confirmar el correo de la cuenta (después enlaza al comprador de mostrador si aún no lo está) |
+
+La tienda nunca expone nombres, correos ni montos de compradores: solo muestra lotes sin `Compra` que tengan al menos una especie y el catálogo activo.
+
+## Con sesión de comprador
+
+| Método | Ruta | Acción |
+|---|---|---|
+| GET | `/cuenta` | Resumen de la cuenta |
+| GET/POST | `/cuenta/datos` | Ver / actualizar los datos personales |
+| GET | `/cuenta/direcciones` | Lista de direcciones de entrega |
+| GET/POST | `/cuenta/direcciones/nueva`, `/cuenta/direcciones` | Formulario / alta de una dirección |
+| GET/PUT | `/cuenta/direcciones/:id/editar`, `/cuenta/direcciones/:id` | Editar una dirección propia |
+| DELETE | `/cuenta/direcciones/:id` | Eliminar una dirección propia |
+| POST | `/cuenta/direcciones/:id/principal` | Marcar una dirección como principal |
+
+El `:id` de otra persona responde **404**. El comprador no entra a `/inicio` (403) ni a los módulos del personal; su inicio es la tienda. Las cuentas de comprador solo nacen en `/registro` (no las crea el admin) y el admin únicamente puede desactivarlas, sin cambiarles el rol.
 
 ## Con sesión (admin y capturista)
 

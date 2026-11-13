@@ -27,16 +27,7 @@ const vistaLogin = (res, errores = [], usuario = "", mensaje = null, estado, vol
 
 const login = (req, res) => {
   // Con sesión vigente no tiene sentido mostrar el formulario
-  if (req.usuario) {
-    // La tienda pública llega en la Fase 3; mientras tanto el comprador ve una portada.
-    if (req.usuario.rol === "comprador") {
-      return res.render("tienda/proximamente", {
-        mensaje: req.query.mensaje,
-        error: req.query.error,
-      });
-    }
-    return res.redirect("/inicio");
-  }
+  if (req.usuario) return res.redirect(destinoTrasEntrar(req.usuario, req.query.volver));
   vistaLogin(res, [], "", req.query.mensaje, undefined, rutaVolver(req.query.volver) || "");
 };
 

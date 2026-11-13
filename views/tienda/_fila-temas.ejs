@@ -1,0 +1,21 @@
+<%
+  // Fila horizontal de lotes con desplazamiento por botones.
+  // Parámetros: id, titulo, subtitulo, lotes.
+%>
+<section class="tienda-fila" data-fila>
+  <div class="tienda-fila__cabecera">
+    <div>
+      <h2 class="tienda-fila__titulo"><%= titulo %></h2>
+      <% if (typeof subtitulo !== 'undefined' && subtitulo) { %><p class="tienda-fila__sub"><%= subtitulo %></p><% } %>
+    </div>
+    <div class="tienda-fila__controles">
+      <button class="btn btn-sm btn-outline-secondary rounded-circle" type="button" data-scroll="-1" aria-label="Ver anteriores"><%- icono('chevron-left', 14) %></button>
+      <button class="btn btn-sm btn-outline-secondary rounded-circle" type="button" data-scroll="1" aria-label="Ver siguientes"><%- icono('chevron-right', 14) %></button>
+    </div>
+  </div>
+  <div class="tienda-fila__pista" data-pista>
+    <% lotes.forEach((lote, i) => { %>
+      <%- include('_tarjeta-lote', { lote, posicion: i }) %>
+    <% }) %>
+  </div>
+</section>

@@ -1,0 +1,78 @@
+<%- include('../plantillas/header') %>
+<%
+  const _llenas = Math.round(resumenOpiniones.media || 0);
+%>
+
+<div class="tienda-especie">
+  <nav class="tienda-migas" aria-label="Ruta">
+    <a href="/"><%- icono('arrow-left', 14, 'me-1') %>Volver a la tienda</a>
+    <span aria-hidden="true">/</span>
+    <span><%= especie.nombre %></span>
+  </nav>
+
+  <header class="tienda-especie__cabecera">
+    <img src="<%= especie.imagen %>" alt="<%= especie.nombre %>" width="360" height="240">
+    <div>
+      <span class="tienda-detalle__tipo"><%= especie.tipo %></span>
+      <h1><%= especie.nombre %></h1>
+      <p class="tienda-especie__desc"><%= especie.descripcion || 'Especie fresca del puerto de Veracruz, disponible en los lotes de la lonja.' %></p>
+      <div class="tienda-especie__resumen">
+        <span class="tienda-estrellas" aria-label="Calificación media">
+          <% for (let i = 1; i <= 5; i += 1) { %><%- icono(i <= _llenas ? 'star-fill' : 'star', 16) %><% } %>
+        </span>
+        <span class="text-muted small">
+          <%= resumenOpiniones.total ? `${resumenOpiniones.media.toFixed(1)} de 5 · ${resumenOpiniones.total} opiniones` : 'Sin opiniones todavía' %>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <div class="row g-4">
+    <div class="col-lg-5">
+      <div class="tienda-detalle__bloque">
+        <h2>Distribución de estrellas</h2>
+        <% if (!resumenOpiniones.total) { %>
+          <p class="text-muted small mb-0">Cuando los compradores califiquen esta especie verás aquí el desglose por estrellas.</p>
+        <% } else { %>
+          <ul class="tienda-distribucion">
+            <% [5, 4, 3, 2, 1].forEach((n) => {
+              const cantidad = resumenOpiniones.distribucion[n - 1] || 0;
+              const pct = resumenOpiniones.total ? Math.round((cantidad / resumenOpiniones.total) * 100) : 0;
+            %>
+              <li><span><%= n %> <%- icono('star-fill', 12) %></span><span class="tienda-distribucion__barra"><span style="width: <%= pct %>%"></span></span><span><%= cantidad %></span></li>
+            <% }) %>
+          </ul>
+        <% } %>
+      </div>
+
+      <div class="tienda-detalle__bloque">
+        <h2>Opiniones</h2>
+        <% if (!opiniones.length) { %>
+          <p class="text-muted small mb-0">Aún no hay opiniones de esta especie. Las opiniones se habilitarán muy pronto.</p>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="col-lg-7">
+      <div class="tienda-detalle__bloque">
+        <div class="d-flex justify-content-between align-items-center gap-2 mb-3">
+          <h2 class="mb-0">Lotes disponibles</h2>
+          <span class="badge bg-secondary"><%= lotes.length %></span>
+        </div>
+        <% if (!lotes.length) { %>
+          <p class="text-muted small mb-0">Ahora mismo no hay lotes disponibles con esta especie. Vuelve a revisar la tienda más tarde.</p>
+        <% } else { %>
+          <div class="tienda-grid tienda-grid--compacta">
+            <% lotes.forEach((lote, i) => { %>
+              <%- include('_tarjeta-lote', { lote, posicion: i }) %>
+            <% }) %>
+          </div>
+        <% } %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="tienda-toasts" aria-live="polite" aria-atomic="true" data-toasts></div>
+
+<%- include('../plantillas/footer') %>

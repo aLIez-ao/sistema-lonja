@@ -1,0 +1,104 @@
+<%- include('../plantillas/header') %>
+<%
+  const _volver = lote.vendido ? '/' : '/#catalogo';
+%>
+
+<div class="tienda-detalle">
+  <nav class="tienda-migas" aria-label="Ruta">
+    <a href="<%= _volver %>"><%- icono('arrow-left', 14, 'me-1') %>Volver a la tienda</a>
+    <span aria-hidden="true">/</span>
+    <span>Lote #<%= lote.id_lte %></span>
+  </nav>
+
+  <% if (lote.vendido) { %>
+    <div class="alert alert-warning d-flex align-items-center gap-2" role="alert">
+      <%- icono('lock', 18) %>
+      <span>Este lote ya fue vendido. Abajo te mostramos lotes parecidos que sí están disponibles.</span>
+    </div>
+  <% } %>
+
+  <div class="row g-4">
+    <div class="col-lg-7">
+      <figure class="tienda-detalle__figura">
+        <img src="<%= lote.imagen %>" alt="<%= lote.nombresEspecies || `Lote #${lote.id_lte}` %>" width="960" height="640">
+        <% if (lote.esDeHoy) { %><figcaption class="insignia insignia--hoy"><%- icono('clock', 12, 'me-1') %>Lote de hoy</figcaption><% } %>
+      </figure>
+
+      <div class="tienda-detalle__bloque">
+        <h2>Especies de este lote</h2>
+        <ul class="tienda-especies-lista">
+          <% lote.especies.forEach((e) => { %>
+            <li>
+              <img src="<%= e.imagen %>" alt="" width="56" height="56" loading="lazy">
+              <div>
+                <a href="/tienda/especie/<%= e.id_cat || e.id_epe %>"><%= e.nombre %></a>
+                <span class="text-muted small d-block"><%= e.tipoNombre %></span>
+              </div>
+              <span class="tienda-estrellas" title="Sin opiniones todavía">
+                <%- icono('star', 13) %><%- icono('star', 13) %><%- icono('star', 13) %><%- icono('star', 13) %><%- icono('star', 13) %>
+              </span>
+            </li>
+          <% }) %>
+        </ul>
+      </div>
+
+      <div class="tienda-detalle__bloque" id="preguntas">
+        <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+          <h2 class="mb-0">Preguntas y respuestas</h2>
+          <span class="badge bg-secondary"><%= preguntas.length %></span>
+        </div>
+        <% if (!preguntas.length) { %>
+          <p class="text-muted small mb-0">Todavía no hay preguntas sobre este lote. Las preguntas públicas se habilitarán muy pronto.</p>
+        <% } %>
+      </div>
+    </div>
+
+    <div class="col-lg-5">
+      <div class="tienda-detalle__compra">
+        <span class="tienda-detalle__tipo"><%= lote.tipos.join(' · ') || lote.tipoPrincipal %></span>
+        <h1 class="tienda-detalle__titulo"><%= lote.nombresEspecies || `Lote #${lote.id_lte}` %></h1>
+        <p class="tienda-detalle__lote">Lote #<%= lote.id_lte %> · registrado el <%= fechaHora(lote.fecha) %></p>
+
+        <div class="tienda-detalle__precio">
+          <span class="tienda-detalle__precio-kilo"><%= dinero(lote.precio_kilo_salida) %><small>/kg</small></span>
+          <span class="tienda-detalle__total">Total estimado <strong><%= dinero(lote.total) %></strong></span>
+        </div>
+
+        <dl class="tienda-detalle__datos">
+          <div><dt>Kilos</dt><dd><%= Number(lote.kilos).toLocaleString('es-MX', { maximumFractionDigits: 2 }) %> kg</dd></div>
+          <div><dt>Cajas</dt><dd><%= lote.numero_cajas %></dd></div>
+          <div><dt>Especies</dt><dd><%= lote.especies.length %></dd></div>
+          <div><dt>Disponibilidad</dt><dd><%= lote.vendido ? 'Vendido' : 'Disponible' %></dd></div>
+        </dl>
+
+        <% if (lote.vendido) { %>
+          <button class="btn btn-secondary w-100" type="button" disabled>Lote vendido</button>
+        <% } else { %>
+          <button class="btn btn-primary btn-lg w-100" type="button" data-agregar-lote="<%= lote.id_lte %>">
+            <%- icono('cart-plus', 18, 'me-1') %>Agregar al carrito
+          </button>
+          <p class="text-muted small text-center mt-2 mb-0">El carrito y el pago en línea se habilitan muy pronto.</p>
+        <% } %>
+
+        <div class="tienda-detalle__entrega">
+          <h2>Entrega</h2>
+          <ul>
+            <li><%- icono('truck', 16) %><span><strong>A domicilio</strong> en Veracruz y zona conurbada.</span></li>
+            <li><%- icono('geo-alt', 16) %><span><strong>Recoger en la lonja</strong>, Muelle Fiscal de Veracruz.</span></li>
+            <li><%- icono('shield-check', 16) %><span>Pago seguro; nunca compartas datos de tu tarjeta por mensaje.</span></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <% if (parecidos.length) { %>
+    <section class="tienda-parecidos">
+      <%- include('_fila-temas', { titulo: 'Lotes parecidos', subtitulo: 'Otras opciones disponibles con especies similares', lotes: parecidos }) %>
+    </section>
+  <% } %>
+</div>
+
+<div class="tienda-toasts" aria-live="polite" aria-atomic="true" data-toasts></div>
+
+<%- include('../plantillas/footer') %>

@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400" width="600" height="400" role="img" aria-label="Marisco">
+  <defs>
+    <linearGradient id="bgM" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#062233"/>
+      <stop offset="0.6" stop-color="#0E7490"/>
+      <stop offset="1" stop-color="#38BDF8"/>
+    </linearGradient>
+    <linearGradient id="shrimpM" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FFF1F2"/>
+      <stop offset="1" stop-color="#FDA4AF"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="400" fill="url(#bgM)"/>
+  <circle cx="480" cy="90" r="110" fill="#FFFFFF" opacity="0.07"/>
+  <circle cx="90" cy="330" r="90" fill="#FFFFFF" opacity="0.06"/>
+  <g transform="translate(190 110)" filter="drop-shadow(0 10px 18px rgba(0,0,0,.25))">
+    <path d="M150 60 C220 60 260 105 260 160 C260 205 230 235 190 235 C150 235 125 210 125 180 C125 152 148 132 176 132 C204 132 222 150 222 174 C222 196 208 210 190 210 C176 210 166 200 166 188 C166 178 174 170 184 170" fill="none" stroke="url(#shrimpM)" stroke-width="26" stroke-linecap="round"/>
+    <path d="M150 60 L110 20 M150 60 L190 18 M150 60 L210 40" stroke="#FFF1F2" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="155" cy="52" r="8" fill="#0B3954"/>
+    <path d="M120 120 L60 96 M118 150 L50 150 M122 180 L62 206" stroke="#FFF1F2" stroke-width="8" stroke-linecap="round" opacity="0.85"/>
+  </g>
+  <path d="M0 330 C90 290 150 360 260 325 C370 290 430 360 540 322 C560 315 580 318 600 326 L600 400 L0 400 Z" fill="#2DD4BF" opacity="0.35"/>
+  <text x="300" y="378" text-anchor="middle" font-family="-apple-system, 'Segoe UI', Roboto, sans-serif" font-size="20" font-weight="700" fill="#EBF4F6" letter-spacing="4">MARISCO</text>
+</svg>

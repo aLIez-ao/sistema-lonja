@@ -19,6 +19,7 @@ import router_configuracion from "./routes/configuracion_router.js";
 import router_busqueda from "./routes/busqueda_router.js";
 import router_registro from "./routes/registro_router.js";
 import router_cuenta from "./routes/cuenta_router.js";
+import router_tienda from "./routes/tienda_router.js";
 import { dinero, formatoFechaHora } from "./helpers/fechas.js";
 import { icono } from "./helpers/iconos.js";
 
@@ -65,9 +66,11 @@ app.use(async (req, res, next) => {
 // Middleware de Preferencias y Cookies
 app.use(middlewarePreferencias);
 
-// Rutas públicas: acceso, recuperación y registro de compradores
+// Rutas públicas: tienda, acceso, recuperación y registro de compradores
 app.use("/", router_login);
 app.use("/registro", router_registro);
+// La portada (GET /) y las páginas /tienda/* son públicas.
+app.use("/", router_tienda);
 
 // Solo personal de la lonja (admin y capturista): pantallas de administración
 const soloPersonal = [rutaProteger, permitir("admin", "capturista")];

@@ -12,17 +12,16 @@ import {
   verificarEmailToken,
 } from "../controllers/loginController.js";
 import rutaProteger, { permitir } from "../middleware/protegerRutas.js";
-import { inicioSegun } from "../helpers/navegacion.js";
 
 const router = express.Router();
 
-router.get("/", login);
+// La portada (/) es la tienda pública; el formulario de acceso vive en /acceso.
 router.get("/acceso", login);
 router.post("/credenciales", reglasLogin, credenciales);
 // El tablero es solo para el personal; el comprador usa la tienda y su cuenta.
 router.get("/inicio", rutaProteger, permitir("admin", "capturista"), principal);
 router.post("/cerrarsesion", cerrarsesion);
-router.get("/cerrarsesion", (req, res) => res.redirect(req.usuario ? inicioSegun(req.usuario) : "/"));
+router.get("/cerrarsesion", (req, res) => res.redirect("/"));
 
 // Recuperación de Contraseña y Verificación de Email
 router.get("/olvide-password", verOlvidePassword);
