@@ -3,9 +3,9 @@
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { arrancar, cliente, modelos } from "./ayuda.js";
-import { limiteSugerencias } from "../controllers/tiendaController.js";
+import { limiteSugerencias, limitesDisponibles } from "../controllers/tiendaController.js";
 
-const { Tipo, Lote, Especie, EspecieCatalogo, Comprador, Compra } = modelos;
+const { Tipo, Lote, Especie, EspecieCatalogo, Comprador, Compra, Usuario, Pedido, PedidoItem } = modelos;
 
 let srv;
 let pescado;
@@ -161,6 +161,40 @@ test("filtros: precio, kilos, tipo y especie", async () => {
   assert.doesNotMatch(especie, /Camarón Test/);
 });
 
+test("sliders usan límites disponibles y normalizan valores fuera de rango o invertidos", async () => {
+  const limites = await limitesDisponibles();
+  assert.deepEqual(limites, { hayLotes: true, precioMin: 50, precioMax: 200, kilosMin: 20, kilosMax: 100, pasoPrecio: 1 });
+
+  const c = nuevo();
+  const portada = await c.get("/");
+  assert.match(portada.texto, /type="range" name="precioMin" min="50" max="200"/);
+  assert.match(portada.texto, /type="range" name="precioMax" min="50" max="200"/);
+  assert.match(portada.texto, /type="range" name="kilosMin" min="20" max="100"/);
+
+  const invertidos = await c.get("/?precioMin=100&precioMax=60");
+  assert.match(invertidos.texto, /name="precioMin" min="50" max="200" step="1" value="60"/);
+  assert.match(invertidos.texto, /name="precioMax" min="50" max="200" step="1" value="100"/);
+
+  const recortado = await c.get("/?precioMax=9999&kilosMin=9999");
+  assert.match(recortado.texto, /name="precioMax" min="50" max="200" step="1" value="200"/);
+  assert.match(recortado.texto, /name="kilosMin" min="20" max="100" step="1" value="100"/);
+});
+
+test("los límites no incluyen lotes reservados aunque sus valores sean extremos", async () => {
+  const clienteMostrador = await Comprador.create({ nombre: "Rosa", apellido_paterno: "Prueba", correo: "limites-reserva@example.test" });
+  const usuario = await Usuario.create({ usuario: "limites-reserva", nombre_completo: "Rosa Prueba", correo: clienteMostrador.correo, password: "Clave1234", rol: "comprador", codigo_cpr: clienteMostrador.codigo_cpr, email_verificado: true });
+  const loteReservado = await Lote.create({ kilos: 9999, numero_cajas: 9, precio_kilo_salida: 1, fecha: new Date() });
+  await Especie.create({ nombre: "Lote reservado extremo", id_lte: loteReservado.id_lte, id_tpo: pescado.id_tpo });
+  const pedido = await Pedido.create({ id_usuario: usuario.id, codigo_cpr: clienteMostrador.codigo_cpr, estado: "pendiente_pago", entrega: "recoger", subtotal: 9999, total: 9999, reservado_hasta: new Date(Date.now() + 60 * 60 * 1000) });
+  await PedidoItem.create({ id_ped: pedido.id_ped, id_lte: loteReservado.id_lte, kilos: 9999, precio_kilo: 1, subtotal: 9999 });
+
+  const limites = await limitesDisponibles();
+  assert.equal(limites.precioMin, 50);
+  assert.equal(limites.precioMax, 200);
+  assert.equal(limites.kilosMin, 20);
+  assert.equal(limites.kilosMax, 100);
+});
+
 test("orden por precio ascendente y descendente dentro de la cuadrícula", async () => {
   const c = nuevo();
   const asc = seccionCatalogo((await c.get("/?orden=precio&dir=asc")).texto);
@@ -267,4 +301,15 @@ test("un comprador con sesión puede ver la tienda sin dejar de ser privado su p
 
   const panel = await c.get("/dashboard");
   assert.equal(panel.status, 403, "el comprador no entra al tablero del personal");
+});
+
+test("sin lotes disponibles los sliders muestran el aviso y quedan deshabilitados", async () => {
+  const comprador = await Comprador.create({ nombre: "Venta", apellido_paterno: "Final", correo: "ultima-venta@example.test" });
+  for (const lote of [loteBarato, loteCaro]) {
+    await Compra.create({ id_cmp: lote.id_lte, codigo_cpr: comprador.codigo_cpr, precio_kilo_final: 75, precio_total: Number(lote.kilos) * 75, fecha: new Date() });
+  }
+  const portada = await nuevo().get("/");
+  assert.match(portada.texto, /No hay lotes disponibles para filtrar/);
+  assert.match(portada.texto, /type="range" disabled aria-label="Precio por kilo"/);
+  assert.match(portada.texto, /id="filtroKilos" type="range" disabled aria-label="Filtrar por kilos mínimos"/);
 });
