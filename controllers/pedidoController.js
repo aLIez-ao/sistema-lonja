@@ -7,7 +7,7 @@ import { generarFacturaPDF } from "../helpers/facturaPdf.js";
 import { datosFactura } from "../helpers/factura.js";
 import { enviarEmailPedido } from "../helpers/email.js";
 import { cobrar } from "../helpers/pasarela.js";
-import { costoEnvio, liberarPedidosVencidos, loteDisponible, reservaMinutos, reservasActivas, textoDireccion, totalLineas } from "../helpers/pedidos.js";
+import { costoEnvio, liberarPedidosVencidos, loteDisponible, reservaMinutos, reservaEfectivoMinutos, reservasActivas, textoDireccion, totalLineas } from "../helpers/pedidos.js";
 import { prepararLote } from "../helpers/tienda.js";
 import { crearLimite } from "../helpers/seguridad.js";
 
@@ -143,12 +143,15 @@ export const verPago = async (req, res) => {
     error: req.query.error || null,
     vence: new Date(pedido.reservado_hasta).toISOString(),
     minutos: reservaMinutos(),
+    minutosEfectivo: reservaEfectivoMinutos(),
   });
 };
 
 export const pagar = async (req, res) => {
   const usuario = await Usuario.findByPk(req.usuario.id);
   if (!usuario?.email_verificado) return errorDe(res, "Verifica tu correo antes de pagar.", 403);
+  const metodo = req.body.metodo || "tarjeta";
+  if (!["tarjeta", "transferencia", "efectivo"].includes(metodo)) return errorDe(res, "Selecciona un método de pago válido.", 400);
   let resultado;
   try {
     resultado = await db.transaction(async (transaction) => {
@@ -156,6 +159,7 @@ export const pagar = async (req, res) => {
       if (!pedido) return { estado: "no_encontrado" };
       if (pedido.estado === "pagado") return { estado: "ya_pagado", pedido };
       if (pedido.estado !== "pendiente_pago") return { estado: pedido.estado, pedido };
+      if (metodo === "efectivo" && pedido.entrega !== "recoger") return { estado: "metodo_invalido", pedido };
 
       const ahora = new Date();
       if (!pedido.reservado_hasta || new Date(pedido.reservado_hasta) <= ahora) {
@@ -178,19 +182,29 @@ export const pagar = async (req, res) => {
         }
       }
 
+      if (metodo === "efectivo") {
+        if (pedido.pago_metodo === "Efectivo en lonja") return { estado: "efectivo_pendiente", pedido };
+        const pendientes = await Pedido.count({ where: { id_usuario: usuario.id, estado: "pendiente_pago", pago_metodo: "Efectivo en lonja", id_ped: { [Op.ne]: pedido.id_ped } }, transaction });
+        if (pendientes >= 3) return { estado: "limite_efectivo", pedido };
+        await pedido.update({ pago_metodo: "Efectivo en lonja", pago_ref: null, pago_ultimos4: null, reservado_hasta: new Date(ahora.getTime() + reservaEfectivoMinutos() * 60_000) }, { transaction });
+        return { estado: "efectivo_pendiente", pedido };
+      }
+
       // El número y el CVV solo viven durante esta llamada. No se escriben ni se registran.
-      const pago = await cobrar({ monto: Number(pedido.total), referencia: `pedido-${pedido.id_ped}`, tarjeta: req.body });
+      const pago = await cobrar({ metodo, monto: Number(pedido.total), referencia: `pedido-${pedido.id_ped}`, tarjeta: req.body });
       if (!pago.aprobado) {
-        const clave = `pago:${pedido.id_ped}`;
-        limitePagosFallidos.fallo(clave);
-        if (limitePagosFallidos.bloqueado(clave)) {
-          await pedido.update({ estado: "cancelado" }, { transaction });
-          limitePagosFallidos.limpiar(clave);
-          return { estado: "intentos_agotados", pedido };
+        if (metodo === "tarjeta") {
+          const clave = `pago:${pedido.id_ped}`;
+          limitePagosFallidos.fallo(clave);
+          if (limitePagosFallidos.bloqueado(clave)) {
+            await pedido.update({ estado: "cancelado" }, { transaction });
+            limitePagosFallidos.limpiar(clave);
+            return { estado: "intentos_agotados", pedido };
+          }
         }
         return { estado: "rechazado", motivo: pago.motivo, pedido };
       }
-      limitePagosFallidos.limpiar(`pago:${pedido.id_ped}`);
+      if (metodo === "tarjeta") limitePagosFallidos.limpiar(`pago:${pedido.id_ped}`);
 
       const fecha = new Date();
       const compras = [];
@@ -208,7 +222,7 @@ export const pagar = async (req, res) => {
       await pedido.update({
         estado: "pagado",
         fecha_pago: fecha,
-        pago_metodo: `Simulado ${pago.marca}`,
+        pago_metodo: metodo === "tarjeta" ? `Simulado ${pago.marca}` : "Simulado SPEI",
         pago_ref: pago.referencia,
         pago_ultimos4: pago.ultimos4,
       }, { transaction });
@@ -223,6 +237,9 @@ export const pagar = async (req, res) => {
   if (resultado.estado === "ya_pagado") return res.redirect(`/cuenta/pedidos/${resultado.pedido.id_ped}?${aMensaje("Este pedido ya estaba pagado")}`);
   if (resultado.estado === "rechazado") return res.redirect(`/pedido/${resultado.pedido.id_ped}/pago?error=${encodeURIComponent(resultado.motivo)}`);
   if (resultado.estado === "intentos_agotados") return res.redirect(`/cuenta/pedidos/${resultado.pedido.id_ped}?error=${encodeURIComponent("Se canceló el pedido después de cinco intentos de pago rechazados. Puedes volver a armar el carrito.")}`);
+  if (resultado.estado === "limite_efectivo") return res.redirect(`/pedido/${resultado.pedido.id_ped}/pago?error=${encodeURIComponent("Ya tienes tres pedidos pendientes de pago en la lonja.")}`);
+  if (resultado.estado === "efectivo_pendiente") return res.redirect(`/cuenta/pedidos/${resultado.pedido.id_ped}?${aMensaje("Tu pedido quedó reservado para pagarse en la lonja.")}`);
+  if (resultado.estado === "metodo_invalido") return errorDe(res, "El pago en la lonja solo está disponible para pedidos que se recogen en persona.", 400);
   if (resultado.estado !== "pagado") {
     const mensaje = resultado.estado === "expirado" ? "La reserva venció. Regresa al carrito para revisar qué lotes siguen disponibles."
       : resultado.estado === "no_disponible" ? "Uno o más lotes ya no están disponibles y la reserva se liberó."

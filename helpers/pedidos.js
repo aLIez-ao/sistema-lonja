@@ -5,6 +5,7 @@ import { redondea } from "./fechas.js";
 const numero = (valor, defecto) => Number.isFinite(Number(valor)) ? Number(valor) : defecto;
 
 export const reservaMinutos = () => Math.max(1, numero(process.env.RESERVA_MINUTOS, 15));
+export const reservaEfectivoMinutos = () => Math.min(24 * 60, Math.max(15, numero(process.env.RESERVA_EFECTIVO_MINUTOS, 120)));
 
 export const costoEnvio = (subtotal, entrega) => {
   if (entrega !== "domicilio") return 0;

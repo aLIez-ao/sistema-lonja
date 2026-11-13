@@ -131,6 +131,57 @@ test("pago rechazado no vende; aprobado crea compras, factura y es idempotente",
   assert.equal((await b.web.get(`/cuenta/pedidos/${id}/factura/${l.id_lte}.pdf`)).status, 404);
 });
 
+test("SPEI se simula y registra la compra real con el total calculado por servidor", async () => {
+  medios.length = 0;
+  const a = await comprador("spei@example.com");
+  const l = await lote({ nombre: "SargoSPEI", kilos: 3, precio: 125 });
+  await agregar(a.web, l.id_lte);
+  const checkout = await a.web.post("/pedido", { entrega: "recoger" });
+  const id = Number(/\/pedido\/(\d+)\/pago/.exec(checkout.loc)[1]);
+  const pantalla = await a.web.get(`/pedido/${id}/pago`);
+  assert.match(pantalla.texto, /000000000000000000/);
+  assert.match(pantalla.texto, /PAGO SIMULADO/);
+  await a.web.post(`/pedido/${id}/pagar`, { metodo: "transferencia" });
+  const pedido = await Pedido.findByPk(id);
+  assert.equal(pedido.estado, "pagado"); assert.equal(pedido.pago_metodo, "Simulado SPEI");
+  assert.match(pedido.pago_ref, /^SPEI-/); assert.equal(pedido.pago_ultimos4, null);
+  assert.equal(Number((await Compra.findOne({ where: { id_cmp: l.id_lte } })).precio_total), 375);
+  assert.equal(medios.length, 1); assert.equal(medios[0].attachments.length, 1);
+});
+
+test("efectivo conserva reserva hasta cobro del personal y solo aplica a recoger", async () => {
+  medios.length = 0;
+  const a = await comprador("efectivo@example.com");
+  const l = await lote({ nombre: "LisaEfectivo", kilos: 2, precio: 75 });
+  await agregar(a.web, l.id_lte);
+  const checkout = await a.web.post("/pedido", { entrega: "recoger" });
+  const id = Number(/\/pedido\/(\d+)\/pago/.exec(checkout.loc)[1]);
+  await a.web.post(`/pedido/${id}/pagar`, { metodo: "efectivo" });
+  let pedido = await Pedido.findByPk(id);
+  assert.equal(pedido.estado, "pendiente_pago"); assert.equal(pedido.pago_metodo, "Efectivo en lonja");
+  assert.ok(new Date(pedido.reservado_hasta).getTime() > Date.now() + 100 * 60_000);
+  assert.equal(await Compra.count({ where: { id_cmp: l.id_lte } }), 0);
+  assert.match((await a.web.get(`/cuenta/pedidos/${id}`)).texto, /págalo en la lonja/);
+  const admin = cliente(srv.base); await admin.entrar("admin", "AdminPrueba123");
+  assert.match((await admin.get(`/pedidos/${id}`)).texto, /Confirmar cobro/);
+  await admin.post(`/pedidos/${id}/confirmar-cobro`, {});
+  pedido = await Pedido.findByPk(id);
+  assert.equal(pedido.estado, "pagado"); assert.match(pedido.pago_ref, /^LONJA-/);
+  assert.equal(await Compra.count({ where: { id_ped: id } }), 1);
+  assert.equal(medios.length, 1);
+  await admin.post(`/pedidos/${id}/confirmar-cobro`, {});
+  assert.equal(await Compra.count({ where: { id_ped: id } }), 1);
+
+  const domicilio = await comprador("efectivo.domicilio@example.com");
+  const l2 = await lote({ nombre: "LisaDomicilio", kilos: 1, precio: 80 });
+  const direccion = await DireccionEntrega.create({ id_usuario: domicilio.us.id, alias: "Casa", destinatario: "Ana", telefono: "2291234567", calle: "Mar", num_ext: "1", colonia: "Centro", cp: "91700", municipio: "Veracruz", estado: "Veracruz", principal: true });
+  await agregar(domicilio.web, l2.id_lte);
+  const checkout2 = await domicilio.web.post("/pedido", { entrega: "domicilio", id_dir: String(direccion.id_dir) });
+  const id2 = Number(/\/pedido\/(\d+)\/pago/.exec(checkout2.loc)[1]);
+  assert.equal((await domicilio.web.post(`/pedido/${id2}/pagar`, { metodo: "efectivo" })).status, 400);
+  assert.equal((await domicilio.web.post(`/pedido/${id2}/pagar`, { metodo: "bitcoin" })).status, 400);
+});
+
 test("cinco rechazos cancelan el pedido y liberan la reserva", async () => {
   const a = await comprador("cinco.rechazos@example.com"), b = await comprador("reserva.liberada@example.com");
   const l = await lote({ nombre: "Raya", kilos: 6, precio: 75 });
