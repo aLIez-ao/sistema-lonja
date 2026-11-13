@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import { arrancar, cliente, modelos } from "./ayuda.js";
 import { fijarTransporteParaPruebas } from "../helpers/email.js";
 
-const { Usuario, Comprador, Tipo, Lote, Especie, DireccionEntrega, CarritoItem, Pedido, PedidoItem, Compra } = modelos;
+const { Usuario, Comprador, Tipo, Lote, Especie, EspecieCatalogo, DireccionEntrega, CarritoItem, Pedido, PedidoItem, Compra } = modelos;
 let srv;
 const medios = [];
 
@@ -28,8 +28,9 @@ async function comprador(correo) {
 
 async function lote({ nombre = "Pargo", kilos = 10, precio = 100 } = {}) {
   const tipo = await Tipo.findOne({ where: { nombre: "Pescado" } });
+  const [catalogo] = await EspecieCatalogo.findOrCreate({ where: { nombre }, defaults: { nombre, id_tpo: tipo.id_tpo, descripcion: "Especie de prueba", activo: true } });
   const l = await Lote.create({ kilos, numero_cajas: 2, precio_kilo_salida: precio });
-  await Especie.create({ nombre, id_lte: l.id_lte, id_tpo: tipo.id_tpo });
+  await Especie.create({ nombre, id_lte: l.id_lte, id_tpo: tipo.id_tpo, id_cat: catalogo.id_cat });
   return l;
 }
 
@@ -92,9 +93,11 @@ test("pago rechazado no vende; aprobado crea compras, factura y es idempotente",
   const id = Number(/\/pedido\/(\d+)\/pago/.exec(checkout.loc)[1]);
   const pagoUrl = `/pedido/${id}/pagar`;
 
-  const rechazado = await a.web.post(pagoUrl, { numero: "4000000000000002", mes: "12", anio: "2030", cvv: "123" });
-  assert.equal(rechazado.status, 302);
-  assert.match(decodeURIComponent(rechazado.loc), /Tarjeta rechazada/);
+  for (let intento = 0; intento < 4; intento += 1) {
+    const rechazado = await a.web.post(pagoUrl, { numero: "4000000000000002", mes: "12", anio: "2030", cvv: "123" });
+    assert.equal(rechazado.status, 302);
+    assert.match(decodeURIComponent(rechazado.loc), /Tarjeta rechazada/);
+  }
   assert.equal(await Compra.count({ where: { id_cmp: l.id_lte } }), 0);
   assert.equal((await Pedido.findByPk(id)).estado, "pendiente_pago");
 
@@ -128,6 +131,57 @@ test("pago rechazado no vende; aprobado crea compras, factura y es idempotente",
   assert.equal((await b.web.get(`/cuenta/pedidos/${id}/factura/${l.id_lte}.pdf`)).status, 404);
 });
 
+test("cinco rechazos cancelan el pedido y liberan la reserva", async () => {
+  const a = await comprador("cinco.rechazos@example.com"), b = await comprador("reserva.liberada@example.com");
+  const l = await lote({ nombre: "Raya", kilos: 6, precio: 75 });
+  await agregar(a.web, l.id_lte); await agregar(b.web, l.id_lte);
+  const checkout = await a.web.post("/pedido", { entrega: "recoger" });
+  const id = Number(/\/pedido\/(\d+)\/pago/.exec(checkout.loc)?.[1]);
+  assert.ok(id);
+  let ultimo;
+  for (let i = 0; i < 5; i += 1) ultimo = await a.web.post(`/pedido/${id}/pagar`, { numero: "4000000000000002", mes: "12", anio: "2030", cvv: "123" });
+  assert.equal((await Pedido.findByPk(id)).estado, "cancelado");
+  assert.match(decodeURIComponent(ultimo.loc), /cinco intentos de pago rechazados/);
+  assert.equal(await Compra.count({ where: { id_cmp: l.id_lte } }), 0);
+  assert.equal((await agregar(b.web, l.id_lte)).status, 200);
+  assert.equal((await a.web.get(`/cuenta/pedidos/${id}?error=mensaje`)).status, 200);
+});
+
+test("dos compradores no se cobran el mismo lote: vencimiento, nueva reserva y pago único", async () => {
+  const a = await comprador("carrera.a@example.com"), b = await comprador("carrera.b@example.com");
+  const l = await lote({ nombre: "Sábalo", kilos: 9, precio: 60 });
+  await agregar(a.web, l.id_lte); await agregar(b.web, l.id_lte);
+  const checkoutA = await a.web.post("/pedido", { entrega: "recoger" });
+  const idA = Number(/\/pedido\/(\d+)\/pago/.exec(checkoutA.loc)[1]);
+  const rechazadoB = await b.web.post("/pedido", { entrega: "recoger" });
+  assert.match(decodeURIComponent(rechazadoB.loc), /reservado/);
+  assert.equal(await Pedido.count({ where: { id_usuario: b.us.id } }), 0);
+
+  await Pedido.update({ reservado_hasta: new Date(Date.now() - 1000) }, { where: { id_ped: idA } });
+  const checkoutB = await b.web.post("/pedido", { entrega: "recoger" });
+  const idB = Number(/\/pedido\/(\d+)\/pago/.exec(checkoutB.loc)[1]);
+  assert.equal((await Pedido.findByPk(idA)).estado, "expirado");
+  await b.web.post(`/pedido/${idB}/pagar`, { numero: "4242424242424242", mes: "12", anio: "2030", cvv: "123" });
+  const pagoTardioA = await a.web.post(`/pedido/${idA}/pagar`, { numero: "4242424242424242", mes: "12", anio: "2030", cvv: "123" });
+  assert.match(decodeURIComponent(pagoTardioA.loc), /reserva venció/);
+  assert.equal(await Compra.count({ where: { id_cmp: l.id_lte } }), 1);
+  assert.equal((await Compra.findOne({ where: { id_cmp: l.id_lte } })).id_ped, idB);
+});
+
+test("dos cobros simultáneos del mismo pedido crean una sola compra", async () => {
+  const a = await comprador("mismo.pedido@example.com");
+  const l = await lote({ nombre: "Petaca", kilos: 7, precio: 55 });
+  await agregar(a.web, l.id_lte);
+  const checkout = await a.web.post("/pedido", { entrega: "recoger" });
+  const id = Number(/\/pedido\/(\d+)\/pago/.exec(checkout.loc)[1]);
+  await Promise.all([
+    a.web.post(`/pedido/${id}/pagar`, { numero: "4242424242424242", mes: "12", anio: "2030", cvv: "123" }),
+    a.web.post(`/pedido/${id}/pagar`, { numero: "4242424242424242", mes: "12", anio: "2030", cvv: "123" }),
+  ]);
+  assert.equal((await Pedido.findByPk(id)).estado, "pagado");
+  assert.equal(await Compra.count({ where: { id_ped: id } }), 1);
+});
+
 test("cancelar y expirar pedidos libera los lotes; correo sin verificar no inicia checkout", async () => {
   const a = await comprador("liberar@example.com");
   const l = await lote({ nombre: "Sierra", kilos: 4, precio: 50 });
@@ -139,11 +193,17 @@ test("cancelar y expirar pedidos libera los lotes; correo sin verificar no inici
   const b = await comprador("liberar.b@example.com");
   assert.equal((await agregar(b.web, l.id_lte)).status, 200);
 
-  const l2 = await lote({ nombre: "Atún", kilos: 4, precio: 50 });
+  const l2 = await lote({ nombre: "AtunReserva", kilos: 4, precio: 50 });
   await agregar(b.web, l2.id_lte);
   const checkout2 = await b.web.post("/pedido", { entrega: "recoger" });
   const id2 = Number(/\/pedido\/(\d+)\/pago/.exec(checkout2.loc)[1]);
   await Pedido.update({ reservado_hasta: new Date(Date.now() - 1000) }, { where: { id_ped: id2 } });
+  const publico = cliente(srv.base);
+  const detalleLiberado = await publico.get(`/tienda/lote/${l2.id_lte}`);
+  assert.equal(detalleLiberado.status, 200);
+  assert.match(detalleLiberado.texto, /AtunReserva/, "el lote vuelve a su ficha pública tras expirar");
+  const home = await publico.get(`/?q=AtunReserva`);
+  assert.match(home.texto, /AtunReserva/, "el lote reaparece en la tienda pública tras expirar");
   const tercero = await comprador("liberar.c@example.com");
   assert.equal((await tercero.web.postJSON(`/carrito/agregar/${l2.id_lte}`, {})).status, 200);
   const vencido = await b.web.post(`/pedido/${id2}/pagar`, { numero: "4242424242424242", mes: "12", anio: "2030", cvv: "123" });
