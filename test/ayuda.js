@@ -13,12 +13,14 @@ const { default: db } = await import("../config/db.js");
 const modelos = await import("../models/index.js");
 const { default: app } = await import("../app.js");
 const { crearAdministradorInicial, crearTiposIniciales } = await import("../helpers/semillas.js");
+const { asegurarEsquema } = await import("../helpers/migraciones.js");
 
 export { db, app, modelos };
 
 /** Arranca la app sobre una BD limpia. Devuelve { base, cerrar }. */
 export async function arrancar() {
   await db.sync({ force: true });
+  await asegurarEsquema();
   await crearAdministradorInicial();
   await crearTiposIniciales();
   const server = app.listen(0);

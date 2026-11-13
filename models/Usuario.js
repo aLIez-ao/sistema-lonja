@@ -30,6 +30,7 @@ const Usuario = db.define(
     token_recuperacion: { type: DataTypes.STRING(100), allowNull: true },
     token_recuperacion_expira: { type: DataTypes.DATE, allowNull: true },
     token_verificacion_expira: { type: DataTypes.DATE, allowNull: true },
+    token_verificacion_envio: { type: DataTypes.DATE, allowNull: true },
     preferencias: { type: DataTypes.TEXT, allowNull: true },
     telefono: { type: DataTypes.STRING(20), allowNull: true },
     puesto: { type: DataTypes.STRING(60), allowNull: true },
