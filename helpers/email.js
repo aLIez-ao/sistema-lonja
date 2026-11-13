@@ -1,5 +1,7 @@
 import nodemailer from "nodemailer";
 import dotenv from "dotenv";
+import { enmascararCorreo } from "./correoUtils.js";
+export { enmascararCorreo };
 
 dotenv.config({ path: ".env" });
 
@@ -47,14 +49,6 @@ export function estadoCorreo() {
     remitenteEnmascarado: enmascararCorreo(remitenteActual()),
     ultimoError: ultimoErrorFecha ? { mensaje: traducirErrorCorreo(ultimoError), fecha: ultimoErrorFecha } : null,
   };
-}
-
-/** ab***@gmail.com: suficiente para diagnosticar sin publicar la dirección completa. */
-export function enmascararCorreo(correo) {
-  const [local, dominio] = String(correo || "").split("@");
-  if (!dominio) return "—";
-  const visibles = local.slice(0, 2);
-  return `${visibles}${"*".repeat(Math.max(2, local.length - 2))}@${dominio}`;
 }
 
 /** Traduce el error técnico de nodemailer/Gmail a un mensaje entendible. */

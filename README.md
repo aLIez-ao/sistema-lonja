@@ -44,7 +44,11 @@ Datos de ejemplo: `npm run demo` (idempotente) · para reemplazar solo registros
 2. **Lotes → Nuevo lote** (kilos, cajas, precio de salida) → agregar sus **especies**.
 3. En la lista de lotes, **Vender** → elegir comprador y precio final por kilo. El total se calcula solo.
 4. **Reportes** → elegir año, revisar el tablero y las compras de cada mes, descargar CSV o el reporte oficial en PDF.
-5. **Tienda** → visita `/`, crea y verifica una cuenta de comprador, agrega lotes al carrito y confirma un pedido con las tarjetas de prueba del simulador.
+5. **Tienda** → visita `/`, crea y verifica una cuenta de comprador, guarda lotes en Favoritos, agrega al carrito y paga de forma simulada con tarjeta o SPEI. Para recoger en persona también puede reservarse el pago en efectivo/terminal.
+
+El personal entra al panel operativo desde `/dashboard`; `/inicio` conserva una redirección permanente para enlaces antiguos. El logo lleva a la tienda pública en `/` y el menú del panel permite alternar entre ambos espacios.
+
+En `/usuarios`, el administrador consulta por separado trabajadores y clientes. Para configurar Gmail en el archivo local `.env`, ejecuta `npm run correo:configurar` en una terminal; la contraseña de aplicación se solicita de forma oculta.
 
 ## Estructura
 ```
@@ -58,7 +62,7 @@ views/ · public/ · scripts/ · test/ · doc/ · reports/
 - [reports/](reports/README.md): qué se hizo y el flujo de desarrollo.
 
 ## Estado y advertencias
-- 124 pruebas automáticas pasan sobre SQLite; **la migración y los flujos no se verificaron contra MariaDB real**.
+- 145 pruebas automáticas pasan sobre SQLite; **la migración y los flujos no se verificaron contra MariaDB real**.
 - Los PDF de ejemplo usan credenciales de práctica (`root/1234`): cámbialas en cualquier uso real.
 
 ## Empaquetado zip

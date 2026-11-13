@@ -44,6 +44,8 @@ Datos de ejemplo (opcional, después del primer arranque): `npm run demo`. La ca
 | ENVIO_COSTO | `150` | Cargo base de envío a domicilio |
 | ENVIO_GRATIS_DESDE | `2500` | Total del carrito a partir del cual el envío cuesta cero |
 | RESERVA_MINUTOS | `15` | Duración de la reserva mientras se confirma el pago |
+| RESERVA_EFECTIVO_MINUTOS | `120` | Reserva ampliada al pagar en la lonja; el máximo permitido es 24 horas |
+| RESERVA_EFECTIVO_MINUTOS | `120` | Reserva ampliada para pedidos que se pagan en efectivo/terminal al recoger (máximo 24 h) |
 | NODE_ENV | `production` | Activa la cookie `secure` (solo HTTPS) |
 
 Generar un `SC_JWT` aleatorio: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`
@@ -52,9 +54,11 @@ Generar un `SC_JWT` aleatorio: `node -e "console.log(require('crypto').randomByt
 
 1. En la cuenta de Google activa la **verificación en 2 pasos**.
 2. Crea una **contraseña de aplicación** de 16 caracteres (Seguridad → Contraseñas de aplicaciones).
-3. Colócala en `GMAIL_PASS` (puedes escribirla con o sin espacios) y tu dirección en `GMAIL_USER`.
-4. Define `APP_URL` con la dirección desde la que abrirás la aplicación; si no, se usa la del navegador
-   que hizo la solicitud. Con esto los enlaces de verificación y recuperación funcionan también desde el celular.
+3. Ejecuta `npm run correo:configurar`. El asistente pide `GMAIL_USER`, la contraseña de aplicación (entrada oculta)
+   y `APP_URL`, valida los tres valores y actualiza solo esas claves en `.env`. No muestra la contraseña.
+   Usa `npm run correo:configurar -- --sin-prueba` si quieres guardar la configuración sin conectar con Gmail.
+4. Define `APP_URL` con la dirección desde la que abrirás la aplicación. Con esto los enlaces de verificación y
+   recuperación funcionan también desde el celular.
 5. Reinicia el servidor. La consola y la pestaña **Configuración → Correo** indican si el envío está
    configurado; desde ahí puedes mandar un **correo de prueba** a tu propia cuenta.
 
