@@ -24,7 +24,10 @@ function tarjetaDePrueba(digitos) {
 }
 
 /** Pasarela educativa simulada; no efectúa cargos ni conserva número o CVV. */
-export async function cobrar({ monto, referencia, tarjeta = {} }) {
+export async function cobrar({ metodo = "tarjeta", monto, referencia, tarjeta = {} }) {
+  if (metodo === "transferencia") return { aprobado: true, referencia: `SPEI-${crypto.randomBytes(6).toString("hex").toUpperCase()}`, marca: "SPEI", monto: Number(monto), idempotencia: referencia };
+  if (metodo === "efectivo") return { aprobado: true, referencia: `LONJA-${crypto.randomBytes(6).toString("hex").toUpperCase()}`, marca: "Efectivo en lonja", monto: Number(monto), idempotencia: referencia };
+  if (metodo !== "tarjeta") return { aprobado: false, motivo: "Método de pago no válido" };
   const numero = soloDigitos(tarjeta.numero);
   const mes = Number(tarjeta.mes);
   const anioEntrada = String(tarjeta.anio ?? "");
