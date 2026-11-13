@@ -50,6 +50,13 @@
   </div>
 </div>
 
+<section class="row g-3 mb-4" aria-label="Pendientes de operación">
+  <div class="col-md-4"><a class="indicador text-decoration-none" href="/pedidos"><%- icono('box-seam', 20) %><div><div class="indicador-valor"><%= pendientes.pedidos %></div><div class="indicador-rotulo">Pedidos por atender</div></div></a></div>
+  <div class="col-md-4"><a class="indicador text-decoration-none" href="/preguntas"><%- icono('info-circle', 20) %><div><div class="indicador-valor"><%= pendientes.preguntas %></div><div class="indicador-rotulo">Preguntas sin responder</div></div></a></div>
+  <div class="col-md-4"><a class="indicador text-decoration-none" href="/opiniones"><%- icono('star', 20) %><div><div class="indicador-valor"><%= pendientes.opiniones %></div><div class="indicador-rotulo">Opiniones nuevas, 7 días</div></div></a></div>
+</section>
+<section class="card p-3 mb-4"><h2 class="h6 fw-bold">Origen de compras</h2><p class="mb-0">Tienda en línea: <strong><%= ventas.tienda %></strong> · Mostrador: <strong><%= ventas.mostrador %></strong> · Total: <strong><%= ventas.total %></strong></p></section>
+
 <!-- Indicadores secundarios -->
 <div class="row g-3 mb-4">
   <div class="col-6 col-xl-3">

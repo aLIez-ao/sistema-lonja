@@ -105,6 +105,7 @@
             <td class="text-nowrap"><%= fechaHora(c.fecha) %></td>
             <td>
               <a class="enlace-registro" href="/compras/<%= c.id_cmp %>/factura" title="Ver la factura de la compra">#<%= c.id_cmp %></a>
+              <% if (c.id_ped) { %><a class="badge text-bg-primary ms-1" href="/pedidos/<%= c.id_ped %>">Pedido #<%= c.id_ped %></a><% } %>
             </td>
             <td>
               <a class="enlace-registro" href="/lotes/<%= c.lote.id_lte %>">Lote #<%= c.lote.id_lte %></a>
