@@ -26,7 +26,7 @@ import router_pedido_admin from "./routes/pedido_admin_router.js";
 import * as social from "./controllers/socialController.js";
 import { dinero, formatoFechaHora } from "./helpers/fechas.js";
 import { icono } from "./helpers/iconos.js";
-import { CarritoItem } from "./models/index.js";
+import { CarritoItem, Lista, ListaItem } from "./models/index.js";
 
 dotenv.config({ path: ".env" });
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -60,6 +60,8 @@ app.use(async (req, res, next) => {
   res.locals.qTienda = String(req.query.q ?? "").slice(0, 60);
   res.locals.usuario = null;
   res.locals.carritoCount = 0;
+  res.locals.favoritosCount = 0;
+  res.locals.favoritos = { lote: new Set(), especie: new Set() };
   req.usuario = null;
 
   const usuario = await usuarioDesdeToken(req.cookies._token);
@@ -68,6 +70,12 @@ app.use(async (req, res, next) => {
     res.locals.usuario = usuario;
     if (usuario.rol === "comprador") {
       res.locals.carritoCount = await CarritoItem.count({ where: { id_usuario: usuario.id } });
+      const lista = await Lista.findOne({ where: { id_usuario: usuario.id, nombre: "Favoritos" } });
+      if (lista) {
+        const items = await ListaItem.findAll({ where: { id_lista: lista.id_lista }, attributes: ["tipo", "id_ref"] });
+        for (const item of items) res.locals.favoritos[item.tipo].add(String(item.id_ref));
+        res.locals.favoritosCount = items.length;
+      }
     }
   }
   next();

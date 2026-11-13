@@ -1,9 +1,19 @@
 import { Op } from "sequelize";
-import { Lista, ListaItem, Pregunta, Opinion, EspecieCatalogo, Especie, Lote, Compra, Pedido, Usuario } from "../models/index.js";
+import { Lista, ListaItem, Pregunta, Opinion, EspecieCatalogo, Especie, Lote, Compra, Pedido, Usuario, CarritoItem } from "../models/index.js";
 import { crearLimite } from "../helpers/seguridad.js";
 import { enviarEmailRespuestaPregunta } from "../helpers/email.js";
 import { errorDeSitio, rutaReferer, volverA } from "../helpers/navegacion.js";
-import { nombrePublico } from "../helpers/tienda.js";
+import { nombrePublico, prepararLote, imagenDeEspecie } from "../helpers/tienda.js";
+import { loteDisponible } from "../helpers/pedidos.js";
+
+const esJson = (req) => req.is("json") || req.accepts(["html", "json"]) === "json";
+const tipoValido = (tipo) => tipo === "lote" || tipo === "especie";
+async function elementoValido(tipo, id_ref) {
+  return tipo === "lote" ? Lote.findByPk(id_ref) : EspecieCatalogo.findByPk(id_ref);
+}
+async function listaFavoritos(id_usuario) {
+  return Lista.findOrCreate({ where: { id_usuario, nombre: "Favoritos" }, defaults: { fecha: new Date() } }).then(([lista]) => lista);
+}
 
 const limitePreguntas = crearLimite({ max: 5, ventanaMs: 60 * 60 * 1000 });
 const limpio = (v, max) => String(v ?? "").trim().slice(0, max);
@@ -23,22 +33,57 @@ export function protegerAccionComprador(req, res, next) {
 export async function listas(req, res) {
   let favoritas = await Lista.findOne({ where: { id_usuario: req.usuario.id, nombre: "Favoritos" } });
   if (!favoritas) favoritas = await Lista.create({ id_usuario: req.usuario.id, nombre: "Favoritos" });
-  res.render("cuenta/listas", { listas: await Lista.findAll({ where: { id_usuario: req.usuario.id }, order: [["nombre", "ASC"]] }) });
+  const filas = await Lista.findAll({ where: { id_usuario: req.usuario.id }, order: [["nombre", "ASC"]] });
+  const listas = await Promise.all(filas.map(async (l) => {
+    const items = await ListaItem.findAll({ where: { id_lista: l.id_lista }, order: [["fecha", "DESC"]] });
+    const vistaPrevia = await Promise.all(items.slice(0, 3).map(async (i) => {
+      const elemento = await elementoValido(i.tipo, i.id_ref);
+      if (!elemento) return null;
+      const plain = typeof elemento.get === "function" ? elemento.get({ plain: true }) : elemento;
+      return { tipo: i.tipo, nombre: i.tipo === "lote" ? `Lote #${plain.id_lte}` : plain.nombre, imagen: i.tipo === "lote" ? prepararLote(plain).imagen : (plain.imagen || imagenDeEspecie(plain)) };
+    }));
+    return { ...l.get({ plain: true }), total: items.length, vistaPrevia: vistaPrevia.filter(Boolean) };
+  }));
+  res.render("cuenta/listas", { listas });
+}
+export async function listarListasJson(req, res) {
+  await listaFavoritos(req.usuario.id);
+  const listas = await Lista.findAll({ where: { id_usuario: req.usuario.id }, order: [["nombre", "ASC"]] });
+  const salida = await Promise.all(listas.map(async (lista) => ({
+    id: lista.id_lista, nombre: lista.nombre,
+    items: (await ListaItem.findAll({ where: { id_lista: lista.id_lista }, attributes: ["tipo", "id_ref"] })).map(({ tipo, id_ref }) => ({ tipo, id_ref })),
+  })));
+  res.json({ listas: salida });
+}
+export async function alternarFavorito(req, res) {
+  const tipo = req.body.tipo;
+  const id_ref = Number(req.body.id_ref);
+  const lista = await listaFavoritos(req.usuario.id);
+  if (!tipoValido(tipo) || !Number.isInteger(id_ref) || id_ref < 1 || !await elementoValido(tipo, id_ref)) {
+    return res.status(404).json({ ok: false, mensaje: "No encontramos ese lote o especie.", total: await ListaItem.count({ where: { id_lista: lista.id_lista } }) });
+  }
+  const where = { id_lista: lista.id_lista, tipo, id_ref };
+  const actual = await ListaItem.findOne({ where });
+  if (actual) await actual.destroy();
+  else await ListaItem.create({ ...where, fecha: new Date() });
+  return res.json({ ok: true, favorito: !actual, total: await ListaItem.count({ where: { id_lista: lista.id_lista } }) });
 }
 export async function crearLista(req, res) {
   const nombre = limpio(req.body.nombre, 40);
-  if (!nombre) return volverA(req, res, "/cuenta/listas", { error: "Escribe un nombre para la lista." });
-  try { await Lista.create({ id_usuario: req.usuario.id, nombre }); }
-  catch { return volverA(req, res, "/cuenta/listas", { error: "Ya existe una lista con ese nombre." }); }
+  if (!nombre) return esJson(req) ? res.status(400).json({ ok: false, mensaje: "Escribe un nombre para la lista." }) : volverA(req, res, "/cuenta/listas", { error: "Escribe un nombre para la lista." });
+  let lista;
+  try { lista = await Lista.create({ id_usuario: req.usuario.id, nombre }); }
+  catch { return esJson(req) ? res.status(409).json({ ok: false, mensaje: "Ya existe una lista con ese nombre." }) : volverA(req, res, "/cuenta/listas", { error: "Ya existe una lista con ese nombre." }); }
+  if (esJson(req)) return res.status(201).json({ ok: true, lista: { id: lista.id_lista, nombre: lista.nombre } });
   return volverA(req, res, "/cuenta/listas", { mensaje: "Lista creada." });
 }
 export async function guardarFavorito(req, res) {
-  const tipo = req.body.tipo === "especie" ? "especie" : "lote";
+  const tipo = tipoValido(req.body.tipo) ? req.body.tipo : "lote";
   const id_ref = Number(req.body.id_ref);
   if (!Number.isInteger(id_ref) || id_ref < 1) return volverA(req, res, "/", { error: "No se encontró el elemento para guardar." });
   const entidad = tipo === "lote" ? await Lote.findByPk(id_ref) : await EspecieCatalogo.findByPk(id_ref);
   if (!entidad) return errorDeSitio(req, res, 404, "No encontramos ese lote o especie.", "/cuenta/listas");
-  const [lista] = await Lista.findOrCreate({ where: { id_usuario: req.usuario.id, nombre: "Favoritos" }, defaults: { fecha: new Date() } });
+  const lista = await listaFavoritos(req.usuario.id);
   await ListaItem.findOrCreate({ where: { id_lista: lista.id_lista, tipo, id_ref }, defaults: { fecha: new Date() } });
   return volverA(req, res, "/cuenta/listas", { mensaje: "Se guardó en Favoritos." });
 }
@@ -48,18 +93,23 @@ export async function detalleLista(req, res) {
   const items = await ListaItem.findAll({ where: { id_lista: lista.id_lista }, order: [["fecha", "DESC"]] });
   const datos = await Promise.all(items.map(async (i) => {
     const elemento = i.tipo === "lote" ? await Lote.findByPk(i.id_ref, { include: [{ model: Especie, as: "especies" }, { model: Compra, as: "compra" }] }) : await EspecieCatalogo.findByPk(i.id_ref);
-    return elemento ? { tipo: i.tipo, elemento, vendido: i.tipo === "lote" && Boolean(elemento.compra) } : null;
+    if (!elemento) return null;
+    const loteState = i.tipo === "lote" ? await loteDisponible(i.id_ref, { usuarioId: req.usuario.id }) : null;
+    const plain = typeof elemento.get === "function" ? elemento.get({ plain: true }) : elemento;
+    const vista = i.tipo === "lote" ? prepararLote(plain) : { ...plain, imagen: plain.imagen || imagenDeEspecie(plain) };
+    return { tipo: i.tipo, elemento: vista, vendido: i.tipo === "lote" && (Boolean(plain.compra) || loteState.motivo === "vendido"), reservado: i.tipo === "lote" && ["reservado", "reservado_propio"].includes(loteState.motivo), disponible: i.tipo === "lote" && !loteState.motivo };
   }));
   res.render("cuenta/lista", { lista, items: datos.filter(Boolean) });
 }
 export async function agregarLista(req, res) {
   const lista = await Lista.findOne({ where: { id_lista: req.params.id, id_usuario: req.usuario.id } });
-  const tipo = req.body.tipo === "especie" ? "especie" : "lote";
+  const tipo = req.body.tipo;
   const id_ref = Number(req.body.id_ref);
-  const existe = lista && Number.isInteger(id_ref) && id_ref > 0 && (tipo === "lote" ? await Lote.findByPk(id_ref) : await EspecieCatalogo.findByPk(id_ref));
-  if (!lista) return errorDeSitio(req, res, 404, "No encontramos esa lista.", "/cuenta/listas");
-  if (!existe) return volverA(req, res, `/cuenta/listas/${lista.id_lista}`, { error: "No encontramos el lote o especie para agregar." });
+  const existe = lista && tipoValido(tipo) && Number.isInteger(id_ref) && id_ref > 0 && await elementoValido(tipo, id_ref);
+  if (!lista) return esJson(req) ? res.status(404).json({ ok: false }) : errorDeSitio(req, res, 404, "No encontramos esa lista.", "/cuenta/listas");
+  if (!existe) return esJson(req) ? res.status(404).json({ ok: false, mensaje: "No encontramos el lote o especie." }) : volverA(req, res, `/cuenta/listas/${lista.id_lista}`, { error: "No encontramos el lote o especie para agregar." });
   await ListaItem.findOrCreate({ where: { id_lista: lista.id_lista, tipo, id_ref }, defaults: { fecha: new Date() } });
+  if (esJson(req)) return res.json({ ok: true });
   return volverA(req, res, `/cuenta/listas/${lista.id_lista}`, { mensaje: "Elemento agregado a la lista." });
 }
 export async function renombrarLista(req, res) {
@@ -78,9 +128,27 @@ export async function borrarLista(req, res) {
 }
 export async function quitarItem(req, res) {
   const lista = await Lista.findOne({ where: { id_lista: req.params.id, id_usuario: req.usuario.id } });
-  if (!lista) return errorDeSitio(req, res, 404, "No encontramos esa lista.", "/cuenta/listas");
+  if (!lista) return esJson(req) ? res.status(404).json({ ok: false }) : errorDeSitio(req, res, 404, "No encontramos esa lista.", "/cuenta/listas");
   await ListaItem.destroy({ where: { id_lista: lista.id_lista, tipo: req.body.tipo, id_ref: req.body.id_ref } });
+  if (esJson(req)) return res.json({ ok: true });
   return volverA(req, res, `/cuenta/listas/${lista.id_lista}`, { mensaje: "Elemento eliminado de la lista." });
+}
+
+export async function agregarDisponiblesLista(req, res) {
+  const lista = await Lista.findOne({ where: { id_lista: req.params.id, id_usuario: req.usuario.id } });
+  if (!lista) return esJson(req) ? res.status(404).json({ ok: false }) : errorDeSitio(req, res, 404, "No encontramos esa lista.", "/cuenta/listas");
+  const items = await ListaItem.findAll({ where: { id_lista: lista.id_lista, tipo: "lote" } });
+  let agregados = 0;
+  const noDisponibles = [];
+  for (const item of items) {
+    const { motivo } = await loteDisponible(item.id_ref, { usuarioId: req.usuario.id });
+    if (motivo) { noDisponibles.push({ id: item.id_ref, motivo }); continue; }
+    const [, creado] = await CarritoItem.findOrCreate({ where: { id_usuario: req.usuario.id, id_lte: item.id_ref }, defaults: { fecha: new Date() } });
+    if (creado) agregados++;
+  }
+  const resultado = { ok: true, agregados, omitidos: noDisponibles.length, noDisponibles };
+  if (esJson(req)) return res.json(resultado);
+  return volverA(req, res, `/cuenta/listas/${lista.id_lista}`, { mensaje: `Se agregaron ${agregados} lotes; ${noDisponibles.length} no estaban disponibles.` });
 }
 
 export async function crearPregunta(req, res) {

@@ -78,10 +78,10 @@
         <% } else if (usuario && usuario.rol === 'comprador') { %>
           <button class="btn btn-primary btn-lg w-100" type="button" data-agregar-lote="<%= lote.id_lte %>"><%- icono('cart-plus', 18, 'me-1') %>Agregar al carrito</button>
           <a class="btn btn-link w-100" href="/carrito">Ver carrito</a>
-          <form action="/cuenta/favoritos" method="post"><input type="hidden" name="tipo" value="lote"><input type="hidden" name="id_ref" value="<%= lote.id_lte %>"><button class="btn btn-outline-secondary w-100"><%- icono('heart', 15, 'me-1') %>Guardar en Favoritos</button></form>
         <% } else { %>
           <a class="btn btn-primary btn-lg w-100" href="/acceso?volver=<%= encodeURIComponent(`/tienda/lote/${lote.id_lte}`) %>"><%- icono('cart-plus', 18, 'me-1') %>Agregar al carrito · Iniciar sesión</a>
         <% } %>
+        <div class="mt-2"><%- include('_control-favorito', { tipoFavorito: 'lote', idFavorito: lote.id_lte, retornoFavorito: rutaActual, claseFavorito: 'btn btn-outline-secondary w-100' }) %></div>
 
         <div class="tienda-detalle__entrega">
           <h2>Entrega</h2>
