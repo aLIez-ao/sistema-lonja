@@ -39,9 +39,31 @@ Datos de ejemplo (opcional, después del primer arranque): `npm run demo`.
 | SC_JWT | cadena larga aleatoria | Firma de los tokens. **Obligatoria**; sin ella la app no arranca |
 | JWT_DURACION | `8h` | Duración de la sesión |
 | ADMIN_USER / ADMIN_PASSWORD | | Administrador inicial (solo se crea si no existe) |
+| GMAIL_USER / GMAIL_PASS | `cuenta@gmail.com` / contraseña de aplicación | Envío de verificación, recuperación y avisos. Sin ellas el correo entra en **modo simulador** |
+| APP_URL | `http://localhost:2800` | URL pública para armar los enlaces de los correos (sin diagonal final) |
 | NODE_ENV | `production` | Activa la cookie `secure` (solo HTTPS) |
 
 Generar un `SC_JWT` aleatorio: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`
+
+## Correo (Gmail)
+
+1. En la cuenta de Google activa la **verificación en 2 pasos**.
+2. Crea una **contraseña de aplicación** de 16 caracteres (Seguridad → Contraseñas de aplicaciones).
+3. Colócala en `GMAIL_PASS` (puedes escribirla con o sin espacios) y tu dirección en `GMAIL_USER`.
+4. Define `APP_URL` con la dirección desde la que abrirás la aplicación; si no, se usa la del navegador
+   que hizo la solicitud. Con esto los enlaces de verificación y recuperación funcionan también desde el celular.
+5. Reinicia el servidor. La consola y la pestaña **Configuración → Correo** indican si el envío está
+   configurado; desde ahí puedes mandar un **correo de prueba** a tu propia cuenta.
+
+Si Gmail rechaza las credenciales, el mensaje para el usuario es genérico ("No pudimos enviar el correo")
+y el detalle técnico aparece solo en la pestaña Correo del administrador.
+
+En **modo simulador** (sin `GMAIL_USER`/`GMAIL_PASS`), los correos se imprimen en la consola. En desarrollo,
+el enlace de verificación también se muestra en pantalla para no bloquear las pruebas; en producción nunca
+se muestra.
+
+Los enlaces de verificación vencen en 24 horas y solo sirve el más reciente: al pedir uno nuevo se anulan los
+anteriores. Hay un enfriamiento de 60 segundos entre envíos y un máximo de 5 por hora y cuenta.
 
 ## Producción
 1. `NODE_ENV=production`, `SC_JWT` largo y propio, `ADMIN_PASSWORD` fuerte (cámbiala tras el primer ingreso).
