@@ -104,7 +104,8 @@ test("mi cuenta: cambiar el correo exige verificarlo de nuevo; la foto debe ser 
   const falsa = await a.post("/configuracion/actualizar-cuenta", { nombre_completo: "Ana Ruiz", correo: "ana@example.com", foto_data: "data:image/png;base64," + Buffer.from("<script>alert(1)</script>").toString("base64") });
   assert.match(decodeURIComponent(falsa.loc), /no es una imagen válida/);
   const r = await a.post("/configuracion/actualizar-cuenta", { nombre_completo: "Ana Ruiz Gómez", correo: "ana.nueva@example.com", telefono: "2291112233" });
-  assert.match(decodeURIComponent(r.loc), /actualizados/);
+  assert.equal(r.status, 200, "en modo simulador el enlace de verificación se muestra en la respuesta");
+  assert.match(r.texto, /verificar-email\//);
   const u = await Usuario.findOne({ where: { usuario: "ana" } });
   assert.equal(u.correo, "ana.nueva@example.com");
   assert.equal(u.email_verificado, false);
