@@ -137,7 +137,7 @@ test("un comprador sin verificar puede entrar y ver su cuenta, pero la cuenta lo
 
   const portada = await c.get("/");
   assert.equal(portada.status, 200);
-  assert.match(portada.texto, /tienda en línea está por abrir/i);
+  assert.match(portada.texto, /Explorar todos los lotes/);
 
   const cuenta = await c.get("/cuenta");
   assert.equal(cuenta.status, 200);

@@ -1,0 +1,46 @@
+<%
+  // Tarjeta de un lote público. Parámetros: lote (ya preparado), posicion (opcional).
+  const _pos = typeof posicion !== 'undefined' ? posicion : 0;
+  const _url = `/tienda/lote/${lote.id_lte}`;
+  const _nombre = lote.nombresEspecies || `Lote #${lote.id_lte}`;
+%>
+<article class="lote-card" style="--i: <%= _pos %>">
+  <a class="lote-card__media" href="<%= _url %>" aria-label="Ver <%= _nombre %>">
+    <img src="<%= lote.imagen %>" alt="<%= _nombre %>" width="480" height="320" loading="lazy">
+    <span class="lote-card__insignias">
+      <% if (lote.esDeHoy) { %><span class="insignia insignia--hoy"><%- icono('clock', 11, 'me-1') %>Hoy</span><% } %>
+      <% if (lote.mejorPrecio) { %><span class="insignia insignia--precio"><%- icono('tag', 11, 'me-1') %>Mejor precio</span><% } %>
+      <% if (lote.esNuevo && !lote.esDeHoy) { %><span class="insignia insignia--nuevo">Nuevo</span><% } %>
+    </span>
+    <span class="lote-card__vista">Vista rápida <%- icono('arrow-right', 13, 'ms-1') %></span>
+  </a>
+
+  <button class="lote-card__corazon" type="button" data-favorito="<%= lote.id_lte %>" aria-pressed="false" aria-label="Guardar <%= _nombre %> en una lista" title="Guardar en una lista">
+    <%- icono('heart', 16) %>
+  </button>
+
+  <div class="lote-card__cuerpo">
+    <div class="lote-card__tipo"><%= lote.tipoPrincipal %></div>
+    <h3 class="lote-card__titulo"><a href="<%= _url %>"><%= _nombre %></a></h3>
+    <div class="lote-card__meta">
+      <span><%- icono('tag', 12, 'me-1') %><%= Number(lote.kilos).toLocaleString('es-MX', { maximumFractionDigits: 2 }) %> kg</span>
+      <span><%= lote.numero_cajas %> cajas</span>
+    </div>
+    <div class="lote-card__estrellas" title="Sin opiniones todavía">
+      <%- icono('star', 12) %><%- icono('star', 12) %><%- icono('star', 12) %><%- icono('star', 12) %><%- icono('star', 12) %>
+      <span>Sin opiniones</span>
+    </div>
+
+    <div class="lote-card__precios">
+      <span class="lote-card__precio"><%= dinero(lote.precio_kilo_salida) %><small>/kg</small></span>
+      <span class="lote-card__total">Total <%= dinero(lote.total) %></span>
+    </div>
+
+    <div class="lote-card__acciones">
+      <button class="btn btn-sm btn-primary flex-grow-1" type="button" data-agregar-lote="<%= lote.id_lte %>">
+        <%- icono('cart-plus', 14, 'me-1') %>Agregar
+      </button>
+      <a class="btn btn-sm btn-outline-secondary" href="<%= _url %>">Ver</a>
+    </div>
+  </div>
+</article>

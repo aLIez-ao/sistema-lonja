@@ -1,5 +1,6 @@
 import { Usuario } from "../models/index.js";
 import { JWTVerifica, opcionesCookieSesion } from "../helpers/tokens.js";
+import { rutaVolver } from "../helpers/navegacion.js";
 
 /**
  * Devuelve el usuario dueño del token o null si el token no sirve: firma inválida o vencida,
@@ -23,7 +24,10 @@ const rutaProteger = async (req, res, next) => {
   const usuario = req.usuario ?? (await usuarioDesdeToken(req.cookies?._token));
   if (!usuario) {
     if (req.cookies?._token) res.clearCookie("_token", opcionesCookieSesion());
-    return res.redirect("/");
+    // Tras iniciar sesión se vuelve a la ruta pedida (solo si es interna).
+    const volver = req.method === "GET" ? rutaVolver(req.originalUrl) : null;
+    const destino = volver && volver !== "/acceso" ? `/acceso?volver=${encodeURIComponent(volver)}` : "/acceso";
+    return res.redirect(destino);
   }
   req.usuario = usuario;
   res.locals.usuario = usuario;

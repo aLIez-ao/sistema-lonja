@@ -49,7 +49,7 @@ test("sin sesión se redirige al login", async () => {
   for (const ruta of ["/inicio", "/compras", "/lotes", "/reportes/diario", "/usuarios"]) {
     const r = await sesion().get(ruta);
     assert.equal(r.status, 302, ruta);
-    assert.equal(r.loc, "/");
+    assert.equal(r.loc, `/acceso?volver=${encodeURIComponent(ruta)}`, ruta);
   }
 });
 

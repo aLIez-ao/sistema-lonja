@@ -52,5 +52,8 @@
   <script src="/bootstrap/js/bootstrap.bundle.min.js"></script>
   <script src="/js/lonja-app.js"></script>
   <script src="/js/lonja-clics.js"></script>
+  <% if ((rutaActual || '') === '/' || (rutaActual || '').startsWith('/tienda')) { %>
+    <script src="/js/lonja-tienda.js"></script>
+  <% } %>
 </body>
 </html>

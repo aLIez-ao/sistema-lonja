@@ -1,0 +1,217 @@
+<%- include('../plantillas/header') %>
+<%
+  const primerDestacado = destacados[0] || null;
+  const restantes = l.params ? Object.entries(l.params).filter(([k]) => k !== 'q') : [];
+%>
+
+<div class="tienda">
+  <!-- ===================== HÉROE ===================== -->
+  <section class="tienda-heroe" aria-label="Lotes destacados">
+    <% if (destacados.length) { %>
+      <div class="tienda-heroe__slides" data-heroe>
+        <% destacados.forEach((lote, i) => { %>
+          <a class="tienda-heroe__slide <%= i === 0 ? 'activo' : '' %>" href="/tienda/lote/<%= lote.id_lte %>" style="--imagen: url('<%= lote.imagen %>')">
+            <span class="tienda-heroe__velo"></span>
+            <span class="tienda-heroe__contenido">
+              <span class="tienda-heroe__etiqueta"><%- icono('fire', 13, 'me-1') %>Destacado de hoy</span>
+              <span class="tienda-heroe__nombre"><%= lote.nombresEspecies || `Lote #${lote.id_lte}` %></span>
+              <span class="tienda-heroe__desc"><%= lote.tipoPrincipal %> fresco del puerto de Veracruz · lote #<%= lote.id_lte %></span>
+              <span class="tienda-heroe__datos">
+                <span><strong><%= Number(lote.kilos).toLocaleString('es-MX', { maximumFractionDigits: 2 }) %></strong> kg</span>
+                <span><strong><%= lote.numero_cajas %></strong> cajas</span>
+                <span><strong><%= dinero(lote.precio_kilo_salida) %></strong>/kg</span>
+              </span>
+              <span class="btn btn-light tienda-heroe__cta">Ver este lote <%- icono('arrow-right', 15, 'ms-1') %></span>
+            </span>
+          </a>
+        <% }) %>
+        <div class="tienda-heroe__puntos" aria-hidden="true">
+          <% destacados.forEach((_, i) => { %><span class="<%= i === 0 ? 'activo' : '' %>"></span><% }) %>
+        </div>
+      </div>
+    <% } else { %>
+      <div class="tienda-heroe__vacio">
+        <div>
+          <span class="tienda-heroe__etiqueta">Lonja de Veracruz</span>
+          <h1>Hoy todavía no hay lotes disponibles</h1>
+          <p>Vuelve más tarde: la subasta del puerto se actualiza durante la madrugada.</p>
+          <a class="btn btn-primary" href="/registro">Crear mi cuenta de comprador</a>
+        </div>
+      </div>
+    <% } %>
+
+    <aside class="tienda-heroe__panel">
+      <div class="tienda-heroe__contador">
+        <span class="tienda-heroe__numero"><%= totalDisponibles %></span>
+        <span class="tienda-heroe__unidad">lotes disponibles</span>
+      </div>
+      <ul class="tienda-heroe__beneficios">
+        <li><%- icono('shield-check', 17) %><span>Compra directo al puerto, sin intermediarios</span></li>
+        <li><%- icono('truck', 17) %><span>Entrega a domicilio o recoge en la lonja</span></li>
+        <li><%- icono('clock', 17) %><span>Lotes frescos del día, actualizados en tiempo real</span></li>
+      </ul>
+      <a class="btn btn-primary w-100" href="#catalogo">Explorar todos los lotes</a>
+      <% if (!usuario) { %>
+        <p class="tienda-heroe__nota mb-0">¿Primera vez? <a href="/registro">Crea tu cuenta</a> y compra en línea.</p>
+      <% } %>
+    </aside>
+  </section>
+
+  <!-- ===================== CATEGORÍAS Y BUSCADOR ===================== -->
+  <div class="tienda-barra">
+    <nav class="tienda-categorias" aria-label="Categorías de la tienda">
+      <a class="tienda-chip <%= !categoriaActiva ? 'activo' : '' %>" href="/">
+        Todo <span class="tienda-chip__cuenta"><%= totalDisponibles %></span>
+      </a>
+      <% categorias.forEach((cat) => { %>
+        <a class="tienda-chip <%= String(categoriaActiva) === String(cat.id_tpo) ? 'activo' : '' %>" href="/?tipo=<%= cat.id_tpo %>">
+          <%= cat.nombre %> <span class="tienda-chip__cuenta"><%= cat.total %></span>
+        </a>
+      <% }) %>
+    </nav>
+
+    <form class="tienda-buscador" action="/" method="GET" role="search" data-buscador-tienda>
+      <% restantes.forEach(([clave, valor]) => { %>
+        <input type="hidden" name="<%= clave %>" value="<%= valor %>">
+      <% }) %>
+      <div class="tienda-buscador__caja">
+        <%- icono('search', 17, 'tienda-buscador__icono') %>
+        <input
+          type="search"
+          name="q"
+          value="<%= l.q %>"
+          class="form-control"
+          placeholder="Busca por especie, tipo o número de lote…"
+          autocomplete="off"
+          aria-label="Buscar lotes"
+          aria-autocomplete="list"
+          aria-expanded="false"
+          aria-controls="sugerenciasTienda"
+          data-sugerencias-tienda
+        >
+        <ul id="sugerenciasTienda" class="list-group lista-sugerencias-tienda shadow-sm" role="listbox" hidden data-lista-sugerencias></ul>
+        <button class="btn btn-primary" type="submit">Buscar</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ===================== FILAS POR TEMA ===================== -->
+  <% if (recien.length) { %>
+    <%- include('_fila-temas', { titulo: 'Recién llegados (hoy)', subtitulo: 'Lotes capturados hoy en la lonja', lotes: recien }) %>
+  <% } %>
+  <% if (baratos.length) { %>
+    <%- include('_fila-temas', { titulo: 'Mejor precio por kilo', subtitulo: 'Las oportunidades del día', lotes: baratos }) %>
+  <% } %>
+  <% if (grandes.length) { %>
+    <%- include('_fila-temas', { titulo: 'Lotes grandes', subtitulo: 'Ideales para restaurantes y mayoristas', lotes: grandes }) %>
+  <% } %>
+  <% if (pequenos.length) { %>
+    <%- include('_fila-temas', { titulo: 'Últimas piezas', subtitulo: 'Lotes pequeños para completar tu compra', lotes: pequenos }) %>
+  <% } %>
+
+  <!-- ===================== CUADRÍCULA Y FILTROS ===================== -->
+  <section class="tienda-catalogo" id="catalogo">
+    <aside class="tienda-filtros" aria-label="Filtros">
+      <form action="/" method="GET" class="tienda-filtros__form">
+        <input type="hidden" name="orden" value="<%= l.campo %>">
+        <input type="hidden" name="dir" value="<%= l.dir %>">
+        <input type="hidden" name="tam" value="<%= l.tam %>">
+
+        <h2 class="tienda-filtros__titulo"><%- icono('funnel', 15, 'me-1') %>Filtros</h2>
+
+        <% if (l.q) { %>
+          <div class="tienda-filtros__activo">
+            <span>Buscando: <strong><%= l.q %></strong></span>
+            <a href="<%= l.urlCon({ q: null }) %>" aria-label="Quitar búsqueda"><%- icono('x-lg', 12) %></a>
+          </div>
+        <% } %>
+
+        <div class="tienda-filtros__grupo">
+          <label class="form-label" for="filtroTipo">Tipo</label>
+          <select class="form-select form-select-sm" id="filtroTipo" name="tipo">
+            <option value="">Todos</option>
+            <% categorias.forEach((cat) => { %>
+              <option value="<%= cat.id_tpo %>" <%= String(categoriaActiva) === String(cat.id_tpo) ? 'selected' : '' %>><%= cat.nombre %> (<%= cat.total %>)</option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="tienda-filtros__grupo">
+          <label class="form-label" for="filtroEspecie">Especie</label>
+          <select class="form-select form-select-sm" id="filtroEspecie" name="especie">
+            <option value="">Todas</option>
+            <% catalogo.forEach((cat) => { %>
+              <option value="<%= cat.id_cat %>" <%= String(l.filtros.especie) === String(cat.id_cat) ? 'selected' : '' %>><%= cat.nombre %></option>
+            <% }) %>
+          </select>
+        </div>
+
+        <div class="tienda-filtros__grupo">
+          <span class="form-label">Precio por kilo</span>
+          <div class="tienda-filtros__rango">
+            <input class="form-control form-control-sm" type="number" name="precioMin" min="0" step="0.5" inputmode="decimal" placeholder="Mín." value="<%= l.filtros.precioMin !== undefined ? l.filtros.precioMin : '' %>" aria-label="Precio mínimo por kilo">
+            <span>–</span>
+            <input class="form-control form-control-sm" type="number" name="precioMax" min="0" step="0.5" inputmode="decimal" placeholder="Máx." value="<%= l.filtros.precioMax !== undefined ? l.filtros.precioMax : '' %>" aria-label="Precio máximo por kilo">
+          </div>
+        </div>
+
+        <div class="tienda-filtros__grupo">
+          <label class="form-label" for="filtroKilos">Kilos mínimos</label>
+          <input class="form-control form-control-sm" id="filtroKilos" type="number" name="kilosMin" min="0" step="1" inputmode="decimal" placeholder="Por ejemplo, 50" value="<%= l.filtros.kilosMin !== undefined ? l.filtros.kilosMin : '' %>">
+        </div>
+
+        <button class="btn btn-primary w-100" type="submit">Aplicar filtros</button>
+        <% if (hayFiltros) { %>
+          <a class="btn btn-link btn-sm w-100 text-decoration-none" href="/">Limpiar filtros</a>
+        <% } %>
+      </form>
+    </aside>
+
+    <div class="tienda-resultados">
+      <div class="tienda-resultados__cabecera">
+        <div>
+          <h2>Lotes disponibles</h2>
+          <p>Mostrando <%= l.inicio %>–<%= l.fin %> de <%= l.total %> lotes</p>
+        </div>
+        <form action="/" method="GET" class="tienda-orden" data-orden-tienda>
+          <% Object.entries(l.params).forEach(([clave, valor]) => { %>
+            <% if (clave !== 'orden' && clave !== 'dir') { %><input type="hidden" name="<%= clave %>" value="<%= valor %>"><% } %>
+          <% }) %>
+          <label for="ordenTienda" class="visually-hidden">Ordenar por</label>
+          <select class="form-select form-select-sm" id="ordenTienda" name="orden" data-orden>
+            <option value="nuevos" <%= l.campo === 'nuevos' ? 'selected' : '' %>>Más nuevos</option>
+            <option value="precio" <%= l.campo === 'precio' ? 'selected' : '' %>>Precio por kilo</option>
+            <option value="total" <%= l.campo === 'total' ? 'selected' : '' %>>Precio total</option>
+            <option value="kilos" <%= l.campo === 'kilos' ? 'selected' : '' %>>Kilos</option>
+          </select>
+          <label for="dirTienda" class="visually-hidden">Dirección</label>
+          <select class="form-select form-select-sm" id="dirTienda" name="dir" data-dir>
+            <option value="desc" <%= l.dir === 'desc' ? 'selected' : '' %>>Descendente</option>
+            <option value="asc" <%= l.dir === 'asc' ? 'selected' : '' %>>Ascendente</option>
+          </select>
+          <noscript><button class="btn btn-sm btn-outline-secondary" type="submit">Ordenar</button></noscript>
+        </form>
+      </div>
+
+      <% if (!l.filas.length) { %>
+        <div class="tienda-vacio">
+          <div class="tienda-vacio__icono"><%- icono('search', 34) %></div>
+          <h3>No encontramos lotes con esos filtros</h3>
+          <p>Prueba con otra especie, amplía el rango de precio o limpia los filtros.</p>
+          <a class="btn btn-outline-primary" href="/">Ver todos los lotes</a>
+        </div>
+      <% } else { %>
+        <div class="tienda-grid">
+          <% l.filas.forEach((lote, i) => { %>
+            <%- include('_tarjeta-lote', { lote, posicion: i }) %>
+          <% }) %>
+        </div>
+        <%- include('../plantillas/paginacion', { l, etiqueta: 'lotes' }) %>
+      <% } %>
+    </div>
+  </section>
+</div>
+
+<div class="tienda-toasts" aria-live="polite" aria-atomic="true" data-toasts></div>
+
+<%- include('../plantillas/footer') %>

@@ -8,9 +8,16 @@
   <title><%= t('app_nombre') %> · Veracruz</title>
   <link rel="stylesheet" href="/bootstrap/css/bootstrap.min.css">
   <link rel="stylesheet" href="/css/lonja.css">
+  <link rel="stylesheet" href="/css/tienda.css">
 </head>
 
-<body data-protegida="<%= usuario ? 1 : 0 %>">
+<%
+  const ruta = rutaActual || '';
+  const esPublica = ruta === '/' || ruta.startsWith('/tienda') || ruta.startsWith('/acceso')
+    || ruta.startsWith('/registro') || ruta.startsWith('/recuperar-password')
+    || ruta.startsWith('/olvide-password') || ruta.startsWith('/verificar-email');
+%>
+<body data-protegida="<%= usuario && !esPublica ? 1 : 0 %>">
   <%
     const banderas = { es: { src: '/img/flags/mx.svg', nombre: 'Español' }, en: { src: '/img/flags/us.svg', nombre: 'English' } };
     const activo = (ruta) => (rutaActual || '').startsWith(ruta) ? 'active' : '';
@@ -115,6 +122,11 @@
               </ul>
             </div>
           </div>
+        </div>
+      <% } else { %>
+        <div class="d-flex align-items-center gap-2 ms-auto">
+          <a class="btn btn-sm btn-outline-secondary rounded-pill px-3 text-decoration-none" href="/acceso">Iniciar sesión</a>
+          <a class="btn btn-sm btn-primary rounded-pill px-3 text-decoration-none" href="/registro">Crear cuenta</a>
         </div>
       <% } %>
     </div>
