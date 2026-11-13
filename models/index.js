@@ -9,6 +9,10 @@ import DireccionEntrega from "./DireccionEntrega.js";
 import CarritoItem from "./CarritoItem.js";
 import Pedido from "./Pedido.js";
 import PedidoItem from "./PedidoItem.js";
+import Lista from "./Lista.js";
+import ListaItem from "./ListaItem.js";
+import Pregunta from "./Pregunta.js";
+import Opinion from "./Opinion.js";
 
 // Tipo 1 --- N Especie
 Tipo.hasMany(Especie, { foreignKey: { name: "id_tpo", allowNull: false }, as: "especies", onDelete: "RESTRICT" });
@@ -56,9 +60,25 @@ PedidoItem.belongsTo(Lote, { foreignKey: { name: "id_lte", allowNull: false }, a
 Pedido.hasMany(Compra, { foreignKey: { name: "id_ped", allowNull: true }, as: "compras", onDelete: "SET NULL" });
 Compra.belongsTo(Pedido, { foreignKey: { name: "id_ped", allowNull: true }, as: "pedido" });
 
+Usuario.hasMany(Lista, { foreignKey: { name: "id_usuario", allowNull: false }, as: "listas", onDelete: "CASCADE" });
+Lista.belongsTo(Usuario, { foreignKey: { name: "id_usuario", allowNull: false }, as: "usuario" });
+Lista.hasMany(ListaItem, { foreignKey: { name: "id_lista", allowNull: false }, as: "items", onDelete: "CASCADE" });
+ListaItem.belongsTo(Lista, { foreignKey: { name: "id_lista", allowNull: false }, as: "lista" });
+Usuario.hasMany(Pregunta, { foreignKey: { name: "id_usuario", allowNull: false }, as: "preguntas", onDelete: "CASCADE" });
+Pregunta.belongsTo(Usuario, { foreignKey: { name: "id_usuario", allowNull: false }, as: "autor" });
+Pregunta.belongsTo(Usuario, { foreignKey: { name: "id_usuario_resp", allowNull: true }, as: "respondio" });
+Lote.hasMany(Pregunta, { foreignKey: { name: "id_lte", allowNull: true }, as: "preguntas", onDelete: "CASCADE" });
+Pregunta.belongsTo(Lote, { foreignKey: { name: "id_lte", allowNull: true }, as: "lote" });
+EspecieCatalogo.hasMany(Pregunta, { foreignKey: { name: "id_cat", allowNull: true }, as: "preguntas", onDelete: "CASCADE" });
+Pregunta.belongsTo(EspecieCatalogo, { foreignKey: { name: "id_cat", allowNull: true }, as: "especie" });
+Usuario.hasMany(Opinion, { foreignKey: { name: "id_usuario", allowNull: false }, as: "opiniones", onDelete: "CASCADE" });
+Opinion.belongsTo(Usuario, { foreignKey: { name: "id_usuario", allowNull: false }, as: "autor" });
+EspecieCatalogo.hasMany(Opinion, { foreignKey: { name: "id_cat", allowNull: false }, as: "opiniones", onDelete: "CASCADE" });
+Opinion.belongsTo(EspecieCatalogo, { foreignKey: { name: "id_cat", allowNull: false }, as: "especie" });
+
 // Usuario 1 --- N DireccionEntrega
 Usuario.hasMany(DireccionEntrega, { foreignKey: { name: "id_usuario", allowNull: false }, as: "direcciones", onDelete: "CASCADE" });
 DireccionEntrega.belongsTo(Usuario, { foreignKey: { name: "id_usuario", allowNull: false }, as: "usuario" });
 
-export { Tipo, Lote, Especie, EspecieCatalogo, Comprador, Compra, Usuario, DireccionEntrega, CarritoItem, Pedido, PedidoItem };
+export { Tipo, Lote, Especie, EspecieCatalogo, Comprador, Compra, Usuario, DireccionEntrega, CarritoItem, Pedido, PedidoItem, Lista, ListaItem, Pregunta, Opinion };
 export { ROLES } from "./Usuario.js";

@@ -377,3 +377,17 @@ export async function enviarEmailPedido({ usuario, correo, pedido, items, factur
     adjuntos,
   });
 }
+
+/** Aviso al comprador cuando el personal responde una pregunta pública. */
+export async function enviarEmailRespuestaPregunta({ usuario, respuesta, pregunta }) {
+  return enviarCorreo({
+    para: usuario.correo,
+    asunto: "Respondimos tu pregunta - Lonja de Veracruz",
+    ...plantillaCuenta({
+      subtitulo: "Respuesta a tu pregunta",
+      usuario,
+      parrafos: [`Tu pregunta: ${pregunta}`, `Respuesta: ${respuesta}`],
+      pie: "Gracias por comprar en la Lonja de Veracruz.",
+    }),
+  });
+}

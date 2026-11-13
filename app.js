@@ -22,6 +22,7 @@ import router_cuenta from "./routes/cuenta_router.js";
 import router_tienda from "./routes/tienda_router.js";
 import router_carrito from "./routes/carrito_router.js";
 import router_pedido from "./routes/pedido_router.js";
+import * as social from "./controllers/socialController.js";
 import { dinero, formatoFechaHora } from "./helpers/fechas.js";
 import { icono } from "./helpers/iconos.js";
 import { CarritoItem } from "./models/index.js";
@@ -89,6 +90,10 @@ app.use("/catalogo", soloPersonal, router_catalogo);
 app.use("/compras", soloPersonal, router_compra);
 app.use("/reportes", soloPersonal, router_reporte);
 app.use("/buscar", soloPersonal, router_busqueda);
+app.get("/preguntas", ...soloPersonal, social.moderarPreguntas);
+app.post("/preguntas/:id", ...soloPersonal, social.responderPregunta);
+app.get("/opiniones", ...soloPersonal, social.moderarOpiniones);
+app.post("/opiniones/:id", ...soloPersonal, social.cambiarVisibilidadOpinion);
 
 // Cuenta de comprador: solo el rol comprador, siempre filtrado por su id
 app.use("/cuenta", rutaProteger, permitir("comprador"), router_cuenta);

@@ -1,0 +1,4 @@
+<%- include('../plantillas/header') %>
+<main class="container py-4"><h1>Mis listas</h1><p class="text-muted">Guarda especies y lotes para encontrarlos después.</p>
+<form action="/cuenta/listas" method="post" class="d-flex gap-2 mb-4"><label class="visually-hidden" for="nombre-lista">Nombre de lista</label><input id="nombre-lista" class="form-control" name="nombre" maxlength="40" required placeholder="Nombre de lista"><button class="btn btn-primary">Crear lista</button></form>
+<ul class="list-group"><% listas.forEach((l) => { %><li class="list-group-item"><a href="/cuenta/listas/<%= l.id_lista %>"><%= l.nombre %></a></li><% }) %></ul></main><%- include('../plantillas/footer') %>
