@@ -57,7 +57,7 @@ const credenciales = async (req, res) => {
 };
 
 const principal = async (req, res) => {
-  res.render("inicio", await estadisticasInicio());
+  res.render("dashboard", await estadisticasInicio());
 };
 
 const cerrarsesion = (req, res) => {

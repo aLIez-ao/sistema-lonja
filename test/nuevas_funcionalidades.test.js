@@ -5,8 +5,8 @@ import { formatearMoneda, t } from "../helpers/i18n.js";
 import { enviarEmailVerificacion, enviarEmailRecuperacion } from "../helpers/email.js";
 
 test("i18n traduce correctamente en español e inglés", () => {
-  assert.equal(t("inicio", "es"), "Inicio");
-  assert.equal(t("inicio", "en"), "Home");
+  assert.equal(t("inicio", "es"), "Dashboard");
+  assert.equal(t("inicio", "en"), "Dashboard");
   assert.equal(t("compras", "en"), "Purchases");
 });
 

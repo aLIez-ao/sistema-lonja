@@ -1,7 +1,7 @@
 // Navegación segura: evitar redirecciones abiertas y escoger el inicio por rol.
 import { aError, aMensaje } from "./utiles.js";
 
-export const inicioSegun = (usuario) => (usuario?.rol === "comprador" ? "/" : "/inicio");
+export const inicioSegun = (usuario) => (usuario?.rol === "comprador" ? "/" : "/dashboard");
 
 /** Solo rutas internas que empiecen con "/" y no con "//" ni "/\". */
 export function rutaVolver(valor) {

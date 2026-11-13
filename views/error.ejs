@@ -11,6 +11,6 @@
       <a class="btn btn-primary me-2" href="<%= accion.url %>"><%= accion.texto %></a>
     <% } %>
   <% } %>
-  <a class="btn btn-outline-primary" href="<%= usuario ? (usuario.rol === 'comprador' ? '/' : '/inicio') : '/' %>">Ir al inicio</a>
+  <a class="btn btn-outline-primary" href="<%= usuario ? (usuario.rol === 'comprador' ? '/' : '/dashboard') : '/' %>">Ir al inicio</a>
 </div>
 <%- include('plantillas/footer') %>

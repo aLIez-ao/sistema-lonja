@@ -19,7 +19,8 @@ const router = express.Router();
 router.get("/acceso", login);
 router.post("/credenciales", reglasLogin, credenciales);
 // El tablero es solo para el personal; el comprador usa la tienda y su cuenta.
-router.get("/inicio", rutaProteger, permitir("admin", "capturista"), principal);
+router.get("/dashboard", rutaProteger, permitir("admin", "capturista"), principal);
+router.get("/inicio", (req, res) => res.redirect(301, "/dashboard"));
 router.post("/cerrarsesion", cerrarsesion);
 router.get("/cerrarsesion", (req, res) => res.redirect("/"));
 

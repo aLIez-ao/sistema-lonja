@@ -10,14 +10,14 @@ after(() => srv.cerrar());
 test("el banner de cookies no aparece en el login y sí al iniciar sesión", async () => {
   assert.doesNotMatch((await c.get("/")).texto, /cookieConsentBanner/);
   await c.entrar("admin", "AdminPrueba123");
-  assert.match((await c.get("/inicio")).texto, /cookieConsentBanner/);
+  assert.match((await c.get("/dashboard")).texto, /cookieConsentBanner/);
 });
 
 test("sin consentimiento la preferencia se guarda en la cuenta pero no en cookie", async () => {
   const r = await c.postJSON("/configuracion/guardar-rapido", { clave: "tema", valor: "dark" });
   assert.equal(r.status, 200);
   assert.equal(c.cookies.has("lonja_theme"), false);
-  const html = (await c.get("/inicio")).texto;
+  const html = (await c.get("/dashboard")).texto;
   assert.match(html, /data-theme="dark"/);
   assert.match(html, /data-bs-theme="dark"/);
 });
@@ -31,7 +31,7 @@ test("aceptar todas crea las cookies de preferencia y oculta el banner", async (
   await c.postJSON("/configuracion/cookies", { nivel: "all" });
   assert.equal(c.cookies.get("lonja_cookies_consent"), "all");
   assert.equal(c.cookies.get("lonja_theme"), "dark");
-  assert.doesNotMatch((await c.get("/inicio")).texto, /cookieConsentBanner/);
+  assert.doesNotMatch((await c.get("/dashboard")).texto, /cookieConsentBanner/);
 });
 
 test("selección personalizada: solo se conservan las categorías elegidas", async () => {
@@ -54,7 +54,7 @@ test("guardar cookies desde Configuración no reinicia tema ni moneda", async ()
 test("el tema retirado 'light' se normaliza a 'ocean'", async () => {
   const r = await c.postJSON("/configuracion/guardar-rapido", { clave: "tema", valor: "light" });
   assert.equal(r.status, 200);
-  const html = (await c.get("/inicio")).texto;
+  const html = (await c.get("/dashboard")).texto;
   assert.match(html, /data-theme="ocean"/);
   assert.match(html, /data-bs-theme="light"/);
 });

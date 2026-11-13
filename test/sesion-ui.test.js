@@ -24,7 +24,7 @@ test("las páginas con sesión se marcan como protegidas", async () => {
   const entrada = await c.entrar("admin", "AdminPrueba123");
   assert.equal(entrada.status, 302);
 
-  const r = await c.get("/inicio");
+  const r = await c.get("/dashboard");
   assert.equal(r.status, 200);
   assert.match(r.texto, /data-protegida="1"/);
 });

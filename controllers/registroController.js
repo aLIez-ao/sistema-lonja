@@ -71,7 +71,7 @@ const vistaRevisa = (res, { correo = "", enlace = null } = {}) =>
   res.render("registro/revisa", { correo, enlace });
 
 const verRegistro = (req, res) => {
-  if (req.usuario) return res.redirect(req.usuario.rol === "comprador" ? "/" : "/inicio");
+  if (req.usuario) return res.redirect(req.usuario.rol === "comprador" ? "/" : "/dashboard");
   vistaFormulario(res);
 };
 

@@ -2,7 +2,7 @@
 export const traducciones = {
   es: {
     app_nombre: "Sistema Lonja",
-    inicio: "Inicio",
+    inicio: "Dashboard",
     tienda: "Tienda",
     compras: "Compras",
     lotes: "Lotes",
@@ -62,7 +62,7 @@ export const traducciones = {
   },
   en: {
     app_nombre: "Fish Market System",
-    inicio: "Home",
+    inicio: "Dashboard",
     tienda: "Store",
     compras: "Purchases",
     lotes: "Batches",
