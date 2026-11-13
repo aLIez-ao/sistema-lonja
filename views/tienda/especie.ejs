@@ -51,7 +51,7 @@
         <% if (!opiniones.length) { %>
           <p class="text-muted small mb-0">Aún no hay opiniones de esta especie.</p>
         <% } %>
-        <% opiniones.forEach((o) => { %><article class="border-bottom py-3"><div><strong><%= o.titulo %></strong> · <%= '★'.repeat(o.estrellas) %> <span class="badge bg-success">Compra verificada</span></div><p class="mb-1"><%= o.texto %></p><small class="text-muted"><%= o.autor?.nombre_completo || 'Comprador' %></small></article><% }) %>
+        <% opiniones.forEach((o) => { %><article class="border-bottom py-3"><div><strong><%= o.titulo %></strong> · <%= '★'.repeat(o.estrellas) %> <span class="badge bg-success">Compra verificada</span></div><p class="mb-1"><%= o.texto %></p><small class="text-muted"><%= o.autorPublico || 'Comprador' %></small></article><% }) %>
         <% if (usuario && usuario.rol === 'comprador') { %><form action="/tienda/especie/<%= especie.id %>/opiniones" method="post" class="mt-3"><h3 class="h6">Comparte tu experiencia</h3><label class="form-label" for="estrellas">Calificación (1 a 5)</label><select id="estrellas" name="estrellas" class="form-select" required><option value="">Elige</option><% [5,4,3,2,1].forEach((n) => { %><option value="<%= n %>"><%= n %> estrellas</option><% }) %></select><label class="form-label mt-2" for="opinion-titulo">Título</label><input id="opinion-titulo" name="titulo" maxlength="80" class="form-control" required><label class="form-label mt-2" for="opinion-texto">Tu opinión</label><textarea id="opinion-texto" name="texto" maxlength="1000" rows="3" class="form-control" required></textarea><button class="btn btn-outline-primary mt-2">Guardar opinión</button></form><% } %>
       </div>
     </div>

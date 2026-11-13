@@ -1,6 +1,8 @@
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { arrancar, cliente, modelos } from "./ayuda.js";
+import { nombrePublico } from "../helpers/tienda.js";
+import { rutaReferer } from "../helpers/navegacion.js";
 
 const { Usuario, Comprador, Tipo, Lote, Especie, EspecieCatalogo, Compra, Lista, ListaItem, Pregunta, Opinion } = modelos;
 let srv;
@@ -30,8 +32,19 @@ test("listas privadas: creación, duplicados y control de acceso al detalle", as
   await a.web.post(`/cuenta/listas/${lista.id_lista}/items`, { tipo: "lote", id_ref: lote.id_lte });
   assert.equal(await ListaItem.count({ where: { id_lista: lista.id_lista } }), 1);
   assert.equal((await b.web.get(`/cuenta/listas/${lista.id_lista}`)).status, 404);
+  const invalido = await a.web.post(`/cuenta/listas/${lista.id_lista}/items`, { tipo: "lote", id_ref: "999999" });
+  assert.equal(invalido.status, 302);
+  assert.ok(invalido.loc.startsWith(`/cuenta/listas/${lista.id_lista}?error=`));
+  assert.notEqual(invalido.loc, "back");
   await a.web.post(`/cuenta/listas/${lista.id_lista}/items`, { tipo: "especie", id_ref: catalogo.id_cat });
   assert.equal(await ListaItem.count({ where: { id_lista: lista.id_lista } }), 2);
+  const cookies = [...a.web.cookies].map(([k, v]) => `${k}=${v}`).join("; ");
+  for (const referer of ["https://evil.example/x", "//evil.example/x"]) {
+    const r = await fetch(`${srv.base}/cuenta/favoritos`, { method: "POST", redirect: "manual", headers: { cookie: cookies, referer, "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ tipo: "lote", id_ref: String(lote.id_lte) }) });
+    assert.equal(r.status, 302);
+    assert.ok(r.headers.get("location").startsWith("/cuenta/listas"));
+    assert.equal(r.headers.get("location").includes("evil"), false);
+  }
 });
 
 test("las preguntas pendientes y ocultas nunca se publican; responder envía correo", async () => {
@@ -63,9 +76,39 @@ test("opiniones requieren compra vinculada, se editan y el público muestra prom
   assert.equal(sinCompra.status, 403);
   await Compra.create({ id_cmp: lote.id_lte, codigo_cpr: a.c.codigo_cpr, precio_kilo_final: 20, precio_total: 100 });
   await a.web.post(`/tienda/especie/${catalogo.id_cat}/opiniones`, { estrellas: "4", titulo: "Fresco", texto: "Pargo <script>alert(1)</script>" });
-  await a.web.post(`/tienda/especie/${catalogo.id_cat}/opiniones`, { estrellas: "5", titulo: "Muy fresco", texto: "Buen producto" });
+  await a.web.post(`/tienda/especie/${catalogo.id_cat}/opiniones`, { estrellas: "5", titulo: "Muy fresco <b>hoy</b>", texto: "Buen producto <b>fresco</b> <script>alert(1)</script>" });
   assert.equal(await Opinion.count({ where: { id_usuario: a.u.id, id_cat: catalogo.id_cat } }), 1);
-  const ficha = await a.web.get(`/tienda/especie/${catalogo.id_cat}`);
+  const ficha = await cliente(srv.base).get(`/tienda/especie/${catalogo.id_cat}`);
   assert.match(ficha.texto, /5\.0 de 5/);
   assert.equal(ficha.texto.includes("<script>alert(1)</script>"), false);
+  assert.match(ficha.texto, /Ana P\./);
+  assert.equal(ficha.texto.includes("Ana Prueba"), false);
+  assert.equal(ficha.texto.includes(a.u.correo), false);
+  assert.match(ficha.texto, /&lt;script&gt;alert\(1\)&lt;\/script&gt;/);
+  assert.match(ficha.texto, /&lt;b&gt;fresco&lt;\/b&gt;/);
+});
+
+test("anónimo al preguntar conserva volver a la ficha y errores de comunidad usan la plantilla", async () => {
+  const { lote, catalogo } = await articulo();
+  const anon = cliente(srv.base);
+  const pregunta = await anon.post("/tienda/preguntas", { id_lte: lote.id_lte, texto: "¿Disponible?" });
+  assert.equal(pregunta.status, 302);
+  assert.ok(pregunta.loc.startsWith("/acceso?volver="));
+  assert.equal(decodeURIComponent(pregunta.loc).includes(`/tienda/lote/${lote.id_lte}`), true);
+  const opinionAnonima = await anon.post(`/tienda/especie/${catalogo.id_cat}/opiniones`, { estrellas: "5", titulo: "Bien", texto: "Producto" });
+  assert.ok(opinionAnonima.loc.startsWith("/acceso?volver="));
+  const a = await comprador("error_opinion");
+  const error = await a.web.post(`/tienda/especie/${catalogo.id_cat}/opiniones`, { estrellas: "9" });
+  assert.equal(error.status, 400);
+  assert.match(error.texto, /Elige una especie y una calificación/);
+  assert.match(error.texto, /Volver/);
+});
+
+test("nombres públicos abreviados y Referer remoto no pueden abrir redirecciones", () => {
+  assert.equal(nombrePublico("  Ana   Pérez  "), "Ana P.");
+  assert.equal(nombrePublico(""), "Comprador");
+  const req = { protocol: "http", get: (h) => h === "host" ? "lonja.local" : "https://evil.example/x" };
+  assert.equal(rutaReferer(req, "/cuenta/listas"), "/cuenta/listas");
+  req.get = (h) => h === "host" ? "lonja.local" : "//evil.example/x";
+  assert.equal(rutaReferer(req, "/tienda/lote/1"), "/tienda/lote/1");
 });
