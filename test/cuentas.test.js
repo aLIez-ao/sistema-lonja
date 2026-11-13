@@ -54,7 +54,7 @@ test("el enlace de invitación permite crear la contraseña una sola vez y verif
 
   assert.equal((await ana.post(enlace, { password: "Segura1234", password_confirmar: "Segura1234" })).status, 302);
   assert.equal((await ana.get(enlace)).status, 400, "el enlace ya no sirve");
-  assert.equal((await ana.entrar("ana", "Segura1234")).loc, "/inicio");
+  assert.equal((await ana.entrar("ana", "Segura1234")).loc, "/dashboard");
   assert.equal((await Usuario.findOne({ where: { usuario: "ana" } })).email_verificado, true);
 });
 
@@ -68,8 +68,8 @@ test("cambiar la contraseña cierra las demás sesiones y conserva la actual", a
   const ok = await a.post("/configuracion/cambiar-password", { password_actual: "Segura1234", password_nuevo: "Nueva12345", password_confirmar: "Nueva12345" });
   assert.match(decodeURIComponent(ok.loc), /Contraseña actualizada/);
 
-  assert.equal((await a.get("/inicio")).status, 200, "la sesión que hizo el cambio sigue abierta");
-  assert.equal((await b.get("/inicio")).status, 302, "la otra sesión quedó cerrada");
+  assert.equal((await a.get("/dashboard")).status, 200, "la sesión que hizo el cambio sigue abierta");
+  assert.equal((await b.get("/dashboard")).status, 302, "la otra sesión quedó cerrada");
   assert.equal((await cliente(srv.base).entrar("ana", "Segura1234")).status, 401);
 });
 
@@ -95,7 +95,7 @@ test("el administrador puede enviar un enlace de restablecimiento", async () => 
   const ruta = enlaceDe(r.loc);
   const c = cliente(srv.base);
   assert.equal((await c.post(ruta, { password: "Tercera123", password_confirmar: "Tercera123" })).status, 302);
-  assert.equal((await c.entrar("ana", "Tercera123")).loc, "/inicio");
+  assert.equal((await c.entrar("ana", "Tercera123")).loc, "/dashboard");
 });
 
 test("mi cuenta: cambiar el correo exige verificarlo de nuevo; la foto debe ser una imagen real", async () => {
@@ -126,5 +126,5 @@ test("cinco intentos fallidos bloquean temporalmente el inicio de sesión de ese
   const bloqueado = await c.entrar("ana", "Tercera123");
   assert.equal(bloqueado.status, 429);
   assert.match(bloqueado.texto, /Demasiados intentos/);
-  assert.equal((await cliente(srv.base).entrar(...ADMIN)).loc, "/inicio", "otros usuarios no se ven afectados");
+  assert.equal((await cliente(srv.base).entrar(...ADMIN)).loc, "/dashboard", "otros usuarios no se ven afectados");
 });

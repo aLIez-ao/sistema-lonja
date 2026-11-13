@@ -26,7 +26,7 @@
   <nav class="navbar navbar-expand-xl navbar-lonja d-print-none">
     <div class="container-fluid px-lg-4">
       <!-- El logo redirige al inicio -->
-      <a class="navbar-brand" href="<%= usuario && usuario.rol !== 'comprador' ? '/inicio' : '/' %>" title="Lonja de Veracruz">
+      <a class="navbar-brand" href="/" title="Lonja de Veracruz">
         <img class="logo-claro" src="/img/logo.svg" alt="Lonja de Veracruz" width="204" height="42">
         <img class="logo-oscuro" src="/img/logo-oscuro.svg" alt="" aria-hidden="true" width="204" height="42">
       </a>
@@ -46,6 +46,8 @@
               <li class="nav-item"><a class="nav-link <%= activo('/cuenta/listas') %>" href="/cuenta/listas"><%- icono('heart', 15, 'me-1') %>Favoritos</a></li>
               <li class="nav-item"><a class="nav-link <%= activo('/cuenta/opiniones') %>" href="/cuenta/opiniones"><%- icono('star', 15, 'me-1') %>Mis opiniones</a></li>
             <% } else { %>
+              <li class="nav-item"><a class="nav-link <%= activo('/dashboard') %>" href="/dashboard"><%- icono('speedometer2', 15, 'me-1') %>Dashboard</a></li>
+              <li class="nav-item"><a class="nav-link" href="/"><%- icono('basket', 15, 'me-1') %>Tienda <span class="small text-muted">ver como cliente</span></a></li>
               <li class="nav-item"><a class="nav-link <%= activo('/compras') %>" href="/compras"><%= t('compras') %></a></li>
               <li class="nav-item"><a class="nav-link <%= activo('/pedidos') %>" href="/pedidos">Pedidos</a></li>
               <li class="nav-item"><a class="nav-link <%= activo('/lotes') %>" href="/lotes"><%= t('lotes') %></a></li>

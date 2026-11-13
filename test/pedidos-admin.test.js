@@ -29,7 +29,7 @@ test("administración de pedidos filtra, avanza estado y notifica enviado/entreg
   await admin.post(`/pedidos/${pedido.id_ped}/estado`, { estado: "entregado" });
   assert.equal((await Pedido.findByPk(pedido.id_ped)).estado, "entregado");
   assert.equal(correos.length, 2);
-  const inicio = await admin.get("/inicio");
+  const inicio = await admin.get("/dashboard");
   assert.equal(inicio.status, 200); assert.match(inicio.texto, /Ventas en línea|Origen de compras/);
   const comprador = cliente(srv.base); await comprador.entrar(u.usuario, "Clave1234");
   assert.notEqual((await comprador.get("/pedidos")).status, 200);

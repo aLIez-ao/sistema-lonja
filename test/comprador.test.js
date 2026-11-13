@@ -178,10 +178,10 @@ test("volver externo se ignora; la ruta interna pedida se respeta", async () => 
   const admin = nuevo();
   const mal1 = await admin.post("/credenciales", { usuario: "admin", password: "AdminPrueba123", volver: "//evil.com" });
   assert.equal(mal1.status, 302);
-  assert.equal(mal1.loc, "/inicio");
+  assert.equal(mal1.loc, "/dashboard");
 
   const mal2 = await admin.post("/credenciales", { usuario: "admin", password: "AdminPrueba123", volver: "https://evil.com" });
-  assert.equal(mal2.loc, "/inicio");
+  assert.equal(mal2.loc, "/dashboard");
 
   const interno = await admin.post("/credenciales", { usuario: "admin", password: "AdminPrueba123", volver: "/lotes?orden=kilos" });
   assert.equal(interno.loc, "/lotes?orden=kilos");
@@ -201,7 +201,7 @@ test("matriz de permisos: el comprador no entra al personal y el personal no ent
   assert.equal((await c.entrar(us.usuario, "Clave1234")).status, 302);
 
   const rutas = [
-    "/inicio",
+    "/dashboard",
     "/compras",
     "/lotes",
     "/especies",

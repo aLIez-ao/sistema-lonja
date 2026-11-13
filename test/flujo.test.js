@@ -46,7 +46,7 @@ const admin = sesion();
 const capt = sesion();
 
 test("sin sesión se redirige al login", async () => {
-  for (const ruta of ["/inicio", "/compras", "/lotes", "/reportes/diario", "/usuarios"]) {
+  for (const ruta of ["/dashboard", "/compras", "/lotes", "/reportes/diario", "/usuarios"]) {
     const r = await sesion().get(ruta);
     assert.equal(r.status, 302, ruta);
     assert.equal(r.loc, `/acceso?volver=${encodeURIComponent(ruta)}`, ruta);
@@ -62,15 +62,15 @@ test("login: credenciales malas rechazadas, buenas entran con cookie httpOnly", 
 
   const ok = await admin.post("/credenciales", { usuario: "admin", password: "AdminPrueba123" });
   assert.equal(ok.status, 302);
-  assert.equal(ok.loc, "/inicio");
+  assert.equal(ok.loc, "/dashboard");
   const cookie = ok.headers.get("set-cookie");
   assert.match(cookie, /HttpOnly/i);
   assert.match(cookie, /SameSite=Strict/i);
-  assert.equal((await admin.get("/inicio")).status, 200);
+  assert.equal((await admin.get("/dashboard")).status, 200);
 });
 
 test("token falso es rechazado", async () => {
-  const r = await sesion("_token=abc.def.ghi").get("/inicio");
+  const r = await sesion("_token=abc.def.ghi").get("/dashboard");
   assert.equal(r.status, 302);
 });
 
@@ -198,7 +198,7 @@ test("todas las pantallas del administrador renderizan (200)", async () => {
   // La especie del lote vendido ya no es editable; se crea un lote libre para esa pantalla.
   const libre = await Lote.create({ kilos: 5, numero_cajas: 1, precio_kilo_salida: 10 });
   const espLibre = await Especie.create({ nombre: "Libre", id_lte: libre.id_lte, id_tpo: 1 });
-  const rutas = ["/inicio", "/tipos", "/tipos/crear", "/tipos/1/editar", "/compradores", "/compradores/crear", "/compradores/1/editar",
+  const rutas = ["/dashboard", "/tipos", "/tipos/crear", "/tipos/1/editar", "/compradores", "/compradores/crear", "/compradores/1/editar",
     "/lotes", "/lotes/crear", "/especies", "/especies/crear", `/especies/${espLibre.id_epe}/editar`, "/compras", "/compras/crear", `/compras/${loteId}/editar`,
     "/reportes/diario", "/usuarios", "/usuarios/crear", "/usuarios/1/editar"];
   for (const ruta of rutas) assert.equal((await admin.get(ruta)).status, 200, ruta);
@@ -209,5 +209,5 @@ test("cerrar sesión borra la cookie y las páginas privadas no quedan en caché
   assert.match(privada.headers.get("cache-control"), /no-store/);
   const r = await admin.post("/cerrarsesion", {});
   assert.equal(r.status, 302);
-  assert.equal((await admin.get("/inicio")).status, 302);
+  assert.equal((await admin.get("/dashboard")).status, 302);
 });

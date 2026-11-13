@@ -265,6 +265,6 @@ test("un comprador con sesión puede ver la tienda sin dejar de ser privado su p
   assert.match(portada.texto, /Huachinango Test/);
   assert.match(portada.texto, /Mi cuenta/);
 
-  const panel = await c.get("/inicio");
+  const panel = await c.get("/dashboard");
   assert.equal(panel.status, 403, "el comprador no entra al tablero del personal");
 });

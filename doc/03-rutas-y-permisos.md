@@ -18,6 +18,7 @@ Roles: **admin** (todo), **capturista** (captura y consulta; no borra ni adminis
 | GET/POST | `/olvide-password` | Solicitar el enlace de recuperación (por correo o usuario) |
 | GET/POST | `/recuperar-password/:token` | Definir una contraseña nueva con el enlace recibido |
 | GET | `/verificar-email/:token` | Confirmar el correo de la cuenta (después enlaza al comprador de mostrador si aún no lo está) |
+| GET | `/inicio` | Redirección permanente 301 a `/dashboard` para enlaces anteriores |
 
 La tienda nunca expone nombres, correos ni montos de compradores: solo muestra lotes sin `Compra` que tengan al menos una especie y el catálogo activo.
 
@@ -43,13 +44,13 @@ La tienda nunca expone nombres, correos ni montos de compradores: solo muestra l
 
 Las opiniones en páginas públicas muestran el nombre abreviado del autor (nombre e inicial del apellido). La cuenta puede editar o eliminar sus opiniones y volver a calificarlas desde el enlace a la especie.
 
-El `:id` de otra persona responde **404**. El comprador no entra a `/inicio` (403) ni a los módulos del personal; su inicio es la tienda. Las cuentas de comprador solo nacen en `/registro` (no las crea el admin) y el admin únicamente puede desactivarlas, sin cambiarles el rol.
+El `:id` de otra persona responde **404**. `/dashboard` exige rol `admin` o `capturista`; el comprador recibe 403 y su inicio es la tienda. Las cuentas de comprador solo nacen en `/registro` (no las crea el admin) y el admin únicamente puede desactivarlas, sin cambiarles el rol.
 
 ## Con sesión (admin y capturista)
 
 | Método | Ruta | Acción |
 |---|---|---|
-| GET | `/inicio` | Tablero: indicadores de hoy y del mes, gráficas, avance de lotes y últimas compras |
+| GET | `/dashboard` | Tablero: indicadores de hoy y del mes, gráficas, avance de lotes y últimas compras |
 | GET | `/reportes/diario?anio=AAAA` | **Reporte anual** con selector de año, gráficas y compras por mes (año actual si falta o es inválido) |
 | GET | `/pedidos`, `/pedidos/:id` | Búsqueda, filtro, orden, paginación y detalle de pedidos de tienda |
 | POST | `/pedidos/:id/estado` | Transición de una etapa: pagado → preparando → enviado → entregado; correo al enviar y entregar |
