@@ -1,0 +1,20 @@
+<form class="tienda-buscador" action="/" method="GET" role="search" data-buscador-tienda>
+  <div class="tienda-buscador__caja">
+    <%- icono('search', 17, 'tienda-buscador__icono') %>
+    <input
+      type="search"
+      name="q"
+      value="<%= qTienda || '' %>"
+      class="form-control"
+      placeholder="Busca por especie, tipo o número de lote…"
+      autocomplete="off"
+      aria-label="Buscar lotes"
+      aria-autocomplete="list"
+      aria-expanded="false"
+      aria-controls="sugerenciasTienda"
+      data-sugerencias-tienda
+    >
+    <ul id="sugerenciasTienda" class="list-group lista-sugerencias-tienda shadow-sm" role="listbox" hidden data-lista-sugerencias></ul>
+    <button class="btn btn-primary" type="submit">Buscar</button>
+  </div>
+</form>
