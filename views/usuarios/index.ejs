@@ -1,80 +1,39 @@
 <%- include('../plantillas/header') %>
-<div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-  <div>
-    <h1 class="h3 mb-0 fw-bold"><%= t('usuarios') %> del sistema</h1>
-    <p class="text-muted small mb-0">Personal autorizado: administradores y capturistas</p>
+<main class="container py-4">
+  <div class="d-flex justify-content-between align-items-center gap-3 flex-wrap mb-4">
+    <div><h1 class="h2 mb-1"><%= t('usuarios') %></h1><p class="text-muted mb-0">Consulta por separado las cuentas del personal y de los clientes.</p></div>
   </div>
-  <a class="btn btn-primary" href="/usuarios/crear"><%- icono('person-plus', 16, 'me-1') %>Nuevo usuario</a>
-</div>
-<%- include('../plantillas/mensajes', { errores: (typeof error !== 'undefined' && error) ? [error] : [] }) %>
-<%- include('../plantillas/barra-listado', { l, entidad: 'usuarios', etiqueta: 'usuarios' }) %>
-<div class="card overflow-hidden">
-  <div class="table-responsive">
-    <table class="table table-hover table-striped align-middle mb-0" data-orden-servidor>
-      <thead>
-        <tr>
-          <%- include('../plantillas/encabezado-orden', { l, campo: 'nombre', titulo: 'Usuario' }) %>
-          <th>Correo</th>
-          <th>Teléfono</th>
-          <th>Puesto</th>
-          <%- include('../plantillas/encabezado-orden', { l, campo: 'rol', titulo: 'Rol' }) %>
-          <%- include('../plantillas/encabezado-orden', { l, campo: 'estado', titulo: 'Estado' }) %>
-          <th class="text-end" data-no-sort>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-      <% if (!usuarios.length) { %>
-        <tr class="fila-vacia">
-          <td colspan="7" class="text-center py-4 text-muted">
-            <%= (l.q || Object.keys(l.filtros).length) ? 'No hay registros que coincidan con la búsqueda.' : 'No hay usuarios registrados en el sistema.' %>
-          </td>
-        </tr>
-      <% } %>
-      <% usuarios.forEach(u => { %>
-        <tr>
-          <td data-sort-value="<%= u.nombre_completo %>">
-            <div class="d-flex align-items-center gap-2">
-              <%- include('../plantillas/avatar', { u, clase: 'avatar-sm' }) %>
-              <div>
-                <div class="fw-semibold"><%= u.nombre_completo %></div>
-                <div class="small text-muted">@<%= u.usuario %></div>
-              </div>
-            </div>
-          </td>
-          <td>
-            <% if (u.correo) { %>
-              <%= u.correo %>
-              <% if (u.email_verificado) { %>
-                <span class="text-success ms-1" title="Correo verificado"><%- icono('check-circle', 14) %><span class="visually-hidden">Verificado</span></span>
-              <% } else { %>
-                <span class="badge bg-warning text-dark ms-1">Sin verificar</span>
-              <% } %>
-            <% } else { %>
-              <span class="badge bg-secondary">Sin correo</span>
-            <% } %>
-          </td>
-          <td><%= u.telefono || '—' %></td>
-          <td><%= u.puesto || '—' %></td>
-          <td><span class="badge bg-body-tertiary text-body border"><%= nombreRol[u.rol] || u.rol %></span></td>
-          <td><span class="badge <%= u.activo ? 'bg-success' : 'bg-danger' %>"><%= u.activo ? 'Activo' : 'Inactivo' %></span></td>
-          <td class="text-end text-nowrap">
-            <% if (u.correo && u.activo) { %>
-              <form action="/usuarios/<%= u.id %>/restablecer" method="POST" class="d-inline" data-confirmar="¿Enviar a <%= u.correo %> un enlace para que cree una contraseña nueva?">
-                <button class="btn btn-sm btn-outline-primary" type="submit" title="Enviar enlace de restablecimiento de contraseña" aria-label="Enviar enlace de restablecimiento de contraseña"><%- icono('key', 14) %></button>
-              </form>
-            <% } %>
-            <a class="btn btn-sm btn-outline-secondary" href="/usuarios/<%= u.id %>/editar" title="Editar usuario" aria-label="Editar usuario"><%- icono('pencil', 14) %></a>
-            <% if (u.id !== usuario.id) { %>
-              <form action="/usuarios/<%= u.id %>?_method=DELETE" method="POST" class="d-inline" data-confirmar="¿Eliminar al usuario <%= u.usuario %>? Esta acción no se puede deshacer.">
-                <button class="btn btn-sm btn-outline-danger" type="submit" title="Eliminar usuario" aria-label="Eliminar usuario"><%- icono('trash', 14) %></button>
-              </form>
-            <% } %>
-          </td>
-        </tr>
-      <% }) %>
-      </tbody>
-    </table>
-  </div>
-</div>
-<%- include('../plantillas/paginacion', { l, etiqueta: 'usuarios' }) %>
+  <%- include('../plantillas/mensajes', { mensaje, errores: error ? [error] : [] }) %>
+
+  <section id="trabajadores" class="mb-5" data-seccion-usuarios="trabajadores">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3"><div><h2 class="h4 mb-1">Trabajadores</h2><p class="text-muted mb-0"><%= trabajadores.total %> cuenta<%= trabajadores.total === 1 ? '' : 's' %> · Administradores y capturistas</p></div><a class="btn btn-primary" href="/usuarios/crear"><%- icono('person-plus', 16, 'me-1') %>Nuevo usuario</a></div>
+    <form method="get" action="/usuarios#trabajadores" class="row g-2 mb-3">
+      <input type="hidden" name="qC" value="<%= clientes.q %>"><input type="hidden" name="paginaC" value="<%= clientes.pagina %>">
+      <div class="col-sm-6"><label class="visually-hidden" for="qT">Buscar trabajadores</label><input id="qT" name="qT" value="<%= trabajadores.q %>" class="form-control" placeholder="Buscar por nombre, usuario o correo"></div>
+      <div class="col-sm-3"><label class="visually-hidden" for="rolT">Filtrar rol</label><select id="rolT" class="form-select" name="rol"><option value="">Todos los trabajadores</option><option value="admin" <%= query.rol === 'admin' ? 'selected' : '' %>>Administradores</option><option value="capturista" <%= query.rol === 'capturista' ? 'selected' : '' %>>Capturistas</option></select></div>
+      <div class="col-sm-2"><label class="visually-hidden" for="vT">Correo</label><select id="vT" class="form-select" name="verificado"><option value="">Cualquier correo</option><option value="verificado" <%= query.verificado === 'verificado' ? 'selected' : '' %>>Verificado</option><option value="sin" <%= query.verificado === 'sin' ? 'selected' : '' %>>Sin verificar</option></select></div>
+      <div class="col-sm-1 d-grid"><button class="btn btn-outline-primary">Buscar</button></div>
+    </form>
+    <div class="card overflow-hidden"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th><a href="<%= ordenUrl('T', 'nombre') %>#trabajadores">Usuario ↕</a></th><th>Correo</th><th>Teléfono</th><th>Puesto</th><th><a href="<%= ordenUrl('T', 'rol') %>#trabajadores">Rol ↕</a></th><th><a href="<%= ordenUrl('T', 'estado') %>#trabajadores">Estado ↕</a></th><th class="text-end">Acciones</th></tr></thead><tbody>
+      <% if (!trabajadores.filas.length) { %><tr><td colspan="7" class="text-center text-muted py-4">No hay trabajadores que coincidan con la búsqueda.</td></tr><% } %>
+      <% trabajadores.filas.forEach((u) => { %><tr><td><strong><%= u.nombre_completo %></strong><span class="d-block small text-muted">@<%= u.usuario %></span></td><td><%= u.correo || '—' %><% if (u.email_verificado) { %><span class="badge text-bg-success ms-1">Verificado</span><% } else if (u.correo) { %><span class="badge text-bg-warning ms-1">Sin verificar</span><% } %></td><td><%= u.telefono || '—' %></td><td><%= u.puesto || '—' %></td><td><%= nombreRol[u.rol] || u.rol %></td><td><span class="badge <%= u.activo ? 'text-bg-success' : 'text-bg-secondary' %>"><%= u.activo ? 'Activo' : 'Inactivo' %></span></td><td class="text-end text-nowrap"><a class="btn btn-sm btn-outline-secondary" href="/usuarios/<%= u.id %>/editar" aria-label="Editar trabajador"><%- icono('pencil', 14) %></a><% if (u.correo && u.activo) { %><form action="/usuarios/<%= u.id %>/restablecer" method="post" class="d-inline"><button class="btn btn-sm btn-outline-primary" aria-label="Enviar enlace de acceso"><%- icono('key', 14) %></button></form><% } %></td></tr><% }) %>
+    </tbody></table></div></div>
+    <% if (trabajadores.paginas > 1) { %><nav class="d-flex justify-content-between align-items-center mt-3" aria-label="Paginación de trabajadores"><span class="small text-muted">Página <%= trabajadores.pagina %> de <%= trabajadores.paginas %></span><div class="btn-group"><% if (trabajadores.pagina > 1) { %><a class="btn btn-sm btn-outline-secondary" href="<%= paginaUrl('T', trabajadores.pagina - 1) %>#trabajadores">Anterior</a><% } %><% if (trabajadores.pagina < trabajadores.paginas) { %><a class="btn btn-sm btn-outline-secondary" href="<%= paginaUrl('T', trabajadores.pagina + 1) %>#trabajadores">Siguiente</a><% } %></div></nav><% } %>
+  </section>
+
+  <section id="clientes" data-seccion-usuarios="clientes">
+    <div class="mb-3"><h2 class="h4 mb-1">Clientes</h2><p class="text-muted mb-0"><%= clientes.total %> cuenta<%= clientes.total === 1 ? '' : 's' %> · Usuarios de la tienda</p></div>
+    <form method="get" action="/usuarios#clientes" class="row g-2 mb-3">
+      <input type="hidden" name="qT" value="<%= trabajadores.q %>"><input type="hidden" name="paginaT" value="<%= trabajadores.pagina %>"><% if (query.rol) { %><input type="hidden" name="rol" value="<%= query.rol %>"><% } %>
+      <div class="col-sm-7"><label class="visually-hidden" for="qC">Buscar clientes</label><input id="qC" name="qC" value="<%= clientes.q %>" class="form-control" placeholder="Buscar por nombre, usuario o correo"></div>
+      <div class="col-sm-3"><label class="visually-hidden" for="vC">Verificación</label><select id="vC" class="form-select" name="verificadoC"><option value="">Cualquier estado de correo</option><option value="verificado" <%= query.verificadoC === 'verificado' ? 'selected' : '' %>>Verificado</option><option value="sin" <%= query.verificadoC === 'sin' ? 'selected' : '' %>>Sin verificar</option></select></div>
+      <div class="col-sm-2 d-grid"><button class="btn btn-outline-primary">Buscar</button></div>
+    </form>
+    <div class="card overflow-hidden"><div class="table-responsive"><table class="table table-hover align-middle mb-0"><thead><tr><th><a href="<%= ordenUrl('C', 'nombre') %>#clientes">Cliente ↕</a></th><th>Correo</th><th>Teléfono</th><th>Registro de lonja</th><th>Pedidos</th><th><a href="<%= ordenUrl('C', 'estado') %>#clientes">Estado ↕</a></th><th class="text-end">Acciones</th></tr></thead><tbody>
+      <% if (!clientes.filas.length) { %><tr><td colspan="7" class="text-center text-muted py-4">No hay clientes que coincidan con la búsqueda.</td></tr><% } %>
+      <% clientes.filas.forEach((u) => { %><tr><td><strong><%= u.nombre_completo %></strong><span class="d-block small text-muted">@<%= u.usuario %></span></td><td><%= u.correo || '—' %><% if (u.email_verificado) { %><span class="badge text-bg-success ms-1">Verificado</span><% } else if (u.correo) { %><span class="badge text-bg-warning ms-1">Sin verificar</span><% } %></td><td><%= u.telefono || '—' %></td><td><% if (u.codigo_cpr) { %><a href="/compradores/<%= u.codigo_cpr %>">Cliente #<%= u.codigo_cpr %></a><% } else { %><span class="text-muted">Sin vincular</span><% } %></td><td><%= pedidosPorUsuario[u.id] || 0 %></td><td><span class="badge <%= u.activo ? 'text-bg-success' : 'text-bg-secondary' %>"><%= u.activo ? 'Activo' : 'Inactivo' %></span></td><td class="text-end"><a class="btn btn-sm btn-outline-secondary" href="/usuarios/<%= u.id %>/editar" aria-label="Editar datos del cliente"><%- icono('pencil', 14) %></a></td></tr><% }) %>
+    </tbody></table></div></div>
+    <% if (clientes.paginas > 1) { %><nav class="d-flex justify-content-between align-items-center mt-3" aria-label="Paginación de clientes"><span class="small text-muted">Página <%= clientes.pagina %> de <%= clientes.paginas %></span><div class="btn-group"><% if (clientes.pagina > 1) { %><a class="btn btn-sm btn-outline-secondary" href="<%= paginaUrl('C', clientes.pagina - 1) %>#clientes">Anterior</a><% } %><% if (clientes.pagina < clientes.paginas) { %><a class="btn btn-sm btn-outline-secondary" href="<%= paginaUrl('C', clientes.pagina + 1) %>#clientes">Siguiente</a><% } %></div></nav><% } %>
+  </section>
+</main>
 <%- include('../plantillas/footer') %>
