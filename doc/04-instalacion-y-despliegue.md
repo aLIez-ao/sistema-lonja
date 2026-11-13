@@ -70,6 +70,18 @@ anteriores. Hay un enfriamiento de 60 segundos entre envíos y un máximo de 5 p
 
 El pago es **simulado** y no se conecta a un adquirente bancario. En desarrollo acepta la tarjeta de prueba `4242 4242 4242 4242`; nunca guarda tarjeta completa ni CVV. Configura `ENVIO_*` y `RESERVA_MINUTOS` en `.env` para personalizar la operación; las plantillas seguras están en `.env.example`.
 
+## Verificación en MariaDB
+
+Ejecuta esta revisión únicamente con una **copia desechable** de la base, nunca con la base activa. Usa un esquema aislado y un usuario con permisos limitados. Conserva las credenciales en `.env` local (no las pegues en comandos compartidos ni en el repositorio).
+
+1. Crea el esquema de prueba y restaura una copia reciente sin datos sensibles. Configura en `.env` `BD_DIALEC=mariadb`, `BD_HOST`, `BD_PORT`, `BD_NOMBRE`, `BD_USUARIO`, `BD_CLAVE` y `BD_SYNC=safe` para ese esquema aislado.
+2. Arranca la aplicación (`npm start`), confirma que `asegurarEsquema()` termina sin error, detén el servidor y vuelve a arrancarlo. El segundo inicio debe completar sin cambiar ni duplicar columnas/tablas.
+3. Con dos sesiones de comprador de prueba, agrega el mismo lote disponible a ambos carritos. La primera sesión crea el pedido; la segunda debe recibir el aviso de que el lote ya está reservado. Cuando expire o se cancele la primera reserva, comprueba que el segundo comprador pueda reservarlo y completar un pago simulado.
+4. Intenta completar el primer pedido después de la nueva compra y verifica que no se cree una segunda fila `Compra` para el lote (índice `uq_compra_lote`). No uses datos ni tarjetas reales.
+5. Descarta el esquema desechable al terminar. Registra versión de MariaDB, resultado de ambos arranques y de los escenarios de reserva/pago en el informe de verificación.
+
+La suite `npm test` cubre estas reglas con SQLite, pero la ejecución observada en este entorno no pudo validar MariaDB: el cliente está instalado, pero no hay servicio escuchando en `127.0.0.1:3306`.
+
 ## Producción
 1. `NODE_ENV=production`, `SC_JWT` largo y propio, `ADMIN_PASSWORD` fuerte (cámbiala tras el primer ingreso).
 2. Poner un proxy con **HTTPS** delante (nginx, Caddy…). La cookie `secure` solo viaja por HTTPS.

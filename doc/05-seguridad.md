@@ -20,6 +20,8 @@
 | Lote tomado por dos compradores | Reserva con vencimiento y revalidación al pagar; índice único de venta por lote |
 | Datos de tarjeta persistidos | Pasarela de desarrollo simulada; solo referencia y últimos cuatro dígitos se guardan |
 | Opinión sin experiencia de compra | El servidor verifica la compra del catálogo por el comprador autenticado |
+| Identidad del autor de opiniones públicas | Se muestra únicamente el nombre abreviado; el panel privado filtra opiniones por la sesión |
+| Reintentos de pago rechazado | Al quinto rechazo de un mismo pedido, se cancela y se liberan sus reservas; un pago aprobado limpia el contador en memoria |
 | Contenido público malicioso | Preguntas, respuestas y opiniones se imprimen escapadas mediante EJS `<%= %>` |
 | Correo falso/indisponible | Nuevas direcciones requieren verificación; preguntas y cambios de estado usan el transporte de correo configurado |
 
