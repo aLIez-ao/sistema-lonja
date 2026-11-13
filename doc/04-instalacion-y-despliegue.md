@@ -23,7 +23,7 @@ npm run server           # desarrollo (nodemon)   |   npm start  (producción)
 Abre <http://localhost:2800> e ingresa con `ADMIN_USER` / `ADMIN_PASSWORD`.
 Al primer arranque se crean las tablas, el administrador y los tipos Pescado, Marisco y Molusco.
 
-Datos de ejemplo (opcional, después del primer arranque): `npm run demo`.
+Datos de ejemplo (opcional, después del primer arranque): `npm run demo`. La carga es repetible. Para eliminar los registros que el script marcó como propios y regenerarlos, ejecuta `npm run demo -- --limpio --confirmar`; se niega en producción.
 
 ## Variables de entorno (`.env`)
 
@@ -41,6 +41,9 @@ Datos de ejemplo (opcional, después del primer arranque): `npm run demo`.
 | ADMIN_USER / ADMIN_PASSWORD | | Administrador inicial (solo se crea si no existe) |
 | GMAIL_USER / GMAIL_PASS | `cuenta@gmail.com` / contraseña de aplicación | Envío de verificación, recuperación y avisos. Sin ellas el correo entra en **modo simulador** |
 | APP_URL | `http://localhost:2800` | URL pública para armar los enlaces de los correos (sin diagonal final) |
+| ENVIO_COSTO | `150` | Cargo base de envío a domicilio |
+| ENVIO_GRATIS_DESDE | `2500` | Total del carrito a partir del cual el envío cuesta cero |
+| RESERVA_MINUTOS | `15` | Duración de la reserva mientras se confirma el pago |
 | NODE_ENV | `production` | Activa la cookie `secure` (solo HTTPS) |
 
 Generar un `SC_JWT` aleatorio: `node -e "console.log(require('crypto').randomBytes(48).toString('hex'))"`
@@ -64,6 +67,8 @@ se muestra.
 
 Los enlaces de verificación vencen en 24 horas y solo sirve el más reciente: al pedir uno nuevo se anulan los
 anteriores. Hay un enfriamiento de 60 segundos entre envíos y un máximo de 5 por hora y cuenta.
+
+El pago es **simulado** y no se conecta a un adquirente bancario. En desarrollo acepta la tarjeta de prueba `4242 4242 4242 4242`; nunca guarda tarjeta completa ni CVV. Configura `ENVIO_*` y `RESERVA_MINUTOS` en `.env` para personalizar la operación; las plantillas seguras están en `.env.example`.
 
 ## Producción
 1. `NODE_ENV=production`, `SC_JWT` largo y propio, `ADMIN_PASSWORD` fuerte (cámbiala tras el primer ingreso).

@@ -32,6 +32,12 @@ La tienda nunca expone nombres, correos ni montos de compradores: solo muestra l
 | GET/PUT | `/cuenta/direcciones/:id/editar`, `/cuenta/direcciones/:id` | Editar una dirección propia |
 | DELETE | `/cuenta/direcciones/:id` | Eliminar una dirección propia |
 | POST | `/cuenta/direcciones/:id/principal` | Marcar una dirección como principal |
+| GET/POST | `/carrito`, `/carrito/agregar/:id_lte`, `/carrito/quitar/:id_lte`, `/carrito/vaciar` | Consultar y cambiar el carrito propio |
+| GET/POST | `/pedido`, `/pedido/:id/pago`, `/pedido/:id/pagar`, `/pedido/:id/cancelar` | Checkout, pago simulado, cancelación del pedido propio |
+| GET | `/cuenta/pedidos`, `/cuenta/pedidos/:id`, `/cuenta/pedidos/:id/factura/:id_cmp[.pdf]` | Historial, detalle y factura propia |
+| GET/POST/PUT/DELETE | `/cuenta/listas`, `/cuenta/listas/:id`, `/cuenta/listas/:id/items`, `/cuenta/favoritos` | Listas y favoritos privados |
+| GET/POST | `/cuenta/preguntas`, `/tienda/preguntas` | Consultar o enviar preguntas (máximo 5 por hora) |
+| POST | `/tienda/especie/:id/opiniones` | Crear o editar una opinión solo tras una compra verificada |
 
 El `:id` de otra persona responde **404**. El comprador no entra a `/inicio` (403) ni a los módulos del personal; su inicio es la tienda. Las cuentas de comprador solo nacen en `/registro` (no las crea el admin) y el admin únicamente puede desactivarlas, sin cambiarles el rol.
 
@@ -41,6 +47,10 @@ El `:id` de otra persona responde **404**. El comprador no entra a `/inicio` (40
 |---|---|---|
 | GET | `/inicio` | Tablero: indicadores de hoy y del mes, gráficas, avance de lotes y últimas compras |
 | GET | `/reportes/diario?anio=AAAA` | **Reporte anual** con selector de año, gráficas y compras por mes (año actual si falta o es inválido) |
+| GET | `/pedidos`, `/pedidos/:id` | Búsqueda, filtro, orden, paginación y detalle de pedidos de tienda |
+| POST | `/pedidos/:id/estado` | Transición de una etapa: pagado → preparando → enviado → entregado; correo al enviar y entregar |
+| GET/POST | `/preguntas`, `/preguntas/:id` | Revisar, responder u ocultar preguntas |
+| GET/POST | `/opiniones`, `/opiniones/:id` | Moderar visibilidad de opiniones |
 | GET | `/reportes/anual.pdf?anio=AAAA` | Reporte anual oficial en PDF |
 | GET | `/reportes/diario.csv?anio=AAAA` o `?fecha=AAAA-MM-DD` | Reporte en CSV (abre en Excel con acentos) |
 | GET | `/configuracion` | Apariencia, cookies y privacidad, cuenta y seguridad |

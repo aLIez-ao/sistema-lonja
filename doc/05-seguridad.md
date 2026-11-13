@@ -16,12 +16,18 @@
 | Datos inválidos / manipulados | Validación en servidor (express-validator) y restricciones en BD; el total de la compra se calcula en el servidor |
 | Revelar tecnología | `x-powered-by` desactivado; errores internos no muestran el detalle al usuario |
 | Secreto sin configurar | La app no arranca sin `SC_JWT` |
+| Datos de compradores expuestos | Carrito, pedidos, listas, direcciones y preguntas personales se consultan con el ID de sesión; recurso ajeno responde 404 |
+| Lote tomado por dos compradores | Reserva con vencimiento y revalidación al pagar; índice único de venta por lote |
+| Datos de tarjeta persistidos | Pasarela de desarrollo simulada; solo referencia y últimos cuatro dígitos se guardan |
+| Opinión sin experiencia de compra | El servidor verifica la compra del catálogo por el comprador autenticado |
+| Contenido público malicioso | Preguntas, respuestas y opiniones se imprimen escapadas mediante EJS `<%= %>` |
+| Correo falso/indisponible | Nuevas direcciones requieren verificación; preguntas y cambios de estado usan el transporte de correo configurado |
 
 ## Límites conocidos (ver también [TODO.md](TODO.md))
 
-- **Sin límite de intentos de login** (fuerza bruta). Pendiente: `express-rate-limit` o bloqueo temporal.
+- El límite por IP de login y los de pregunta/sugerencias se guardan en memoria; se reinician al reiniciar el proceso y no se comparten entre varias instancias.
 - **Sin token CSRF** además de `SameSite`; `csurf` está obsoleto. Para navegadores muy antiguos conviene añadir un token propio.
 - El JWT no se puede revocar antes de vencer, pero la consulta a BD en cada petición cubre desactivación y borrado de cuentas.
-- No hay recuperación de contraseña ni bitácora de auditoría.
+- No existe bitácora de auditoría para cambios administrativos.
 - Sin cabeceras de seguridad adicionales (p. ej. `helmet`/CSP).
 - Los ejemplos del curso muestran credenciales de prueba (`root/1234`, `FESAdministrador4`); **no usarlas** en un ambiente real.
