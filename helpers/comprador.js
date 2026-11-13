@@ -23,7 +23,11 @@ export async function vincularComprador(usuario) {
   const comprador = await compradorPorCorreo(correo);
   if (!comprador) return null;
   const ocupado = await Usuario.findOne({ where: { codigo_cpr: comprador.codigo_cpr } });
-  if (ocupado && ocupado.id !== usuario.id) return null;
+  if (ocupado && ocupado.id !== usuario.id) {
+    const error = new Error("El cliente con ese correo ya está vinculado a otra cuenta");
+    error.code = "COMPRADOR_YA_VINCULADO";
+    throw error;
+  }
 
   usuario.codigo_cpr = comprador.codigo_cpr;
   await usuario.save();

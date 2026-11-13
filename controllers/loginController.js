@@ -152,7 +152,15 @@ const verificarEmailToken = async (req, res) => {
   await us.save();
 
   // El comprador hereda el historial del mostrador solo ahora que demostró el correo.
-  if (us.rol === "comprador" && !us.codigo_cpr) await vincularComprador(us);
+  if (us.rol === "comprador" && !us.codigo_cpr) {
+    try {
+      await vincularComprador(us);
+    } catch (error) {
+      if (error.code !== "COMPRADOR_YA_VINCULADO") throw error;
+      console.warn(`No se vinculó el comprador de la cuenta ${us.id}: el registro de cliente ya pertenece a otra cuenta.`);
+      return res.redirect(`/acceso?${aMensaje("Tu correo quedó verificado, pero el cliente con ese correo ya está vinculado a otra cuenta. Pide al personal de la lonja que reconcilie las cuentas antes de comprar.")}`);
+    }
+  }
 
   if (req.usuario) {
     return res.redirect(`${inicioSegun(req.usuario)}?${aMensaje("Correo verificado correctamente")}`);

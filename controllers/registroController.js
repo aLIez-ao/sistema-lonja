@@ -80,16 +80,17 @@ const registrar = async (req, res) => {
   const trampa = CAMPOS_TRAMPA.some((campo) => String(req.body[campo] ?? "").trim());
   if (trampa) return vistaRevisa(res, { correo: req.body.correo });
 
+  const errs = erroresRegistro(req.body);
+  if (errs.length) return vistaFormulario(res, { errores: errs, datos: req.body });
+
   if (limiteRegistro.bloqueado(req.ip)) {
     return res.status(429).render("error", {
       codigo: 429,
       mensaje: "Se hicieron demasiados registros desde este equipo. Inténtalo de nuevo en una hora.",
     });
   }
+  // Solo un intento que pasó todas las validaciones consume el límite.
   limiteRegistro.fallo(req.ip);
-
-  const errs = erroresRegistro(req.body);
-  if (errs.length) return vistaFormulario(res, { errores: errs, datos: req.body });
 
   const correo = String(req.body.correo).trim().toLowerCase();
   const existente = await Usuario.findOne({ where: sqlWhere(fn("LOWER", col("correo")), correo) });
