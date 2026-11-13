@@ -23,7 +23,8 @@ test("carga demo idempotente, con pedidos coherentes y opiniones verificadas", a
   assert.ok(pagados.length >= 4);
   for (const pedido of pagados) {
     assert.ok(pedido.compras.length);
-    assert.equal(Number(pedido.compras[0].precio_total), Number(pedido.total));
+    const totalCompras = pedido.compras.reduce((suma, compra) => suma + Number(compra.precio_total), 0);
+    assert.equal(Math.round((totalCompras + Number(pedido.costo_envio)) * 100) / 100, Number(pedido.total));
   }
   const opiniones = await modelos.Opinion.findAll({ include: [{ model: modelos.Usuario, as: "autor" }] });
   assert.ok(opiniones.length);

@@ -9,6 +9,7 @@ import { enviarEmailPedido } from "../helpers/email.js";
 import { cobrar } from "../helpers/pasarela.js";
 import { costoEnvio, liberarPedidosVencidos, loteDisponible, reservaMinutos, reservasActivas, textoDireccion, totalLineas } from "../helpers/pedidos.js";
 import { prepararLote } from "../helpers/tienda.js";
+import { crearLimite } from "../helpers/seguridad.js";
 
 const errorDe = (res, mensaje, estado = 400) => res.status(estado).render("error", {
   codigo: estado,
@@ -31,6 +32,7 @@ const obtenerCarrito = async (usuarioId, transaction) => CarritoItem.findAll({
 });
 
 const subtotalCarrito = (filas) => totalLineas(filas.filter((f) => f.lote).map((f) => f.lote));
+const limitePagosFallidos = crearLimite({ max: 5, ventanaMs: 60 * 60 * 1000 });
 
 export const verNuevo = async (req, res) => {
   await liberarPedidosVencidos();
@@ -178,7 +180,17 @@ export const pagar = async (req, res) => {
 
       // El número y el CVV solo viven durante esta llamada. No se escriben ni se registran.
       const pago = await cobrar({ monto: Number(pedido.total), referencia: `pedido-${pedido.id_ped}`, tarjeta: req.body });
-      if (!pago.aprobado) return { estado: "rechazado", motivo: pago.motivo, pedido };
+      if (!pago.aprobado) {
+        const clave = `pago:${pedido.id_ped}`;
+        limitePagosFallidos.fallo(clave);
+        if (limitePagosFallidos.bloqueado(clave)) {
+          await pedido.update({ estado: "cancelado" }, { transaction });
+          limitePagosFallidos.limpiar(clave);
+          return { estado: "intentos_agotados", pedido };
+        }
+        return { estado: "rechazado", motivo: pago.motivo, pedido };
+      }
+      limitePagosFallidos.limpiar(`pago:${pedido.id_ped}`);
 
       const fecha = new Date();
       const compras = [];
@@ -210,6 +222,7 @@ export const pagar = async (req, res) => {
   if (resultado.estado === "no_encontrado") return errorDe(res, "No encontramos ese pedido.", 404);
   if (resultado.estado === "ya_pagado") return res.redirect(`/cuenta/pedidos/${resultado.pedido.id_ped}?${aMensaje("Este pedido ya estaba pagado")}`);
   if (resultado.estado === "rechazado") return res.redirect(`/pedido/${resultado.pedido.id_ped}/pago?error=${encodeURIComponent(resultado.motivo)}`);
+  if (resultado.estado === "intentos_agotados") return res.redirect(`/cuenta/pedidos/${resultado.pedido.id_ped}?error=${encodeURIComponent("Se canceló el pedido después de cinco intentos de pago rechazados. Puedes volver a armar el carrito.")}`);
   if (resultado.estado !== "pagado") {
     const mensaje = resultado.estado === "expirado" ? "La reserva venció. Regresa al carrito para revisar qué lotes siguen disponibles."
       : resultado.estado === "no_disponible" ? "Uno o más lotes ya no están disponibles y la reserva se liberó."
