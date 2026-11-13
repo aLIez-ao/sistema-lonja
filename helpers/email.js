@@ -86,12 +86,12 @@ async function enviarCorreo({ para, asunto, html, texto, adjuntos = [] }) {
   const transporter = obtenerTransporte();
 
   if (!transporter) {
-    console.log("==================================================================");
-    console.log("📧 [SIMULADOR DE CORREO - Configura GMAIL_USER y GMAIL_PASS en .env]");
+    console.log("\x1b[33m==================================================================\x1b[0m");
+    console.log("\x1b[33m[SIMULADOR DE CORREO - Configura GMAIL_USER y GMAIL_PASS en .env]\x1b[0m");
     console.log(`Para: ${para}`);
     console.log(`Asunto: ${asunto}`);
     console.log(`Contenido:\n${texto || html}`);
-    console.log("==================================================================");
+    console.log("\x1b[33m==================================================================\x1b[0m");
     return { simulado: true, mensaje: "Correo simulado en consola (configura Gmail en .env para envío real)" };
   }
 
@@ -104,14 +104,14 @@ async function enviarCorreo({ para, asunto, html, texto, adjuntos = [] }) {
       html,
       attachments: adjuntos,
     });
-    console.log(`✅ Correo enviado a ${para} (ID: ${info.messageId})`);
+    console.log(`\x1b[32mCorreo enviado a ${para} (ID: ${info.messageId})\x1b[0m`);
     return { ok: true, messageId: info.messageId };
   } catch (error) {
     ultimoError = error;
     ultimoErrorFecha = new Date();
     const detalle = traducirErrorCorreo(error);
     // El detalle técnico completo solo en consola y en la pestaña Correo del administrador.
-    console.error(`❌ Error al enviar correo a ${para}: ${detalle}`);
+    console.error(`\x1b[31mError al enviar correo a ${para}: ${detalle}\x1b[0m`);
     console.error(error);
     return { ok: false, error: detalle, tecnico: error.message };
   }
