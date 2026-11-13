@@ -14,6 +14,13 @@
   </div>
 <% } %>
 
+<% if (typeof enlaceVerificacion !== 'undefined' && enlaceVerificacion) { %>
+  <div class="alert alert-info" role="status">
+    Enlace temporal de verificación para desarrollo:
+    <a class="d-block text-break" href="<%= enlaceVerificacion %>"><%= enlaceVerificacion %></a>
+  </div>
+<% } %>
+
 <% if (typeof error !== 'undefined' && error) { %>
   <div class="alert alert-danger alert-dismissible fade show" role="alert">
     <%= error %>

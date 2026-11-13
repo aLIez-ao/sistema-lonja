@@ -121,9 +121,10 @@ test("modo simulador: en desarrollo muestra el enlace; en producción no", async
   delete process.env.GMAIL_PASS;
 
   const dev = await admin.post("/configuracion/solicitar-verificacion");
-  assert.equal(dev.status, 302);
-  assert.match(mensajeDe(dev.loc), /Modo desarrollo/);
-  assert.ok(enlaceDe(mensajeDe(dev.loc)), "el enlace se muestra en pantalla");
+  assert.equal(dev.status, 200);
+  assert.match(dev.texto, /Modo desarrollo/);
+  assert.ok(enlaceDe(dev.texto), "el enlace se muestra directamente en la respuesta");
+  assert.equal(dev.loc, null, "el enlace no viaja en la URL");
 
   await Usuario.update({ token_verificacion_envio: new Date(0) }, { where: { usuario: "admin" } });
   process.env.NODE_ENV = "production";
@@ -132,6 +133,43 @@ test("modo simulador: en desarrollo muestra el enlace; en producción no", async
   assert.doesNotMatch(mensajeDe(prod.loc), /verificar-email/);
   assert.match(mensajeDe(prod.loc), /Avisa al administrador/);
   delete process.env.NODE_ENV;
+});
+
+test("cambiar correo invalida de inmediato el enlace anterior aunque siga el enfriamiento", async () => {
+  const t = transporteFalso();
+  fijarTransporteParaPruebas(t);
+  await admin.post("/configuracion/solicitar-verificacion");
+  const enlaceAnterior = enlaceDe(t.enviados[0].text);
+  assert.ok(enlaceAnterior);
+
+  const cambio = await admin.post("/configuracion/actualizar-cuenta", {
+    nombre_completo: "Administrador",
+    correo: "nuevo-admin@example.com",
+  });
+  assert.equal(cambio.status, 302);
+  assert.match(mensajeDe(cambio.loc), /espera \d+ s/i);
+  assert.doesNotMatch(mensajeDe(cambio.loc), /sigue vigente/i);
+
+  const u = await Usuario.findOne({ where: { usuario: "admin" } });
+  assert.equal(u.correo, "nuevo-admin@example.com");
+  assert.equal(u.email_verificado, false);
+  assert.equal(u.token_verificacion, null);
+  assert.equal(u.token_verificacion_expira, null);
+  assert.equal((await admin.get(enlaceAnterior)).status, 400);
+});
+
+test("el simulador también muestra el enlace de cambio de correo en el cuerpo, no en la URL", async () => {
+  fijarTransporteParaPruebas(null);
+  delete process.env.GMAIL_USER;
+  delete process.env.GMAIL_PASS;
+  await Usuario.update({ token_verificacion_envio: new Date(0) }, { where: { usuario: "admin" } });
+  const r = await admin.post("/configuracion/actualizar-cuenta", {
+    nombre_completo: "Administrador",
+    correo: "cambio@example.com",
+  });
+  assert.equal(r.status, 200);
+  assert.match(r.texto, /href="http:\/\/127\.0\.0\.1:[0-9]+\/verificar-email\//);
+  assert.doesNotMatch(r.loc || "", /verificar-email/);
 });
 
 test("APP_URL se usa en los enlaces si está definida", async () => {

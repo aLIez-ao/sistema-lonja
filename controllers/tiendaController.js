@@ -232,31 +232,12 @@ export const detalleLote = async (req, res) => {
 /** GET /tienda/especie/:id — ficha pública de una especie del catálogo. */
 export const fichaEspecie = async (req, res) => {
   const id = filtroEntero(req.params.id);
-  let catalogo = id
+  const catalogo = id
     ? await EspecieCatalogo.findByPk(id, {
         include: [{ model: Tipo, as: "tipo" }],
       })
     : null;
-
-  // Compatibilidad con especies capturadas sin catálogo (datos de demostración):
-  // si el id no es de catálogo, se busca la especie del lote por su id_epe.
-  let especieSuelta = null;
-  if (!catalogo && id) {
-    especieSuelta = await Especie.findByPk(id, {
-      include: [
-        { model: Tipo, as: "tipo" },
-        { model: EspecieCatalogo, as: "catalogo", attributes: ["id_cat", "descripcion", "imagen"] },
-      ],
-    });
-    if (!especieSuelta) {
-      return res.status(404).render("error", {
-        codigo: 404,
-        mensaje: "No encontramos esa especie.",
-        accion: { texto: "Volver a la tienda", url: "/" },
-      });
-    }
-  }
-  if (!catalogo && !especieSuelta) {
+  if (!catalogo) {
     return res.status(404).render("error", {
       codigo: 404,
       mensaje: "No encontramos esa especie.",
@@ -264,13 +245,11 @@ export const fichaEspecie = async (req, res) => {
     });
   }
 
-  const nombre = catalogo?.nombre || especieSuelta.nombre;
-  const tipo = catalogo?.tipo || especieSuelta.tipo;
-  const descripcion = catalogo?.descripcion || especieSuelta?.catalogo?.descripcion || "";
-  const imagen = catalogo?.imagen || imagenDeEspecie(especieSuelta || { nombre, tipo });
-  const ids = await idsDeLotesConEspecie(
-    catalogo ? { id_cat: catalogo.id_cat } : { nombre },
-  );
+  const nombre = catalogo.nombre;
+  const tipo = catalogo.tipo;
+  const descripcion = catalogo.descripcion || "";
+  const imagen = catalogo.imagen || imagenDeEspecie({ nombre, tipo });
+  const ids = await idsDeLotesConEspecie({ id_cat: catalogo.id_cat });
   const hoyInicio = rangoDelDia(hoy()).inicio;
   const lotes = await lotesDisponibles(
     { id_lte: { [Op.in]: ids } },
@@ -279,9 +258,19 @@ export const fichaEspecie = async (req, res) => {
     hoyInicio,
   );
 
+  // Una especie retirada del catálogo solo conserva página pública mientras
+  // tenga lotes activos disponibles para consultar.
+  if (!catalogo.activo && lotes.length === 0) {
+    return res.status(404).render("error", {
+      codigo: 404,
+      mensaje: "No encontramos esa especie.",
+      accion: { texto: "Volver a la tienda", url: "/" },
+    });
+  }
+
   res.render("tienda/especie", {
     especie: {
-      id: catalogo?.id_cat || especieSuelta.id_epe,
+      id: catalogo.id_cat,
       nombre,
       tipo: tipo?.nombre || "",
       descripcion,

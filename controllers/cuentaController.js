@@ -1,7 +1,7 @@
 import { Usuario, Compra, Lote, Especie, DireccionEntrega } from "../models/index.js";
 import { aMensaje, aError } from "../helpers/utiles.js";
 import { aplicarFoto } from "../helpers/avatar.js";
-import { compradorDe, partirNombre } from "../helpers/comprador.js";
+import { compradorDe, compradorPorCorreo, partirNombre } from "../helpers/comprador.js";
 import { enviarVerificacionCorreo, segundosEsperaVerificacion } from "../helpers/cuentas.js";
 
 const CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -25,7 +25,7 @@ async function datosPersonales(us) {
   };
 }
 
-const vistaDatos = async (res, us, { errores = [], estado = 200, mensaje = null } = {}) => {
+const vistaDatos = async (res, us, { errores = [], estado = 200, mensaje = null, enlaceVerificacion = null } = {}) => {
   const direcciones = await DireccionEntrega.count({ where: { id_usuario: us.id } });
   res.status(estado).render("cuenta/datos", {
     us,
@@ -33,6 +33,7 @@ const vistaDatos = async (res, us, { errores = [], estado = 200, mensaje = null 
     direcciones,
     errores,
     mensaje,
+    enlaceVerificacion,
   });
 };
 
@@ -108,6 +109,12 @@ export const actualizarDatos = async (req, res) => {
     }
 
     const cpr = await compradorDe(us);
+    if (correoCambio && cpr) {
+      const existente = await compradorPorCorreo(correo);
+      if (existente && existente.codigo_cpr !== cpr.codigo_cpr) {
+        return vistaDatos(res, us, { errores: ["Ese correo ya está asociado a otro cliente de la lonja"], estado: 400 });
+      }
+    }
     us.nombre_completo = `${nombre} ${paterno}${materno ? ` ${materno}` : ""}`;
     us.telefono = telefono || null;
     us.rfc = rfc || null;
@@ -115,12 +122,14 @@ export const actualizarDatos = async (req, res) => {
     if (correoCambio) {
       us.correo = correo;
       us.email_verificado = false;
+      us.token_verificacion = null;
+      us.token_verificacion_expira = null;
     }
     await aplicarFoto(us, { fotoData: req.body.foto_data, quitar: req.body.foto_quitar === "on" });
     await us.save();
 
     if (cpr && cpr.codigo_cpr === us.codigo_cpr) {
-      await cpr.update({ nombre, apellido_paterno: paterno, apellido_materno: materno || null });
+      await cpr.update({ nombre, apellido_paterno: paterno, apellido_materno: materno || null, ...(correoCambio ? { correo } : {}) });
     }
 
     let aviso = "Tus datos quedaron guardados.";
@@ -132,12 +141,13 @@ export const actualizarDatos = async (req, res) => {
         const envio = await enviarVerificacionCorreo(req, us).catch(() => ({ ok: false }));
         if (envio.ok) aviso += ` Te enviamos un enlace a ${correo} para verificarlo.`;
         else if (envio.simulado && process.env.NODE_ENV !== "production") {
-          aviso += ` Modo desarrollo: correo no configurado. Abre este enlace: ${envio.enlace}`;
+          return vistaDatos(res, us, { mensaje: aviso, enlaceVerificacion: envio.enlace });
         } else aviso += " No pudimos enviar el correo de verificación; inténtalo más tarde.";
       }
     }
     return res.redirect(`/cuenta/datos?${aMensaje(aviso)}`);
   } catch (e) {
-    return res.redirect(`/cuenta/datos?${aError(e?.message || "No se pudieron guardar los datos")}`);
+    console.error("No se pudieron actualizar los datos de la cuenta:", e);
+    return res.redirect(`/cuenta/datos?${aError("No se pudieron guardar los datos. Revisa la información e inténtalo de nuevo.")}`);
   }
 };

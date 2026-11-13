@@ -9,6 +9,13 @@
 
 <%- include('../plantillas/mensajes', { mensaje: typeof mensaje !== 'undefined' ? mensaje : null, errores }) %>
 
+<% if (typeof enlaceVerificacion !== 'undefined' && enlaceVerificacion) { %>
+  <div class="alert alert-info" role="status">
+    Enlace temporal de verificación para desarrollo:
+    <a class="d-block text-break" href="<%= enlaceVerificacion %>"><%= enlaceVerificacion %></a>
+  </div>
+<% } %>
+
 <div class="row g-4">
   <div class="col-lg-8">
     <div class="card p-4">

@@ -6,10 +6,11 @@ import { aplicarFoto } from "../helpers/avatar.js";
 import { problemasPassword } from "../helpers/seguridad.js";
 import { JWTGenera, opcionesCookieSesion } from "../helpers/tokens.js";
 import { aMensaje } from "../helpers/utiles.js";
+import { compradorDe, compradorPorCorreo } from "../helpers/comprador.js";
 import { prefValida } from "../middleware/preferencias.js";
 import { CATEGORIAS, COOKIE_DE_PREF, aplicarConsentimiento, guardarCookiePreferencia } from "../helpers/cookies.js";
 
-export const verConfiguracion = async (req, res) => {
+const renderConfiguracion = async (req, res, adicionales = {}) => {
   const us = await Usuario.findByPk(req.usuario.id);
   const totalCompradores = await Comprador.count();
   res.render("configuracion/index", {
@@ -19,8 +20,11 @@ export const verConfiguracion = async (req, res) => {
     appUrl: urlBase(req),
     mensaje: req.query.mensaje,
     error: req.query.error,
+    ...adicionales,
   });
 };
+
+export const verConfiguracion = (req, res) => renderConfiguracion(req, res);
 
 /** Guarda en la cuenta (siempre) y en cookies (solo las categorías aceptadas). */
 async function persistirPreferencias(req, res, cambios) {
@@ -88,18 +92,28 @@ export const actualizarCuenta = async (req, res) => {
   if (telefono && !/^[0-9+() -]{7,20}$/.test(telefono)) return res.redirect(`/configuracion?${aError("El teléfono no es válido")}#pane-cuenta`);
 
   try {
-    const correoCambio = correo !== (us.correo || "");
+    const correoCambio = correo !== String(us.correo || "").toLowerCase();
     if (correoCambio && (await Usuario.findOne({ where: { correo } }))) {
       return res.redirect(`/configuracion?${aError("Ese correo ya está en uso por otro usuario")}#pane-cuenta`);
+    }
+    const comprador = await compradorDe(us);
+    if (correoCambio && comprador) {
+      const compradorExistente = await compradorPorCorreo(correo);
+      if (compradorExistente && compradorExistente.codigo_cpr !== comprador.codigo_cpr) {
+        return res.redirect(`/configuracion?${aError("Ese correo ya está asociado a otro cliente de la lonja")}#pane-cuenta`);
+      }
     }
     us.nombre_completo = nombre;
     us.telefono = telefono || null;
     if (correoCambio) {
       us.correo = correo;
       us.email_verificado = false; // un correo nuevo debe verificarse otra vez
+      us.token_verificacion = null;
+      us.token_verificacion_expira = null;
     }
     await aplicarFoto(us, { fotoData: req.body.foto_data, quitar: req.body.foto_quitar === "on" });
     await us.save();
+    if (correoCambio && comprador) await comprador.update({ correo });
 
     let aviso = "Datos de la cuenta actualizados.";
     if (correoCambio) {
@@ -110,14 +124,15 @@ export const actualizarCuenta = async (req, res) => {
         const envio = await enviarVerificacionCorreo(req, us);
         if (envio.ok) aviso += ` Te enviamos un enlace a ${correo} para verificarlo.`;
         else if (envio.simulado && process.env.NODE_ENV !== "production") {
-          aviso += ` Modo desarrollo: el correo no está configurado. Abre este enlace para verificar: ${envio.enlace}`;
+          return renderConfiguracion(req, res, { mensaje: aviso, enlaceVerificacion: envio.enlace, paneActiva: "cuenta" });
         } else if (envio.simulado) aviso += " No pudimos enviar el correo. Avisa al administrador.";
         else aviso += " No pudimos enviar el correo; inténtalo más tarde.";
       }
     }
     res.redirect(`/configuracion?${aMensaje(aviso)}#pane-cuenta`);
   } catch (err) {
-    res.redirect(`/configuracion?${aError(err.name?.startsWith("Sequelize") ? "No se pudieron guardar los datos" : err.message)}#pane-cuenta`);
+    console.error("No se pudo actualizar la cuenta:", err);
+    res.redirect(`/configuracion?${aError("No se pudieron guardar los datos. Revisa la información e inténtalo de nuevo.")}#pane-cuenta`);
   }
 };
 
@@ -128,7 +143,7 @@ export const solicitarVerificacionEmail = async (req, res) => {
 
   const espera = segundosEsperaVerificacion(us);
   if (espera > 0) {
-    return res.redirect(`/configuracion?${aError(`Espera ${espera} segundos antes de pedir otro enlace; el anterior sigue vigente`)}#pane-cuenta`);
+    return res.redirect(`/configuracion?${aError(`Espera ${espera} segundos antes de pedir otro enlace`)}#pane-cuenta`);
   }
   const clave = `verificacion:${us.id}`;
   if (limiteVerificacion.bloqueado(clave)) {
@@ -143,7 +158,7 @@ export const solicitarVerificacionEmail = async (req, res) => {
   let aviso;
   if (envio.ok) aviso = `Se envió un enlace nuevo a ${us.correo}; los enlaces anteriores dejan de servir. Vence en 24 horas.`;
   else if (envio.simulado && process.env.NODE_ENV !== "production") {
-    aviso = `Modo desarrollo: el correo no está configurado. Abre este enlace para verificar: ${envio.enlace}`;
+    return renderConfiguracion(req, res, { mensaje: `Modo desarrollo: correo no configurado para ${us.correo}.`, enlaceVerificacion: envio.enlace, paneActiva: "cuenta" });
   } else if (envio.simulado) aviso = "No pudimos enviar el correo. Avisa al administrador.";
   else aviso = "No pudimos enviar el correo; inténtalo más tarde.";
   res.redirect(`/configuracion?${aMensaje(aviso)}#pane-cuenta`);
