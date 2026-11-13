@@ -1,6 +1,7 @@
 import { Op } from "sequelize";
 import { Pedido, Usuario, Comprador, PedidoItem, Lote, Especie, Compra } from "../models/index.js";
 import { enviarEmailPedido } from "../helpers/email.js";
+import { aError } from "../helpers/utiles.js";
 
 const ESTADOS = ["pendiente_pago", "pagado", "preparando", "enviado", "entregado", "cancelado", "expirado"];
 const avanzan = { pagado: "preparando", preparando: "enviado", enviado: "entregado" };
@@ -44,7 +45,12 @@ export async function cambiarEstado(req, res) {
   const pedido = await Pedido.findByPk(req.params.id, { include: incluir });
   if (!pedido) return res.sendStatus(404);
   const siguiente = avanzan[pedido.estado];
-  if (!siguiente || req.body.estado !== siguiente) return res.status(400).redirect(`/pedidos/${pedido.id_ped}?error=transicion`);
+  if (!siguiente || req.body.estado !== siguiente) {
+    const etiqueta = { pendiente_pago: "pendiente de pago", pagado: "pagado", preparando: "preparando", enviado: "enviado", entregado: "entregado", cancelado: "cancelado", expirado: "expirado" };
+    const solicitada = etiqueta[req.body.estado] || "estado desconocido";
+    const actual = etiqueta[pedido.estado] || pedido.estado;
+    return res.redirect(`/pedidos/${pedido.id_ped}?${aError(`No se puede pasar el pedido de «${actual}» a «${solicitada}».`)}`);
+  }
   await pedido.update({ estado: siguiente });
   if (["enviado", "entregado"].includes(siguiente) && pedido.usuario?.correo) {
     const parrafos = siguiente === "enviado" ? ["Tu pedido está en camino."] : ["Tu pedido fue marcado como entregado."];

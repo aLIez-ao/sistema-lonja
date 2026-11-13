@@ -19,7 +19,10 @@ test("administración de pedidos filtra, avanza estado y notifica enviado/entreg
   await Compra.create({ id_cmp: lote.id_lte, codigo_cpr: c.codigo_cpr, id_ped: pedido.id_ped, precio_kilo_final: 50, precio_total: 500 });
   const admin = cliente(srv.base); await admin.entrar("admin", "AdminPrueba123");
   assert.equal((await admin.get("/pedidos?q=maria")).status, 200);
-  assert.equal((await admin.post(`/pedidos/${pedido.id_ped}/estado`, { estado: "enviado" })).status, 302, "salta preparando y no permite avanzar más de una etapa");
+  const transicionInvalida = await admin.post(`/pedidos/${pedido.id_ped}/estado`, { estado: "enviado" });
+  assert.equal(transicionInvalida.status, 302, "salta preparando y no permite avanzar más de una etapa");
+  assert.match(decodeURIComponent(transicionInvalida.loc), /No se puede pasar el pedido de «pagado» a «enviado»/);
+  assert.equal(decodeURIComponent(transicionInvalida.loc).includes("transicion"), false);
   assert.equal((await Pedido.findByPk(pedido.id_ped)).estado, "pagado");
   await admin.post(`/pedidos/${pedido.id_ped}/estado`, { estado: "preparando" });
   await admin.post(`/pedidos/${pedido.id_ped}/estado`, { estado: "enviado" });

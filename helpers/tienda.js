@@ -3,6 +3,15 @@
 // trabaja con lotes disponibles y especies activas.
 import { redondea } from "./fechas.js";
 
+/** Muestra un nombre de comprador sin revelar su apellido completo. */
+export function nombrePublico(nombreCompleto) {
+  const partes = String(nombreCompleto ?? "").trim().split(/\s+/).filter(Boolean);
+  if (!partes.length) return "Comprador";
+  const nombre = partes[0];
+  const apellido = partes.length > 1 ? partes.at(-1) : "";
+  return apellido ? `${nombre} ${Array.from(apellido)[0].toLocaleUpperCase("es-MX")}.` : nombre;
+}
+
 // Las fotos existentes en public/img se asignan por nombre de especie.
 const FOTOS_POR_NOMBRE = [
   [/huachinango/i, "/img/Huachinango.webp"],
