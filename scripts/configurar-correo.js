@@ -6,10 +6,13 @@ import { enmascararCorreo } from "../helpers/correoUtils.js";
 
 const CLAVES = ["GMAIL_USER", "GMAIL_PASS", "APP_URL"];
 
+/** Google muestra la contraseña de aplicación en bloques con espacios: se guardan sin ellos. */
+export const normalizarClave = (clave) => String(clave ?? "").replace(/\s+/g, "");
+
 export function validarConfiguracionCorreo({ usuario, clave, appUrl }) {
   const errores = [];
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(usuario || "").trim())) errores.push("GMAIL_USER debe ser una dirección de correo válida.");
-  if (!/^[A-Za-z0-9]{16}$/.test(String(clave || ""))) errores.push("GMAIL_PASS debe tener 16 caracteres alfanuméricos, sin espacios.");
+  if (!/^[A-Za-z0-9]{16}$/.test(normalizarClave(clave))) errores.push("GMAIL_PASS debe tener 16 caracteres alfanuméricos (se ignoran los espacios).");
   try {
     const url = new URL(String(appUrl || ""));
     if (!["http:", "https:"].includes(url.protocol) || /\s/.test(String(appUrl))) throw new Error();
@@ -28,7 +31,8 @@ export function actualizarEnv(texto, valores) {
   return salida;
 }
 
-export async function escribirEnv({ rutaEnv = path.resolve(".env"), rutaEjemplo = path.resolve(".env.example"), valores }) {
+export async function escribirEnv({ rutaEnv = path.resolve(".env"), rutaEjemplo = path.resolve(".env.example"), valores: valoresEntrada }) {
+  const valores = { ...valoresEntrada, GMAIL_PASS: normalizarClave(valoresEntrada.GMAIL_PASS) };
   const errores = validarConfiguracionCorreo({ usuario: valores.GMAIL_USER, clave: valores.GMAIL_PASS, appUrl: valores.APP_URL });
   if (errores.length) throw new Error(errores.join(" "));
   let original;
@@ -52,7 +56,7 @@ export async function ejecutarAsistente({ input = process.stdin, output = proces
     output.write("Configuración de correo de Lonja de Veracruz\n");
     const valores = {
       GMAIL_USER: (await preguntar("GMAIL_USER (correo Gmail): ")).trim(),
-      GMAIL_PASS: await preguntar("GMAIL_PASS (contraseña de aplicación, entrada oculta): ", true),
+      GMAIL_PASS: normalizarClave(await preguntar("GMAIL_PASS (contraseña de aplicación, entrada oculta; puedes pegarla con espacios): ", true)),
       APP_URL: (await preguntar("APP_URL (http/https): ")).trim().replace(/\/$/, ""),
     };
     const errores = validarConfiguracionCorreo({ usuario: valores.GMAIL_USER, clave: valores.GMAIL_PASS, appUrl: valores.APP_URL });
