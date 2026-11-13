@@ -1,0 +1,62 @@
+<%- include('../plantillas/header') %>
+<div class="mb-4"><p class="text-uppercase small text-muted fw-semibold mb-1">Finalizar pedido</p><h1 class="h2 mb-0">Entrega y resumen</h1></div>
+<%- include('../plantillas/mensajes', { mensaje, errores: error ? [error] : [] }) %>
+<% if (!items.length) { %>
+  <div class="alert alert-info">Tu carrito está vacío. <a href="/">Explora los lotes disponibles</a>.</div>
+<% } else { %>
+  <form action="/pedido" method="POST" class="row g-4">
+    <div class="col-lg-7">
+      <section class="card p-4 mb-4">
+        <h2 class="h5">¿Cómo recibirás el pedido?</h2>
+        <div class="form-check border rounded p-3 ps-5 mb-2">
+          <input class="form-check-input" type="radio" id="recoger" name="entrega" value="recoger" <%= entregaSeleccionada === 'recoger' ? 'checked' : '' %> required>
+          <label class="form-check-label" for="recoger"><strong>Recoger en la lonja</strong><span class="d-block small text-muted">Muelle Fiscal de Veracruz · sin costo de envío</span></label>
+        </div>
+        <div class="form-check border rounded p-3 ps-5">
+          <input class="form-check-input" type="radio" id="domicilio" name="entrega" value="domicilio" <%= entregaSeleccionada === 'domicilio' ? 'checked' : '' %> required>
+          <label class="form-check-label" for="domicilio"><strong>Entrega a domicilio</strong><span class="d-block small text-muted">Veracruz y zona conurbada</span></label>
+        </div>
+        <div class="mt-3" data-direccion-entrega <%= entregaSeleccionada !== 'domicilio' ? 'hidden' : '' %>>
+          <label class="form-label" for="id_dir">Dirección de entrega</label>
+          <% if (!direcciones.length) { %>
+            <div class="alert alert-warning">Aún no tienes direcciones guardadas. <a href="/cuenta/direcciones/nueva">Agrega una dirección</a> y regresa.</div>
+          <% } else { %>
+            <select class="form-select" name="id_dir" id="id_dir">
+              <% direcciones.forEach((d) => { %><option value="<%= d.id_dir %>" <%= d.principal ? 'selected' : '' %>><%= d.alias %> · <%= d.calle %> <%= d.num_ext %>, <%= d.colonia %>, <%= d.municipio %></option><% }) %>
+            </select>
+            <a class="small d-inline-block mt-2" href="/cuenta/direcciones">Administrar direcciones</a>
+          <% } %>
+        </div>
+      </section>
+      <section class="card p-4">
+        <h2 class="h5">Lotes seleccionados</h2>
+        <% items.forEach((item) => { %>
+          <div class="d-flex justify-content-between align-items-center gap-3 border-top py-3">
+            <div><strong>Lote #<%= item.id_lte %> · <%= item.lote?.nombresEspecies || 'Producto no disponible' %></strong>
+              <% if (item.reservado) { %><span class="d-block small text-danger">No disponible; reservado por otro pedido.</span><% } else if (item.lote) { %><span class="d-block small text-muted"><%= Number(item.lote.kilos).toFixed(2) %> kg × <%= dinero(item.lote.precio_kilo_salida) %>/kg</span><% } %>
+            </div>
+            <% if (item.lote) { %><strong><%= dinero(item.lote.total) %></strong><% } %>
+          </div>
+        <% }) %>
+      </section>
+    </div>
+    <aside class="col-lg-5">
+      <div class="card p-4">
+        <h2 class="h5">Resumen de pago</h2>
+        <div class="d-flex justify-content-between py-2"><span>Subtotal</span><span><%= dinero(subtotal) %></span></div>
+        <div class="d-flex justify-content-between py-2 border-top"><span>Envío estimado</span><span><%= dinero(envio) %></span></div>
+        <div class="d-flex justify-content-between py-3 border-top fs-5"><strong>Total</strong><strong><%= dinero(total) %></strong></div>
+        <p class="small text-muted">Al continuar, los lotes se reservan <%= minutos %> minutos. El precio se confirma nuevamente en el servidor.</p>
+        <button class="btn btn-primary btn-lg" type="submit" <%= !items.some((i) => i.lote && !i.reservado) ? 'disabled' : '' %>>Reservar y continuar al pago</button>
+      </div>
+    </aside>
+  </form>
+<% } %>
+<script>
+  document.querySelectorAll('input[name="entrega"]').forEach((radio) => radio.addEventListener('change', () => {
+    const panel = document.querySelector('[data-direccion-entrega]');
+    if (panel) panel.hidden = radio.value !== 'domicilio' || !radio.checked;
+    const url = new URL(window.location.href); url.searchParams.set('entrega', radio.value); window.location.href = url;
+  }));
+</script>
+<%- include('../plantillas/footer') %>

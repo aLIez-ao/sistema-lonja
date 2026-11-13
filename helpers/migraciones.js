@@ -133,5 +133,14 @@ export async function asegurarEsquema() {
   await asegurarAncho("comprador", "apellido_paterno", 40);
   await asegurarAncho("comprador", "apellido_materno", 40);
 
+  // La tabla pedido se crea desde el modelo; esta FK permite conservar compras antiguas.
+  await asegurarColumna("compra", "id_ped", {
+    type: DataTypes.INTEGER,
+    allowNull: true,
+    references: { model: "pedido", key: "id_ped" },
+    onDelete: "SET NULL",
+    onUpdate: "CASCADE",
+  });
+
   await rellenarCatalogoEspecies();
 }

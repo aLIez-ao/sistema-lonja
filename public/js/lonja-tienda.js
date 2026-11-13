@@ -1,7 +1,7 @@
 /**
  * Tienda pública: héroe rotativo, filas deslizables, sugerencias del buscador
- * y avisos flotantes. El carrito y las listas llegan en fases posteriores;
- * por ahora los botones explican que estarán disponibles pronto.
+ * y avisos flotantes. El carrito usa peticiones JSON y conserva el flujo
+ * accesible por formulario cuando JavaScript no está disponible.
  */
 (function () {
   'use strict';
@@ -71,12 +71,49 @@
   }
 
   // ------------------------------------------------------------------
-  // Acciones que dependen de fases posteriores.
+  // Carrito de compra.
   // ------------------------------------------------------------------
   function iniciarAcciones() {
     qsa('[data-agregar-lote]').forEach((boton) => {
-      boton.addEventListener('click', () => {
-        aviso('El carrito estará disponible muy pronto. Mientras tanto, puedes explorar el lote.');
+      boton.addEventListener('click', async () => {
+        const id = boton.dataset.agregarLote;
+        boton.disabled = true;
+        try {
+          const respuesta = await fetch(`/carrito/agregar/${encodeURIComponent(id)}`, {
+            method: 'POST',
+            headers: { accept: 'application/json', 'content-type': 'application/json' },
+            body: '{}',
+          });
+          const datos = await respuesta.json();
+          if (typeof datos.cantidad === 'number') {
+            qsa('[data-carrito-count]').forEach((n) => { n.textContent = datos.cantidad; });
+          }
+          aviso(datos.mensaje || 'No se pudo actualizar el carrito.');
+        } catch {
+          aviso('No pudimos conectar con el carrito. Inténtalo de nuevo.');
+        } finally {
+          boton.disabled = false;
+        }
+      });
+    });
+
+    qsa('form[data-carrito-accion]').forEach((form) => {
+      form.addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const boton = qs('button[type="submit"]', form);
+        if (boton) boton.disabled = true;
+        try {
+          const respuesta = await fetch(form.action, {
+            method: 'POST',
+            headers: { accept: 'application/json', 'content-type': 'application/json' },
+            body: '{}',
+          });
+          const datos = await respuesta.json();
+          if (typeof datos.cantidad === 'number') qsa('[data-carrito-count]').forEach((n) => { n.textContent = datos.cantidad; });
+          window.location.reload();
+        } catch {
+          form.submit();
+        }
       });
     });
 

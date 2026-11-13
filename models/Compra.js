@@ -11,6 +11,8 @@ const Compra = db.define(
     codigo_cpr: { type: DataTypes.SMALLINT, primaryKey: true, allowNull: false },
     precio_kilo_final: { type: DataTypes.DECIMAL(10, 2), allowNull: false, validate: { min: 0.01 } },
     precio_total: { type: DataTypes.DECIMAL(12, 2), allowNull: false },
+    // NULL para ventas de mostrador; se llena al confirmar compras de tienda.
+    id_ped: { type: DataTypes.INTEGER, allowNull: true },
     fecha: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
   },
   {
