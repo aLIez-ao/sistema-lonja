@@ -9,6 +9,7 @@ import { textoBusqueda } from "../helpers/busqueda.js";
 import { rangoDelDia, hoy, dinero } from "../helpers/fechas.js";
 import { crearLimite } from "../helpers/seguridad.js";
 import { prepararLote, imagenDeEspecie, precioMinimo } from "../helpers/tienda.js";
+import { liberarPedidosVencidos, reservasActivas } from "../helpers/pedidos.js";
 
 // 30 sugerencias por minuto y por IP (se reinicia en las pruebas).
 export const limiteSugerencias = crearLimite({ max: 30, ventanaMs: 60 * 1000 });
@@ -36,7 +37,12 @@ const conEspecies = () =>
     [Op.gt]: 0,
   });
 
-const disponible = () => combinarWhere(sinCompra(), conEspecies());
+const noReservado = () =>
+  sqlWhere(literal("(SELECT COUNT(*) FROM pedido_item pi INNER JOIN pedido p ON p.id_ped = pi.id_ped WHERE pi.id_lte = `Lote`.`id_lte` AND p.estado = 'pendiente_pago' AND p.reservado_hasta > CURRENT_TIMESTAMP)"), {
+    [Op.eq]: 0,
+  });
+
+const disponible = () => combinarWhere(sinCompra(), conEspecies(), noReservado());
 
 /** Lotes disponibles con sus especies, ordenados y limitados. */
 async function lotesDisponibles(where = {}, order = [["fecha", "DESC"]], limit = 8, hoyInicio = null) {
@@ -102,6 +108,7 @@ const ORDEN_PORTADA = {
 
 /** GET / — portada pública de la tienda. */
 export const portada = async (req, res) => {
+  await liberarPedidosVencidos();
   const inicioHoy = rangoDelDia(hoy()).inicio;
   const l = leerListado(req, {
     porPagina: [24],
@@ -193,6 +200,7 @@ export const portada = async (req, res) => {
 
 /** GET /tienda/lote/:id — detalle público de un lote. */
 export const detalleLote = async (req, res) => {
+  await liberarPedidosVencidos();
   const id = filtroEntero(req.params.id);
   const lote = id
     ? await Lote.findByPk(id, {
@@ -208,6 +216,15 @@ export const detalleLote = async (req, res) => {
     return res.status(404).render("error", {
       codigo: 404,
       mensaje: "Este lote no existe o ya no está disponible.",
+      accion: { texto: "Volver a la tienda", url: "/" },
+    });
+  }
+
+  const reserva = (await reservasActivas()).get(Number(lote.id_lte));
+  if (reserva && reserva.id_usuario !== req.usuario?.id) {
+    return res.status(404).render("error", {
+      codigo: 404,
+      mensaje: "Este lote está reservado temporalmente y no está disponible.",
       accion: { texto: "Volver a la tienda", url: "/" },
     });
   }
@@ -231,6 +248,7 @@ export const detalleLote = async (req, res) => {
 
 /** GET /tienda/especie/:id — ficha pública de una especie del catálogo. */
 export const fichaEspecie = async (req, res) => {
+  await liberarPedidosVencidos();
   const id = filtroEntero(req.params.id);
   const catalogo = id
     ? await EspecieCatalogo.findByPk(id, {
@@ -285,6 +303,7 @@ export const fichaEspecie = async (req, res) => {
 
 /** GET /tienda/sugerencias?q=… — sugerencias públicas del buscador. */
 export const sugerencias = async (req, res) => {
+  await liberarPedidosVencidos();
   if (limiteSugerencias.bloqueado(req.ip)) {
     return res.status(429).json({ error: "Demasiadas sugerencias. Espera un momento." });
   }

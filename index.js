@@ -5,6 +5,7 @@ import app from "./app.js";
 import { crearAdministradorInicial, crearTiposIniciales } from "./helpers/semillas.js";
 import { asegurarEsquema } from "./helpers/migraciones.js";
 import { verificarTransporte } from "./helpers/email.js";
+import { liberarPedidosVencidos } from "./helpers/pedidos.js";
 
 dotenv.config({ path: ".env" });
 const port = process.env.PORT || 2800;
@@ -29,6 +30,11 @@ const port = process.env.PORT || 2800;
     if (correo.configurado && !correo.error) console.log("✅ Correo listo");
     else if (correo.error) console.warn(`❌ Gmail rechazó las credenciales: ${correo.error}`);
     else console.warn("⚠️ Correo NO configurado (modo simulador). Define GMAIL_USER y GMAIL_PASS en .env");
+
+    const barridoReservas = setInterval(() => {
+      liberarPedidosVencidos().catch((error) => console.warn("No se pudieron limpiar reservas vencidas:", error.message));
+    }, 60_000);
+    barridoReservas.unref();
 
     app.listen(port, () => {
       console.log(`Servidor corriendo en \x1b[36mhttp://localhost:${port}\x1b[0m`);

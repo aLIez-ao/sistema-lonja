@@ -1,0 +1,24 @@
+<%- include('../plantillas/header') %>
+<div class="mb-4"><a href="/cuenta/pedidos" class="small">← Mis pedidos</a><h1 class="h2 mt-1 mb-0">Pedido #<%= pedido.id_ped %></h1><p class="text-muted mb-0">Creado el <%= fechaHora(pedido.fecha) %></p></div>
+<%- include('../plantillas/mensajes', { mensaje, errores: error ? [error] : [] }) %>
+<div class="row g-4">
+  <div class="col-lg-8">
+    <section class="card p-4 mb-4"><div class="d-flex justify-content-between align-items-start gap-3"><h2 class="h5">Estado del pedido</h2><span class="badge text-bg-<%= pedido.estado === 'pagado' || pedido.estado === 'entregado' ? 'success' : pedido.estado === 'pendiente_pago' ? 'warning' : 'secondary' %>"><%= pedido.estado.replaceAll('_', ' ') %></span></div>
+      <p class="small text-muted">Método: <%= pedido.entrega === 'domicilio' ? 'Entrega a domicilio' : 'Recoger en la lonja' %></p>
+      <p class="mb-0"><%= pedido.dir_destinatario || 'Lonja de Veracruz' %><% if (pedido.dir_telefono) { %> · <%= pedido.dir_telefono %><% } %><% if (pedido.dir_texto) { %><br><span class="small text-muted"><%= pedido.dir_texto %></span><% } %></p>
+    </section>
+    <section class="card p-4"><h2 class="h5">Lotes</h2>
+      <% pedido.items.forEach((item) => { %><article class="d-flex justify-content-between gap-3 border-top py-3"><div><strong>Lote #<%= item.id_lte %> · <%= item.lote?.especies.map((e) => e.nombre).join(', ') || 'Lote' %></strong><span class="d-block small text-muted"><%= Number(item.kilos).toFixed(2) %> kg × <%= dinero(item.precio_kilo) %>/kg</span>
+        <% const compra = pedido.compras?.find((c) => c.id_cmp === item.id_lte); if (compra) { %><a class="small" href="/cuenta/pedidos/<%= pedido.id_ped %>/factura/<%= compra.id_cmp %>">Ver factura</a> · <a class="small" href="/cuenta/pedidos/<%= pedido.id_ped %>/factura/<%= compra.id_cmp %>.pdf">Descargar PDF</a><% } %>
+      </div><strong><%= dinero(item.subtotal) %></strong></article><% }) %>
+    </section>
+  </div>
+  <aside class="col-lg-4"><div class="card p-4"><h2 class="h5">Pago</h2>
+    <div class="d-flex justify-content-between py-2"><span>Subtotal</span><span><%= dinero(pedido.subtotal) %></span></div>
+    <div class="d-flex justify-content-between py-2"><span>Envío</span><span><%= dinero(pedido.costo_envio) %></span></div>
+    <div class="d-flex justify-content-between py-3 border-top fs-5"><strong>Total</strong><strong><%= dinero(pedido.total) %></strong></div>
+    <% if (pedido.pago_ref) { %><p class="small text-muted">Referencia de prueba: <%= pedido.pago_ref %><br>Tarjeta terminación <%= pedido.pago_ultimos4 %> · <%= pedido.pago_metodo %></p><% } %>
+    <% if (pedido.estado === 'pendiente_pago') { %><a class="btn btn-primary w-100 mb-2" href="/pedido/<%= pedido.id_ped %>/pago">Continuar al pago</a><form action="/pedido/<%= pedido.id_ped %>/cancelar" method="POST"><button class="btn btn-outline-danger w-100" type="submit">Cancelar pedido</button></form><% } %>
+  </div></aside>
+</div>
+<%- include('../plantillas/footer') %>

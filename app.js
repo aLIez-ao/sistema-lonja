@@ -20,8 +20,11 @@ import router_busqueda from "./routes/busqueda_router.js";
 import router_registro from "./routes/registro_router.js";
 import router_cuenta from "./routes/cuenta_router.js";
 import router_tienda from "./routes/tienda_router.js";
+import router_carrito from "./routes/carrito_router.js";
+import router_pedido from "./routes/pedido_router.js";
 import { dinero, formatoFechaHora } from "./helpers/fechas.js";
 import { icono } from "./helpers/iconos.js";
+import { CarritoItem } from "./models/index.js";
 
 dotenv.config({ path: ".env" });
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -53,12 +56,16 @@ app.use(async (req, res, next) => {
   res.locals.icono = icono;
   res.locals.rutaActual = req.path;
   res.locals.usuario = null;
+  res.locals.carritoCount = 0;
   req.usuario = null;
 
   const usuario = await usuarioDesdeToken(req.cookies._token);
   if (usuario) {
     req.usuario = usuario;
     res.locals.usuario = usuario;
+    if (usuario.rol === "comprador") {
+      res.locals.carritoCount = await CarritoItem.count({ where: { id_usuario: usuario.id } });
+    }
   }
   next();
 });
@@ -85,6 +92,10 @@ app.use("/buscar", soloPersonal, router_busqueda);
 
 // Cuenta de comprador: solo el rol comprador, siempre filtrado por su id
 app.use("/cuenta", rutaProteger, permitir("comprador"), router_cuenta);
+
+// Carrito y ciclo de compra: exclusivos para cuentas de comprador.
+app.use("/carrito", rutaProteger, permitir("comprador"), router_carrito);
+app.use("/pedido", rutaProteger, permitir("comprador"), router_pedido);
 
 // Configuración: todos los roles (las pestañas de administración se ocultan)
 app.use("/configuracion", rutaProteger, router_configuracion);

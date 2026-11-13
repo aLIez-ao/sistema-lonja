@@ -41,6 +41,7 @@
           <ul class="navbar-nav me-auto mb-2 mb-xl-0 ms-xl-3">
             <% if (usuario.rol === 'comprador') { %>
               <li class="nav-item"><a class="nav-link <%= rutaActual === '/' ? 'active' : '' %>" href="/"><%- icono('basket', 15, 'me-1') %><%= t('tienda') %></a></li>
+              <li class="nav-item"><a class="nav-link <%= activo('/carrito') %>" href="/carrito"><%- icono('cart-plus', 15, 'me-1') %>Carrito <span class="badge text-bg-primary" data-carrito-count><%= typeof carritoCount === 'number' ? carritoCount : 0 %></span></a></li>
               <li class="nav-item"><a class="nav-link <%= activo('/cuenta') %>" href="/cuenta"><%- icono('person', 15, 'me-1') %>Mi cuenta</a></li>
             <% } else { %>
               <li class="nav-item"><a class="nav-link <%= activo('/compras') %>" href="/compras"><%= t('compras') %></a></li>

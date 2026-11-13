@@ -37,9 +37,11 @@
     </div>
 
     <div class="lote-card__acciones">
-      <button class="btn btn-sm btn-primary flex-grow-1" type="button" data-agregar-lote="<%= lote.id_lte %>">
-        <%- icono('cart-plus', 14, 'me-1') %>Agregar
-      </button>
+      <% if (usuario && usuario.rol === 'comprador') { %>
+        <button class="btn btn-sm btn-primary flex-grow-1" type="button" data-agregar-lote="<%= lote.id_lte %>"><%- icono('cart-plus', 14, 'me-1') %>Agregar</button>
+      <% } else { %>
+        <a class="btn btn-sm btn-primary flex-grow-1" href="/acceso?volver=<%= encodeURIComponent(`/tienda/lote/${lote.id_lte}`) %>"><%- icono('cart-plus', 14, 'me-1') %>Agregar al carrito · Iniciar sesión</a>
+      <% } %>
       <a class="btn btn-sm btn-outline-secondary" href="<%= _url %>">Ver</a>
     </div>
   </div>
