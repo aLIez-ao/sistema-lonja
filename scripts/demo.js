@@ -625,7 +625,7 @@ for (let i = 0; i < 6; i += 1) {
 
 // At least 40 available lots, on the same deterministic daily schedule.
 const lotesDisponiblesDemo = [];
-for (let i = 0; i < 40; i += 1) {
+for (let i = 0; i < 48; i += 1) {
   const fecha = haceMinutos(20 + i * 3);
   const kilos = 20 + ((i * 17) % 180);
   const cajas = 2 + (i % 18);
@@ -641,7 +641,7 @@ for (let i = 0; i < 40; i += 1) {
 // Orders covering all lifecycle states with matching snapshots and purchases.
 const estadosDemo = ["pendiente_pago", "pagado", "preparando", "enviado", "entregado", "expirado"];
 for (let i = 0; i < estadosDemo.length; i += 1) {
-  const lote = lotesDisponiblesDemo[40 - estadosDemo.length + i];
+  const lote = lotesDisponiblesDemo[48 - estadosDemo.length + i];
   const cuenta = compradoresWeb[i % compradoresWeb.length];
   const estado = estadosDemo[i];
   const [pedido] = await Pedido.findOrCreate({ where: { id_usuario: cuenta.usuario.id, notas: `DEMO-${estado}` }, defaults: {
