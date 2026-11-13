@@ -287,7 +287,7 @@ export const fichaEspecie = async (req, res) => {
     });
   }
 
-  const social = await ponerOpinionesEnFicha(catalogo.id_cat);
+  const social = await ponerOpinionesEnFicha(catalogo.id_cat, req.usuario?.rol === "comprador" ? req.usuario.id : null);
   res.render("tienda/especie", {
     especie: {
       id: catalogo.id_cat,

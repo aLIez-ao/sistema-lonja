@@ -31,5 +31,7 @@ router.put("/listas/:id", social.renombrarLista);
 router.delete("/listas/:id", social.borrarLista);
 router.delete("/listas/:id/items", social.quitarItem);
 router.get("/preguntas", social.misPreguntas);
+router.get("/opiniones", social.misOpiniones);
+router.delete("/opiniones/:id", social.borrarMiOpinion);
 
 export default router;
