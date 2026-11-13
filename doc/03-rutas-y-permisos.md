@@ -35,9 +35,13 @@ La tienda nunca expone nombres, correos ni montos de compradores: solo muestra l
 | GET/POST | `/carrito`, `/carrito/agregar/:id_lte`, `/carrito/quitar/:id_lte`, `/carrito/vaciar` | Consultar y cambiar el carrito propio |
 | GET/POST | `/pedido`, `/pedido/:id/pago`, `/pedido/:id/pagar`, `/pedido/:id/cancelar` | Checkout, pago simulado, cancelación del pedido propio |
 | GET | `/cuenta/pedidos`, `/cuenta/pedidos/:id`, `/cuenta/pedidos/:id/factura/:id_cmp[.pdf]` | Historial, detalle y factura propia |
+| GET | `/cuenta/opiniones` | Opiniones propias y especies compradas pendientes de calificar |
+| DELETE | `/cuenta/opiniones/:id` | Eliminar una opinión propia (una ajena responde 404) |
 | GET/POST/PUT/DELETE | `/cuenta/listas`, `/cuenta/listas/:id`, `/cuenta/listas/:id/items`, `/cuenta/favoritos` | Listas y favoritos privados |
 | GET/POST | `/cuenta/preguntas`, `/tienda/preguntas` | Consultar o enviar preguntas (máximo 5 por hora) |
 | POST | `/tienda/especie/:id/opiniones` | Crear o editar una opinión solo tras una compra verificada |
+
+Las opiniones en páginas públicas muestran el nombre abreviado del autor (nombre e inicial del apellido). La cuenta puede editar o eliminar sus opiniones y volver a calificarlas desde el enlace a la especie.
 
 El `:id` de otra persona responde **404**. El comprador no entra a `/inicio` (403) ni a los módulos del personal; su inicio es la tienda. Las cuentas de comprador solo nacen en `/registro` (no las crea el admin) y el admin únicamente puede desactivarlas, sin cambiarles el rol.
 
