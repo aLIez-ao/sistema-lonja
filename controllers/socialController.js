@@ -5,6 +5,7 @@ import { enviarEmailRespuestaPregunta } from "../helpers/email.js";
 import { errorDeSitio, rutaReferer, volverA } from "../helpers/navegacion.js";
 import { nombrePublico, prepararLote, imagenDeEspecie } from "../helpers/tienda.js";
 import { disponibilidadDeLotes } from "../helpers/pedidos.js";
+import { ESTADO_PEDIDO } from "../models/Pedido.js";
 
 const esJson = (req) => req.is("json") || req.accepts(["html", "json"]) === "json";
 const tipoValido = (tipo) => tipo === "lote" || tipo === "especie";
@@ -226,7 +227,7 @@ export async function guardarOpinion(req, res) {
     comprada = Boolean(await Compra.findOne({ where: { codigo_cpr: req.usuario.codigo_cpr, id_ped: null }, include }));
     if (!comprada) comprada = Boolean(await Compra.findOne({
       where: { codigo_cpr: req.usuario.codigo_cpr },
-      include: [...include, { model: Pedido, as: "pedido", required: true, where: { estado: { [Op.in]: ["pagado", "preparando", "enviado", "entregado"] } } }],
+      include: [...include, { model: Pedido, as: "pedido", required: true, where: { estado: { [Op.in]: [ESTADO_PEDIDO.PAGADO, ESTADO_PEDIDO.PREPARANDO, ESTADO_PEDIDO.ENVIADO, ESTADO_PEDIDO.ENTREGADO] } } }],
     }));
   }
   if (!comprada) return errorDeSitio(req, res, 403, "Solo puedes opinar sobre especies que compraste.", destino);
@@ -248,7 +249,7 @@ export async function misOpiniones(req, res) {
     ],
     order: [["fecha", "DESC"]],
   }) : [];
-  const estadosPagados = new Set(["pagado", "preparando", "enviado", "entregado"]);
+  const estadosPagados = new Set([ESTADO_PEDIDO.PAGADO, ESTADO_PEDIDO.PREPARANDO, ESTADO_PEDIDO.ENVIADO, ESTADO_PEDIDO.ENTREGADO]);
   const yaOpino = new Set(opiniones.map((o) => Number(o.id_cat)));
   const pendientes = new Map();
   for (const compra of compras) {

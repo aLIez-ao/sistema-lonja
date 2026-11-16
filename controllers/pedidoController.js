@@ -11,6 +11,7 @@ import { costoEnvio, disponibilidadDeLotes, liberarPedidosVencidos, reservaMinut
 import { prepararLote } from "../helpers/tienda.js";
 import { crearLimite } from "../helpers/seguridad.js";
 import { encolarTrabajo } from "../helpers/colaTrabajos.js";
+import { ESTADO_PEDIDO, METODO_PAGO_PEDIDO, OPCIONES_PAGO_PEDIDO, OPCIONES_PAGO_PEDIDO_VALIDAS } from "../models/Pedido.js";
 
 const errorDe = (res, mensaje, estado = 400) => res.status(estado).render("error", {
   codigo: estado,
@@ -105,7 +106,7 @@ export const crear = async (req, res) => {
       const pedidoNuevo = await Pedido.create({
         id_usuario: usuario.id,
         codigo_cpr: usuario.codigo_cpr,
-        estado: "pendiente_pago",
+        estado: ESTADO_PEDIDO.PENDIENTE_PAGO,
         entrega,
         id_dir: direccion?.id_dir || null,
         dir_destinatario: direccion?.destinatario || null,
@@ -136,7 +137,7 @@ export const crear = async (req, res) => {
 export const verPago = async (req, res) => {
   const pedido = await Pedido.findOne({ where: { id_ped: req.params.id, id_usuario: req.usuario.id }, include: [includeItems] });
   if (!pedido) return errorDe(res, "No encontramos ese pedido.", 404);
-  if (pedido.estado !== "pendiente_pago") return res.redirect(`/cuenta/pedidos/${pedido.id_ped}`);
+  if (pedido.estado !== ESTADO_PEDIDO.PENDIENTE_PAGO) return res.redirect(`/cuenta/pedidos/${pedido.id_ped}`);
   res.render("pedido/pago", {
     pedido,
     items: pedido.items,
@@ -151,20 +152,20 @@ export const pagar = async (req, res) => {
   const usuario = await Usuario.findByPk(req.usuario.id);
   if (!usuario?.email_verificado) return errorDe(res, "Verifica tu correo antes de pagar.", 403);
   const metodo = req.body.metodo || "tarjeta";
-  if (!["tarjeta", "transferencia", "efectivo"].includes(metodo)) return errorDe(res, "Selecciona un método de pago válido.", 400);
+  if (!OPCIONES_PAGO_PEDIDO_VALIDAS.includes(metodo)) return errorDe(res, "Selecciona un método de pago válido.", 400);
   let resultado;
   try {
     resultado = await db.transaction(async (transaction) => {
       const pedido = await Pedido.findOne({ where: { id_ped: req.params.id, id_usuario: usuario.id }, transaction, lock: transaction.LOCK?.UPDATE });
       if (!pedido) return { estado: "no_encontrado" };
-      if (pedido.estado === "pagado") return { estado: "ya_pagado", pedido };
-      if (pedido.estado !== "pendiente_pago") return { estado: pedido.estado, pedido };
+      if (pedido.estado === ESTADO_PEDIDO.PAGADO) return { estado: "ya_pagado", pedido };
+      if (pedido.estado !== ESTADO_PEDIDO.PENDIENTE_PAGO) return { estado: pedido.estado, pedido };
       if (metodo === "efectivo" && pedido.entrega !== "recoger") return { estado: "metodo_invalido", pedido };
 
       const ahora = new Date();
       if (!pedido.reservado_hasta || new Date(pedido.reservado_hasta) <= ahora) {
-        await pedido.update({ estado: "expirado" }, { transaction });
-        return { estado: "expirado", pedido };
+        await pedido.update({ estado: ESTADO_PEDIDO.EXPIRADO }, { transaction });
+        return { estado: ESTADO_PEDIDO.EXPIRADO, pedido };
       }
 
       const items = await PedidoItem.findAll({
@@ -177,16 +178,16 @@ export const pagar = async (req, res) => {
       for (const item of items) {
         const vendido = await Compra.findOne({ where: { id_cmp: item.id_lte }, transaction, lock: transaction.LOCK?.UPDATE });
         if (vendido || reservadas.has(Number(item.id_lte))) {
-          await pedido.update({ estado: "expirado" }, { transaction });
+          await pedido.update({ estado: ESTADO_PEDIDO.EXPIRADO }, { transaction });
           return { estado: "no_disponible", pedido };
         }
       }
 
       if (metodo === "efectivo") {
-        if (pedido.pago_metodo === "Efectivo en lonja") return { estado: "efectivo_pendiente", pedido };
-        const pendientes = await Pedido.count({ where: { id_usuario: usuario.id, estado: "pendiente_pago", pago_metodo: "Efectivo en lonja", id_ped: { [Op.ne]: pedido.id_ped } }, transaction });
+        if (pedido.pago_metodo === METODO_PAGO_PEDIDO.EFECTIVO_LONJA) return { estado: "efectivo_pendiente", pedido };
+        const pendientes = await Pedido.count({ where: { id_usuario: usuario.id, estado: ESTADO_PEDIDO.PENDIENTE_PAGO, pago_metodo: METODO_PAGO_PEDIDO.EFECTIVO_LONJA, id_ped: { [Op.ne]: pedido.id_ped } }, transaction });
         if (pendientes >= 3) return { estado: "limite_efectivo", pedido };
-        await pedido.update({ pago_metodo: "Efectivo en lonja", pago_ref: null, pago_ultimos4: null, reservado_hasta: new Date(ahora.getTime() + reservaEfectivoMinutos() * 60_000) }, { transaction });
+        await pedido.update({ pago_metodo: METODO_PAGO_PEDIDO.EFECTIVO_LONJA, pago_ref: null, pago_ultimos4: null, reservado_hasta: new Date(ahora.getTime() + reservaEfectivoMinutos() * 60_000) }, { transaction });
         return { estado: "efectivo_pendiente", pedido };
       }
 
@@ -197,7 +198,7 @@ export const pagar = async (req, res) => {
           const clave = `pago:${pedido.id_ped}`;
           limitePagosFallidos.fallo(clave);
           if (limitePagosFallidos.bloqueado(clave)) {
-            await pedido.update({ estado: "cancelado" }, { transaction });
+            await pedido.update({ estado: ESTADO_PEDIDO.CANCELADO }, { transaction });
             limitePagosFallidos.limpiar(clave);
             return { estado: "intentos_agotados", pedido };
           }
@@ -220,13 +221,13 @@ export const pagar = async (req, res) => {
         }, { transaction }));
       }
       await pedido.update({
-        estado: "pagado",
+        estado: ESTADO_PEDIDO.PAGADO,
         fecha_pago: fecha,
-        pago_metodo: metodo === "tarjeta" ? `Simulado ${pago.marca}` : "Simulado SPEI",
+        pago_metodo: metodo === OPCIONES_PAGO_PEDIDO.TARJETA ? `Simulado ${pago.marca}` : "Simulado SPEI",
         pago_ref: pago.referencia,
         pago_ultimos4: pago.ultimos4,
       }, { transaction });
-      return { estado: "pagado", pedido, compras };
+      return { estado: ESTADO_PEDIDO.PAGADO, pedido, compras };
     });
   } catch (error) {
     console.error("No se pudo completar el pago:", mensajeBD(error));
@@ -240,8 +241,8 @@ export const pagar = async (req, res) => {
   if (resultado.estado === "limite_efectivo") return res.redirect(`/pedido/${resultado.pedido.id_ped}/pago?error=${encodeURIComponent("Ya tienes tres pedidos pendientes de pago en la lonja.")}`);
   if (resultado.estado === "efectivo_pendiente") return res.redirect(`/cuenta/pedidos/${resultado.pedido.id_ped}?${aMensaje("Tu pedido quedó reservado para pagarse en la lonja.")}`);
   if (resultado.estado === "metodo_invalido") return errorDe(res, "El pago en la lonja solo está disponible para pedidos que se recogen en persona.", 400);
-  if (resultado.estado !== "pagado") {
-    const mensaje = resultado.estado === "expirado" ? "La reserva venció. Regresa al carrito para revisar qué lotes siguen disponibles."
+  if (resultado.estado !== ESTADO_PEDIDO.PAGADO) {
+    const mensaje = resultado.estado === ESTADO_PEDIDO.EXPIRADO ? "La reserva venció. Regresa al carrito para revisar qué lotes siguen disponibles."
       : resultado.estado === "no_disponible" ? "Uno o más lotes ya no están disponibles y la reserva se liberó."
         : "Este pedido ya no admite pago.";
     return res.redirect(`/pedido/${resultado.pedido.id_ped}/pago?error=${encodeURIComponent(mensaje)}`);
@@ -281,8 +282,8 @@ export const pagar = async (req, res) => {
 export const cancelar = async (req, res) => {
   const pedido = await Pedido.findOne({ where: { id_ped: req.params.id, id_usuario: req.usuario.id } });
   if (!pedido) return errorDe(res, "No encontramos ese pedido.", 404);
-  if (pedido.estado !== "pendiente_pago") return res.redirect(`/cuenta/pedidos/${pedido.id_ped}?error=${encodeURIComponent("Solo se cancelan pedidos pendientes de pago")}`);
-  await pedido.update({ estado: "cancelado" });
+  if (pedido.estado !== ESTADO_PEDIDO.PENDIENTE_PAGO) return res.redirect(`/cuenta/pedidos/${pedido.id_ped}?error=${encodeURIComponent("Solo se cancelan pedidos pendientes de pago")}`);
+  await pedido.update({ estado: ESTADO_PEDIDO.CANCELADO });
   return res.redirect(`/cuenta/pedidos/${pedido.id_ped}?${aMensaje("Pedido cancelado; los lotes quedaron disponibles")}`);
 };
 
@@ -306,7 +307,7 @@ export const detalleCuenta = async (req, res) => {
 
 async function compraPropia(req) {
   const pedido = await Pedido.findOne({ where: { id_ped: req.params.id, id_usuario: req.usuario.id } });
-  if (!pedido || pedido.estado === "pendiente_pago") return null;
+  if (!pedido || pedido.estado === ESTADO_PEDIDO.PENDIENTE_PAGO) return null;
   return Compra.findOne({
     where: { id_cmp: req.params.id_cmp, id_ped: pedido.id_ped, codigo_cpr: pedido.codigo_cpr },
     include: [

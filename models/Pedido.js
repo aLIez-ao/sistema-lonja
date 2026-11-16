@@ -1,13 +1,25 @@
 import { DataTypes } from "sequelize";
 import db from "../config/db.js";
 
-export const ESTADOS_PEDIDO = ["pendiente_pago", "pagado", "preparando", "enviado", "entregado", "cancelado", "expirado"];
+export const ESTADO_PEDIDO = Object.freeze({
+  PENDIENTE_PAGO: "pendiente_pago",
+  PAGADO: "pagado",
+  PREPARANDO: "preparando",
+  ENVIADO: "enviado",
+  ENTREGADO: "entregado",
+  CANCELADO: "cancelado",
+  EXPIRADO: "expirado",
+});
+export const ESTADOS_PEDIDO = Object.freeze(Object.values(ESTADO_PEDIDO));
+export const METODO_PAGO_PEDIDO = Object.freeze({ EFECTIVO_LONJA: "Efectivo en lonja" });
+export const OPCIONES_PAGO_PEDIDO = Object.freeze({ TARJETA: "tarjeta", TRANSFERENCIA: "transferencia", EFECTIVO: "efectivo" });
+export const OPCIONES_PAGO_PEDIDO_VALIDAS = Object.freeze(Object.values(OPCIONES_PAGO_PEDIDO));
 
 const Pedido = db.define("Pedido", {
   id_ped: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
   id_usuario: { type: DataTypes.INTEGER, allowNull: false },
   codigo_cpr: { type: DataTypes.SMALLINT, allowNull: false },
-  estado: { type: DataTypes.STRING(20), allowNull: false, defaultValue: "pendiente_pago", validate: { isIn: [ESTADOS_PEDIDO] } },
+  estado: { type: DataTypes.STRING(20), allowNull: false, defaultValue: ESTADO_PEDIDO.PENDIENTE_PAGO, validate: { isIn: [ESTADOS_PEDIDO] } },
   entrega: { type: DataTypes.STRING(20), allowNull: false, validate: { isIn: [["domicilio", "recoger"]] } },
   id_dir: { type: DataTypes.INTEGER, allowNull: true },
   dir_destinatario: { type: DataTypes.STRING(60), allowNull: true },

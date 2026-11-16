@@ -6,9 +6,10 @@ import { cobrar } from "../helpers/pasarela.js";
 import { aError, aMensaje } from "../helpers/utiles.js";
 import { errorDeSitio } from "../helpers/navegacion.js";
 import { encolarTrabajo } from "../helpers/colaTrabajos.js";
+import { ESTADOS_PEDIDO, ESTADO_PEDIDO, METODO_PAGO_PEDIDO } from "../models/Pedido.js";
 
-const ESTADOS = ["pendiente_pago", "pagado", "preparando", "enviado", "entregado", "cancelado", "expirado"];
-const avanzan = { pagado: "preparando", preparando: "enviado", enviado: "entregado" };
+const ESTADOS = ESTADOS_PEDIDO;
+const avanzan = { [ESTADO_PEDIDO.PAGADO]: ESTADO_PEDIDO.PREPARANDO, [ESTADO_PEDIDO.PREPARANDO]: ESTADO_PEDIDO.ENVIADO, [ESTADO_PEDIDO.ENVIADO]: ESTADO_PEDIDO.ENTREGADO };
 const incluir = [
   { model: Usuario, as: "usuario", attributes: ["id", "nombre_completo", "correo"] },
   { model: Comprador, as: "comprador" },
@@ -68,7 +69,7 @@ export async function confirmarCobro(req, res) {
   const salida = await db.transaction(async (transaction) => {
     const pedido = await Pedido.findByPk(req.params.id, { transaction, lock: transaction.LOCK?.UPDATE });
     if (!pedido) return { error: "No encontramos ese pedido." };
-    if (pedido.estado !== "pendiente_pago" || pedido.pago_metodo !== "Efectivo en lonja" || pedido.entrega !== "recoger") return { error: "Solo se confirma el cobro de pedidos pendientes que se pagan en la lonja." };
+    if (pedido.estado !== ESTADO_PEDIDO.PENDIENTE_PAGO || pedido.pago_metodo !== METODO_PAGO_PEDIDO.EFECTIVO_LONJA || pedido.entrega !== "recoger") return { error: "Solo se confirma el cobro de pedidos pendientes que se pagan en la lonja." };
     if (!pedido.reservado_hasta || new Date(pedido.reservado_hasta) <= new Date()) {
       await pedido.update({ estado: "expirado" }, { transaction });
       return { error: "La reserva venció y el pedido se liberó." };
@@ -79,7 +80,7 @@ export async function confirmarCobro(req, res) {
     const pago = await cobrar({ metodo: "efectivo", monto: Number(pedido.total), referencia: `pedido-${pedido.id_ped}` });
     const fecha = new Date();
     for (const item of items) await Compra.create({ id_cmp: item.id_lte, codigo_cpr: pedido.codigo_cpr, precio_kilo_final: item.precio_kilo, precio_total: item.subtotal, fecha, id_ped: pedido.id_ped }, { transaction });
-    await pedido.update({ estado: "pagado", fecha_pago: fecha, pago_ref: pago.referencia }, { transaction });
+    await pedido.update({ estado: ESTADO_PEDIDO.PAGADO, fecha_pago: fecha, pago_ref: pago.referencia }, { transaction });
     return { pedido, items };
   });
   if (salida.error) return res.redirect(`/pedidos/${req.params.id}?error=${encodeURIComponent(salida.error)}`);

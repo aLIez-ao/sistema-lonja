@@ -1,6 +1,7 @@
 import { Op } from "sequelize";
 import { Pedido, PedidoItem, Lote, Compra } from "../models/index.js";
 import { redondea } from "./fechas.js";
+import { ESTADO_PEDIDO } from "../models/Pedido.js";
 
 const numero = (valor, defecto) => Number.isFinite(Number(valor)) ? Number(valor) : defecto;
 
@@ -27,7 +28,7 @@ export async function reservasActivas({ ahora = new Date(), exceptoPedido = null
       as: "pedido",
       attributes: ["id_ped", "id_usuario", "reservado_hasta"],
       where: {
-        estado: "pendiente_pago",
+        estado: ESTADO_PEDIDO.PENDIENTE_PAGO,
         reservado_hasta: { [Op.gt]: ahora },
         ...(exceptoPedido ? { id_ped: { [Op.ne]: exceptoPedido } } : {}),
       },
@@ -78,7 +79,7 @@ export async function disponibilidadDeLotes(ids, { usuarioId = null, transaction
         as: "pedido",
         attributes: ["id_ped", "id_usuario", "reservado_hasta"],
         where: {
-          estado: "pendiente_pago",
+          estado: ESTADO_PEDIDO.PENDIENTE_PAGO,
           reservado_hasta: { [Op.gt]: ahora },
           ...(exceptoPedido ? { id_ped: { [Op.ne]: exceptoPedido } } : {}),
         },
@@ -105,9 +106,9 @@ export async function disponibilidadDeLotes(ids, { usuarioId = null, transaction
 
 /** Marca como expirados los pedidos cuya reserva venció. */
 export async function liberarPedidosVencidos(ahora = new Date(), transaction = null) {
-  const [cantidad] = await Pedido.update({ estado: "expirado" }, {
+  const [cantidad] = await Pedido.update({ estado: ESTADO_PEDIDO.EXPIRADO }, {
     where: {
-      estado: "pendiente_pago",
+      estado: ESTADO_PEDIDO.PENDIENTE_PAGO,
       reservado_hasta: { [Op.lte]: ahora },
     },
     transaction,

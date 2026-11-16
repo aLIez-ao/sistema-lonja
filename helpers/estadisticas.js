@@ -2,6 +2,7 @@
 import { Op } from "sequelize";
 import { Compra, Lote, Comprador, Especie, Tipo, Pedido, Pregunta, Opinion } from "../models/index.js";
 import { hoy, rangoDelDia, redondea, formatoFecha, formatoHora, NOMBRES_MESES } from "./fechas.js";
+import { ESTADO_PEDIDO } from "../models/Pedido.js";
 
 const DIA = 24 * 60 * 60 * 1000;
 const claveDia = (d) => new Intl.DateTimeFormat("en-CA", { timeZone: process.env.APP_TZ || "America/Mexico_City" }).format(new Date(d));
@@ -41,7 +42,7 @@ export async function estadisticasInicio() {
     Compra.count(),
     Comprador.count(),
     Especie.count({ distinct: true, col: "nombre" }),
-    Pedido.count({ where: { estado: { [Op.in]: ["pagado", "preparando", "enviado"] } } }),
+    Pedido.count({ where: { estado: { [Op.in]: [ESTADO_PEDIDO.PAGADO, ESTADO_PEDIDO.PREPARANDO, ESTADO_PEDIDO.ENVIADO] } } }),
     Pregunta.count({ where: { estado: "pendiente" } }),
     Opinion.count({ where: { fecha: { [Op.gte]: new Date(Date.now() - 7 * DIA) } } }),
     Compra.count({ where: { id_ped: { [Op.ne]: null } } }),
