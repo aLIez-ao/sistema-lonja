@@ -28,7 +28,7 @@ Fecha: 12 de noviembre de 2026
 
 ## Pendiente
 
-1. Ejecutar el procedimiento de [Verificación en MariaDB](04-instalacion-y-despliegue.md#verificacion-en-mariadb) en una copia desechable de la base.
+1. Ejecutar el procedimiento de [Verificación en MariaDB](../04-instalacion-y-despliegue.md#verificacion-en-mariadb) en una copia desechable de la base.
 2. Con el usuario autenticado, revisar en navegador ficha pública con opiniones, `/cuenta/opiniones` y error de transición del pedido en tema claro/oscuro y ancho de 375 px.
 
 El usuario completa `GMAIL_USER`, `GMAIL_PASS` y `APP_URL` en su `.env` local si desea habilitar correo real y enlaces externos correctos.

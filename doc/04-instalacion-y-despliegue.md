@@ -11,7 +11,7 @@
 mysql -u root -p -e "CREATE DATABASE lonja_veracruz CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
 
 # 2. Dependencias
-npm install
+npm ci
 
 # 3. Configuración
 cp .env.example .env     # edita BD_CLAVE, SC_JWT y ADMIN_PASSWORD
@@ -40,11 +40,10 @@ Datos de ejemplo (opcional, después del primer arranque): `npm run demo`. La ca
 | JWT_DURACION | `8h` | Duración de la sesión |
 | ADMIN_USER / ADMIN_PASSWORD | | Administrador inicial (solo se crea si no existe) |
 | GMAIL_USER / GMAIL_PASS | `cuenta@gmail.com` / contraseña de aplicación | Envío de verificación, recuperación y avisos. Sin ellas el correo entra en **modo simulador** |
-| APP_URL | `http://localhost:2800` | URL pública para armar los enlaces de los correos (sin diagonal final) |
+| APP_URL | `http://localhost:2800` | URL pública para enlaces de correo y origen de confianza de peticiones con efectos. Obligatoria si el proxy cambia `Host` (sin diagonal final) |
 | ENVIO_COSTO | `150` | Cargo base de envío a domicilio |
 | ENVIO_GRATIS_DESDE | `2500` | Total del carrito a partir del cual el envío cuesta cero |
 | RESERVA_MINUTOS | `15` | Duración de la reserva mientras se confirma el pago |
-| RESERVA_EFECTIVO_MINUTOS | `120` | Reserva ampliada al pagar en la lonja; el máximo permitido es 24 horas |
 | RESERVA_EFECTIVO_MINUTOS | `120` | Reserva ampliada para pedidos que se pagan en efectivo/terminal al recoger (máximo 24 h) |
 | NODE_ENV | `production` | Activa la cookie `secure` (solo HTTPS) |
 
@@ -57,8 +56,8 @@ Generar un `SC_JWT` aleatorio: `node -e "console.log(require('crypto').randomByt
 3. Ejecuta `npm run correo:configurar`. El asistente pide `GMAIL_USER`, la contraseña de aplicación (entrada oculta)
    y `APP_URL`, valida los tres valores y actualiza solo esas claves en `.env`. No muestra la contraseña.
    Usa `npm run correo:configurar -- --sin-prueba` si quieres guardar la configuración sin conectar con Gmail.
-4. Define `APP_URL` con la dirección desde la que abrirás la aplicación. Con esto los enlaces de verificación y
-   recuperación funcionan también desde el celular.
+4. Define `APP_URL` con la dirección pública desde la que se abrirá la aplicación. Se usa para los enlaces de
+   verificación y recuperación, y como origen confiable para las peticiones con efectos.
 5. Reinicia el servidor. La consola y la pestaña **Configuración → Correo** indican si el envío está
    configurado; desde ahí puedes mandar un **correo de prueba** a tu propia cuenta.
 
@@ -88,7 +87,12 @@ La suite `npm test` cubre estas reglas con SQLite, pero la ejecución observada 
 
 ## Producción
 1. `NODE_ENV=production`, `SC_JWT` largo y propio, `ADMIN_PASSWORD` fuerte (cámbiala tras el primer ingreso).
-2. Poner un proxy con **HTTPS** delante (nginx, Caddy…). La cookie `secure` solo viaja por HTTPS.
+2. Poner un proxy con **HTTPS** delante (nginx, Caddy…). La cookie `secure` solo viaja por HTTPS. Si el proxy
+   reescribe `Host`, define `APP_URL` con el origen externo exacto; sin ese valor, los POST/PUT/DELETE del sitio
+   responden 403 porque `Origin`/`Referer` no coincide con el host recibido por Node.
 3. Usuario de MariaDB con permisos solo sobre su esquema (no `root`).
 4. Respaldos periódicos de la base de datos.
-5. Para cambios de esquema futuros conviene usar migraciones en lugar de `alter` (ver [TODO.md](TODO.md)).
+5. Los cambios de esquema se registran en la tabla `migracion`; añade una migración versionada en lugar de depender de `alter` (ver [pendientes](.reports/TODO.md)).
+   En MariaDB cada `ALTER TABLE` confirma por sí mismo: la transacción de una migración no deshace las columnas ya
+   creadas si un paso posterior falla. Escribe cada paso idempotente (comprobar antes de crear) y respalda la base
+   antes de desplegar. No reviertas la migración `001`: su `down` borra columnas con datos.

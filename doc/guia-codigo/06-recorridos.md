@@ -1,4 +1,4 @@
-# 10 — Cómo colaboran las partes
+# 06 — Cómo colaboran las partes
 
 ## Comprar un lote
 

@@ -58,7 +58,7 @@ Diseño relacional entregado por el cliente (PDF *Sistema Lonja*, pág. 2), impl
 
 Índice único `uq_compra_lote` sobre `id_cmp`.
 
-> **Interpretación del diagrama.** En el PDF, `id_cmp` y `codigo_cpr` aparecen ambos como FK en el compartimiento de llave, y la relación Lote–Compra se dibuja 1 a 1. Se modeló como llave primaria compuesta `(id_cmp, codigo_cpr)` más el índice único sobre `id_cmp`, de modo que **un lote se vende completo a un solo comprador**. Si el cliente quiere ventas parciales de un lote, basta quitar ese índice (ver [TODO.md](TODO.md)).
+> **Interpretación del diagrama.** En el PDF, `id_cmp` y `codigo_cpr` aparecen ambos como FK en el compartimiento de llave, y la relación Lote–Compra se dibuja 1 a 1. Se modeló como llave primaria compuesta `(id_cmp, codigo_cpr)` más el índice único sobre `id_cmp`, de modo que **un lote se vende completo a un solo comprador**. Si el cliente requiere ventas parciales de un lote, primero debe acordarse el cambio de regla de negocio.
 
 ### `usuario` (agregada)
 | Columna | Tipo | Notas |
@@ -85,6 +85,12 @@ Diseño relacional entregado por el cliente (PDF *Sistema Lonja*, pág. 2), impl
 
 `compra.id_ped` relaciona la venta tradicional existente con un pedido en línea; es `NULL` para mostrador.
 
+## Configuración, avisos y cambios versionados
+
+La tabla `migracion` guarda el identificador de cada cambio aplicado. Las migraciones nuevas declaran operaciones `up` y `down`, por lo que se pueden aplicar y revertir en orden. La migración `002_aviso_suscripcion_descartado` agrega a `usuario.aviso_suscripcion_descartado` el estado persistente del aviso de suscripción. `usuario.recibir_avisos` registra si la cuenta acepta comunicaciones. Los correos se normalizan a minúsculas al validar y guardar para evitar duplicados por diferencias de mayúsculas.
+
+La referencia por archivo de modelos y asociaciones está en [guía del código](guia-codigo/02-controladores-y-servicios.md); las tareas pendientes de base de datos se reúnen en [.reports/TODO.md](.reports/TODO.md).
+
 ## Reglas de integridad en la aplicación
 
 - Un lote **ya comprado** no se puede editar ni eliminar (cambiaría el importe cobrado).
@@ -92,4 +98,4 @@ Diseño relacional entregado por el cliente (PDF *Sistema Lonja*, pág. 2), impl
 - No se elimina un comprador con compras, ni un tipo con especies.
 - Al eliminar un lote sin compra se eliminan sus especies. Al eliminar una compra, el lote vuelve a quedar disponible.
 - El pedido conserva una copia de su dirección y del precio/kilos de cada lote para proteger el historial.
-- Las tablas nuevas se crean con `db.sync()`; `asegurarEsquema()` agrega columnas faltantes sin alterar ni truncar registros existentes.
+- Las tablas nuevas se crean con `db.sync()`; `helpers/migraciones.js` aplica migraciones versionadas sobre instalaciones existentes. `BD_SYNC=safe` no modifica columnas.

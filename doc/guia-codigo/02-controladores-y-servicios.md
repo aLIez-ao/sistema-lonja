@@ -1,4 +1,4 @@
-# 05 — Controladores
+# 02 — Controladores y servicios
 
 El controlador recibe una petición ya encaminada por un router. Aquí se validan reglas de negocio, se consultan modelos, se llama a los ayudantes y se elige una vista o respuesta JSON. No debería contener marcado HTML.
 
@@ -34,3 +34,11 @@ El controlador recibe una petición ya encaminada por un router. Aquí se valida
 ## Una regla práctica para modificar
 
 Si la regla necesita leer o cambiar datos, usa modelos; si se comparte entre varios controladores, considera un ayudante. Si depende del rol, colócala también en router/middleware. Acompaña el cambio con una prueba de solicitud HTTP.
+
+## Servicio de pedidos
+
+`servicios/pedidos.js` contiene `crearPedido`, `pagarPedido` y `confirmarCobro`. El controlador traduce la solicitud web y la respuesta para la persona; el servicio vuelve a consultar la disponibilidad, abre la transacción y coordina precio, reserva, compra y estado. Así una ruta de tienda y una acción del personal comparten las reglas que protegen una venta.
+
+## Modelos y tablas
+
+Los modelos describen filas y relaciones, y `models/index.js` los conecta. `PedidoItem` conserva kilos y precio acordados; `Pedido` guarda una copia de entrega; `Compra` enlaza la operación con el historial de mostrador. La referencia de tablas, campos y reglas está en [base de datos](../02-base-de-datos.md).

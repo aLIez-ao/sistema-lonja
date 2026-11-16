@@ -24,12 +24,11 @@ Requisitos: **Node.js ≥ 20** y **MariaDB ≥ 10.6**.
 mariadb -u root -p
 CREATE DATABASE lonja_veracruz CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 CREATE USER 'lonja'@'localhost' IDENTIFIED BY '<tu_clave>';
-CREATE DATABASE lonja_veracruz CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 GRANT ALL PRIVILEGES ON lonja_veracruz.* TO 'lonja'@'localhost';
 FLUSH PRIVILEGES;
 SHOW GRANTS FOR 'lonja'@'localhost';
 
-npm install
+npm ci
 cp .env.example .env        # edita BD_CLAVE, SC_JWT y ADMIN_PASSWORD
 npm run server              # desarrollo (nodemon)  ·  npm start para producción
 ```
@@ -53,16 +52,16 @@ En `/usuarios`, el administrador consulta por separado trabajadores y clientes. 
 ## Estructura
 ```
 index.js · app.js · config/ · models/ · controllers/ · routes/ · middleware/ · helpers/
-views/ · public/ · scripts/ · test/ · doc/ · doc/resolver/
+views/ · public/ · scripts/ · test/ · doc/ · doc/guia-codigo/
 ```
 
 ## Documentación
-- [Guía del código](doc/resolver/README.md): guía numerada por archivo, capas y recorridos para lectores técnicos y no técnicos.
+- [Guía del código](doc/guia-codigo/README.md): guía por capas y recorridos para lectores técnicos y no técnicos.
 - [Documentación operativa](doc/README.md): arquitectura, base de datos, rutas y permisos, instalación, seguridad y pruebas.
-- [Informe de ejecución del plan 05](doc/08-informe-plan-05.md): cambios, commits, pruebas y verificaciones pendientes.
+- [Informe de ejecución del plan 05](doc/.reports/08-informe-plan-05.md): cambios, commits, pruebas y verificaciones pendientes.
 
 ## Estado y advertencias
-- 145 pruebas automáticas pasan sobre SQLite; **la migración y los flujos no se verificaron contra MariaDB real**.
+- 181 pruebas automáticas pasan sobre SQLite; **las migraciones y los flujos no se verificaron contra MariaDB real**.
 - Los PDF de ejemplo usan credenciales de práctica (`root/1234`): cámbialas en cualquier uso real.
 
 ## Empaquetado zip

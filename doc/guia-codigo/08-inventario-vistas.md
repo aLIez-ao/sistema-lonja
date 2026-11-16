@@ -1,4 +1,4 @@
-# 12 — Inventario de pantallas EJS
+# 08 — Inventario de pantallas EJS
 
 Todas estas plantillas las presenta un controlador mediante `res.render()`. Las vistas parciales cuyo nombre empieza por `_` se insertan dentro de otra página, para que las acciones comunes no se repitan.
 

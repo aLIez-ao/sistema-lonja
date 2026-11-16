@@ -34,9 +34,9 @@ Se completaron las seis fases del plan: navegación del personal, controles y fi
 
 - No se midió el tamaño del buscador antes y después con `getBoundingClientRect()` ni se realizó recorrido visual con sesión en claro/oscuro y anchos 375, 768, 1200 y 1440 px. El ancho reportado queda **sin medición**, no se infiere desde CSS.
 - No se probaron foco, lectores de pantalla ni consola en navegador.
-- No se ejecutó MariaDB real. Hay que probar migraciones y bloqueo de reservas en una base desechable, según [la guía de instalación](04-instalacion-y-despliegue.md#verificacion-en-mariadb).
+- No se ejecutó MariaDB real. Hay que probar migraciones y bloqueo de reservas en una base desechable, según [la guía de instalación](../04-instalacion-y-despliegue.md#verificacion-en-mariadb).
 - No se configuraron credenciales ni se conectó a Gmail. Cuando quieras activar el correo, ejecuta `npm run correo:configurar` en tu terminal y verifica el envío en **Configuración → Correo**.
 - Repetir `npm test` cuando esté disponible un entorno de pruebas con transporte simulado y sin credenciales reales de correo.
 - SPEI/CLABE es solo una simulación educativa. No se debe enviar dinero a la CLABE ficticia mostrada en la página de pago.
 
-Los seguimientos quedan anotados en [TODO](TODO.md#plan-05--navegación-tienda-compra-y-usuarios).
+Los seguimientos quedan anotados en [TODO](TODO.md).

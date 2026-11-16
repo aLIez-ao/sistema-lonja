@@ -21,6 +21,8 @@ Roles: **admin** (todo), **capturista** (captura y consulta; no borra ni adminis
 | GET | `/inicio` | Redirección permanente 301 a `/dashboard` para enlaces anteriores |
 | GET | `/dashboard` | Panel de admin/capturista; comprador: 403 |
 
+La tabla de arriba resume quién puede visitar cada zona. El inventario detallado de routers está en [guía del código](guia-codigo/07-inventario-archivos.md); `app.js` aplica el middleware en el servidor, de modo que ocultar un enlace de menú no sustituye los permisos.
+
 La tienda nunca expone nombres, correos ni montos de compradores: solo muestra lotes sin `Compra` que tengan al menos una especie y el catálogo activo.
 
 ## Con sesión de comprador
@@ -43,6 +45,7 @@ La tienda nunca expone nombres, correos ni montos de compradores: solo muestra l
 | GET | `/cuenta/listas.json` | Listas propias e identificadores de sus elementos (JSON) |
 | POST | `/cuenta/favoritos/alternar` | Agrega o quita lote/especie de Favoritos; JSON `{ tipo, id_ref }` |
 | POST | `/cuenta/listas/:id/carrito` | Agrega lotes disponibles de una lista al carrito y devuelve el conteo; omite vendidos/reservados |
+| POST | `/avisos/descartar-suscripcion` | Guarda en la cuenta que el comprador cerró el aviso de suscripción |
 | GET/POST | `/cuenta/preguntas`, `/tienda/preguntas` | Consultar o enviar preguntas (máximo 5 por hora) |
 | POST | `/tienda/especie/:id/opiniones` | Crear o editar una opinión solo tras una compra verificada |
 

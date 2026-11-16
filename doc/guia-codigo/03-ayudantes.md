@@ -1,4 +1,4 @@
-# 06 — Ayudantes
+# 03 — Ayudantes
 
 Los archivos de `helpers/` reúnen lógica reutilizable que los controladores necesitan. No son rutas web; son herramientas para armar una fecha, revisar un token, calcular un envío o generar una factura.
 
@@ -32,5 +32,10 @@ Los archivos de `helpers/` reúnen lógica reutilizable que los controladores ne
 | `helpers/pdfComun.js` | Componentes y formato PDF compartido |
 | `helpers/reportePdf.js` | Informe anual en PDF |
 | `helpers/estadisticas.js` | Agrega importes, lotes, pendientes y origen de ventas para el tablero |
+| `helpers/registro.js` | Escribe eventos con nivel y contexto útil para operación, sin enviar secretos al log |
+| `helpers/colaTrabajos.js` | Ejecuta trabajos secundarios en cola para no bloquear la respuesta web |
+| `helpers/validacionSecretos.js` | Comprueba al iniciar que la configuración de secretos cumple los requisitos |
 
 Los ayudantes importantes se invocan desde los controladores. Por ejemplo: `pedidoController` usa `pedidos.js` para calcular y reservar y `pasarela.js` para simular un resultado; después `factura.js` prepara la venta.
+
+`helpers/migraciones.js` mantiene la compatibilidad de la base instalada. Las definiciones versionadas registran cada cambio y ofrecen `up`/`down`; `models/Migracion.js` guarda qué versión se aplicó. El detalle para operar esos cambios está en [base de datos](../02-base-de-datos.md) y [pruebas](../06-pruebas.md).

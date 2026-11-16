@@ -1,4 +1,4 @@
-# 07 — Plantillas EJS
+# 04 — Plantillas EJS
 
 EJS combina datos con HTML. `<%= valor %>` imprime texto escapado; conserva esa forma para comentarios, nombres, preguntas y opiniones que ingresaron usuarios. `<%- ... %>` se reserva para incluir plantillas o iconos confiables.
 
