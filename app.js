@@ -62,7 +62,6 @@ app.get("/favicon.ico", (req, res) => res.redirect(301, "/img/favicon.svg"));
 
 // Identificación pasiva de usuario para navbar si tiene sesión
 app.use(async (req, res, next) => {
-  if (req.path === "/tienda/sugerencias" || /\.(?:pdf|json)$/i.test(req.path)) return next();
   res.locals.fechaHora = formatoFechaHora;
   res.locals.icono = icono;
   res.locals.rutaActual = req.path;
@@ -72,6 +71,7 @@ app.use(async (req, res, next) => {
   res.locals.favoritosCount = 0;
   res.locals.favoritos = { lote: new Set(), especie: new Set() };
   req.usuario = null;
+  if (req.path === "/tienda/sugerencias" || /\.(?:pdf|json)$/i.test(req.path)) return next();
 
   const usuario = await usuarioDesdeToken(req.cookies._token);
   if (usuario) {

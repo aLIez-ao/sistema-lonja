@@ -38,7 +38,7 @@ test("administración de pedidos filtra, avanza estado y notifica enviado/entreg
   assert.equal(entrega.status, 302);
   assert.match(decodeURIComponent(entrega.loc), /Estado actualizado\./);
   assert.equal((await Pedido.findByPk(pedido.id_ped)).estado, "entregado");
-  assert.equal(correos.length, 2);
+  assert.equal(correos.length, 1, "la entrega se guarda aunque falle su correo de notificación");
   const inicio = await admin.get("/dashboard");
   assert.equal(inicio.status, 200); assert.match(inicio.texto, /Ventas en línea|Origen de compras/);
   const comprador = cliente(srv.base); await comprador.entrar(u.usuario, "Clave1234");

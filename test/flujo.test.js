@@ -22,7 +22,11 @@ const sesion = (cookie = "") => ({
     const r = await fetch(base + ruta, {
       method: metodo,
       redirect: "manual",
-      headers: { cookie: this.cookie, ...(datos ? { "content-type": "application/x-www-form-urlencoded" } : {}) },
+      headers: {
+        cookie: this.cookie,
+        ...(!["GET", "HEAD", "OPTIONS"].includes(metodo) ? { origin: new URL(base).origin } : {}),
+        ...(datos ? { "content-type": "application/x-www-form-urlencoded" } : {}),
+      },
       body: datos ? new URLSearchParams(datos).toString() : undefined,
     });
     const set = r.headers.get("set-cookie");

@@ -52,15 +52,17 @@ test("Favoritos es una lista reservada y los nombres duplicados se muestran como
   const favoritos = await Lista.findOne({ where: { id_usuario: a.u.id, nombre: "Favoritos" } });
   assert.equal((await a.web.post("/cuenta/listas", { nombre: "fAvOrItOs" })).status, 302);
   assert.equal(await Lista.count({ where: { id_usuario: a.u.id, nombre: "Favoritos" } }), 1);
-  assert.match(decodeURIComponent((await a.web.post(`/cuenta/listas/${favoritos.id_lista}?_method=PUT`, { nombre: "Personal" })).loc), /no se puede renombrar/);
-  assert.match(decodeURIComponent((await a.web.post(`/cuenta/listas/${favoritos.id_lista}?_method=DELETE`)).loc), /no se puede eliminar/);
+  const renombrado = await a.web.post(`/cuenta/listas/${favoritos.id_lista}?_method=PUT`, { nombre: "Personal" });
+  assert.match(new URL(renombrado.loc, srv.base).searchParams.get("error"), /no se puede renombrar/);
+  const eliminada = await a.web.post(`/cuenta/listas/${favoritos.id_lista}?_method=DELETE`);
+  assert.match(new URL(eliminada.loc, srv.base).searchParams.get("error"), /no se puede eliminar/);
   assert.ok(await Lista.findByPk(favoritos.id_lista));
 
   await a.web.post("/cuenta/listas", { nombre: "Mariscos" });
   const mariscos = await Lista.findOne({ where: { id_usuario: a.u.id, nombre: "Mariscos" } });
   await a.web.post("/cuenta/listas", { nombre: "Pescados" });
   const respuesta = await a.web.post(`/cuenta/listas/${mariscos.id_lista}?_method=PUT`, { nombre: "Pescados" });
-  assert.match(decodeURIComponent(respuesta.loc), /Ya existe una lista con ese nombre/);
+  assert.match(new URL(respuesta.loc, srv.base).searchParams.get("error"), /Ya existe una lista con ese nombre/);
   assert.equal((await Lista.findByPk(mariscos.id_lista)).nombre, "Mariscos");
 });
 
