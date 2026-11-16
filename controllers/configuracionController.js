@@ -1,8 +1,9 @@
 import bcrypt from "bcryptjs";
+import db from "../config/db.js";
 import { Usuario, Comprador } from "../models/index.js";
 import { enviarBoletinClientes, enviarEmailPasswordCambiada, estadoCorreo, enviarCorreoPrueba } from "../helpers/email.js";
 import { enviarVerificacionCorreo, limiteVerificacion, segundosEsperaVerificacion, urlBase } from "../helpers/cuentas.js";
-import { aplicarFoto } from "../helpers/avatar.js";
+import { prepararFoto } from "../helpers/avatar.js";
 import { problemasPassword } from "../helpers/seguridad.js";
 import { JWTGenera, opcionesCookieSesion } from "../helpers/tokens.js";
 import { aMensaje } from "../helpers/utiles.js";
@@ -91,6 +92,8 @@ export const actualizarCuenta = async (req, res) => {
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo) || correo.length > 80) return res.redirect(`/configuracion?${aError("Escribe un correo electrónico válido")}#pane-cuenta`);
   if (telefono && !/^[0-9+() -]{7,20}$/.test(telefono)) return res.redirect(`/configuracion?${aError("El teléfono no es válido")}#pane-cuenta`);
 
+  let fotoPreparada = null;
+  let transaccionConfirmada = false;
   try {
     const correoCambio = correo !== String(us.correo || "").toLowerCase();
     if (correoCambio && (await Usuario.findOne({ where: { correo } }))) {
@@ -111,9 +114,15 @@ export const actualizarCuenta = async (req, res) => {
       us.token_verificacion = null;
       us.token_verificacion_expira = null;
     }
-    await aplicarFoto(us, { fotoData: req.body.foto_data, quitar: req.body.foto_quitar === "on" });
-    await us.save();
-    if (correoCambio && comprador) await comprador.update({ correo });
+    fotoPreparada = await prepararFoto(us, { fotoData: req.body.foto_data, quitar: req.body.foto_quitar === "on" });
+    us.foto = fotoPreparada.foto;
+    await db.transaction(async (transaction) => {
+      await us.save({ transaction });
+      if (correoCambio && comprador) await comprador.update({ correo }, { transaction });
+    });
+    transaccionConfirmada = true;
+    try { await fotoPreparada.confirmar(); }
+    catch (error) { console.warn("La cuenta se actualizó, pero no se pudo retirar la foto anterior:", error.message); }
 
     let aviso = "Datos de la cuenta actualizados.";
     if (correoCambio) {
@@ -131,6 +140,9 @@ export const actualizarCuenta = async (req, res) => {
     }
     res.redirect(`/configuracion?${aMensaje(aviso)}#pane-cuenta`);
   } catch (err) {
+    if (!transaccionConfirmada) {
+      try { await fotoPreparada?.revertir(); } catch (error) { console.warn("No se pudo limpiar la foto preparada:", error.message); }
+    }
     console.error("No se pudo actualizar la cuenta:", err);
     const errorImagen = /^(?:La imagen debe ser un archivo JPG, PNG o WebP|La imagen es demasiado grande|El archivo no es una imagen válida)$/.test(String(err?.message || ""));
     res.redirect(`/configuracion?${aError(errorImagen ? err.message : "No se pudieron guardar los datos. Revisa la información e inténtalo de nuevo.")}#pane-cuenta`);

@@ -30,4 +30,19 @@ export async function aplicarFoto(usuario, { fotoData, quitar }) {
   usuario.foto = nueva;
 }
 
+/** Prepara el cambio sin borrar la foto anterior hasta confirmar la transacción de BD. */
+export async function prepararFoto(usuario, { fotoData, quitar }) {
+  const anterior = usuario.foto;
+  if (quitar && !fotoData) {
+    return { foto: null, confirmar: () => borrarImagen(anterior, opciones), revertir: async () => {} };
+  }
+  if (!fotoData) return { foto: anterior, confirmar: async () => {}, revertir: async () => {} };
+  const nueva = await guardarImagenDataURL(fotoData, { ...opciones, prefijo: `u${usuario.id}` });
+  return {
+    foto: nueva,
+    confirmar: () => borrarImagen(anterior, opciones),
+    revertir: () => borrarImagen(nueva, opciones),
+  };
+}
+
 export const borrarFoto = (usuario) => borrarImagen(usuario.foto, opciones);
