@@ -2,6 +2,7 @@
 // Solo se consultan lotes sin compra y especies activas; ningún dato de
 // compradores (nombres, correos o montos) sale por estas rutas.
 import { Op, fn, col, literal, where as sqlWhere } from "sequelize";
+import db from "../config/db.js";
 import { Lote, Especie, EspecieCatalogo, Tipo, Compra } from "../models/index.js";
 import { leerListado, consultarListado, combinarWhere } from "../helpers/listado.js";
 import { filtroEntero, filtroNumero } from "../helpers/filtros.js";
@@ -38,8 +39,8 @@ const conEspecies = () =>
     [Op.gt]: 0,
   });
 
-const noReservado = () =>
-  sqlWhere(literal("(SELECT COUNT(*) FROM pedido_item pi INNER JOIN pedido p ON p.id_ped = pi.id_ped WHERE pi.id_lte = `Lote`.`id_lte` AND p.estado = 'pendiente_pago' AND p.reservado_hasta > CURRENT_TIMESTAMP)"), {
+const noReservado = (ahora = new Date()) =>
+  sqlWhere(literal(`(SELECT COUNT(*) FROM pedido_item pi INNER JOIN pedido p ON p.id_ped = pi.id_ped WHERE pi.id_lte = \`Lote\`.\`id_lte\` AND p.estado = 'pendiente_pago' AND p.reservado_hasta > ${db.escape(ahora)})`), {
     [Op.eq]: 0,
   });
 
