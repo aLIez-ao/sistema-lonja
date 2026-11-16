@@ -8,11 +8,15 @@
     "server": "nodemon index.js",
     "start": "node index.js",
     "test": "node --test test/*.test.js",
+    "test:cov": "node --test --experimental-test-coverage test/*.test.js",
     "demo": "node scripts/demo.js",
     "correo:configurar": "node scripts/configurar-correo.js"
   },
   "author": "Ardan Olvera",
   "license": "ISC",
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "bootstrap": "^5.3.8",
