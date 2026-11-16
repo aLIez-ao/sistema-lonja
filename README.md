@@ -23,8 +23,7 @@ Requisitos: **Node.js ≥ 20** y **MariaDB ≥ 10.6**.
 ```bash
 mariadb -u root -p
 CREATE DATABASE lonja_veracruz CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'lonja'@'localhost' IDENTIFIED BY 'Q^X3tB2';
-CREATE DATABASE lonja_veracruz CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+CREATE USER 'lonja'@'localhost' IDENTIFIED BY 'CAMBIA_ESTA_CLAVE';
 GRANT ALL PRIVILEGES ON lonja_veracruz.* TO 'lonja'@'localhost';
 FLUSH PRIVILEGES;
 SHOW GRANTS FOR 'lonja'@'localhost';
@@ -53,16 +52,15 @@ En `/usuarios`, el administrador consulta por separado trabajadores y clientes. 
 ## Estructura
 ```
 index.js · app.js · config/ · models/ · controllers/ · routes/ · middleware/ · helpers/
-views/ · public/ · scripts/ · test/ · doc/ · doc/resolver/
+views/ · public/ · scripts/ · test/ · doc/ · doc/guia-codigo/
 ```
 
 ## Documentación
-- [Guía del código](doc/resolver/README.md): guía numerada por archivo, capas y recorridos para lectores técnicos y no técnicos.
+- [Guía del código](doc/guia-codigo/README.md): guía numerada por capas, archivos y recorridos, adaptada a v1.
 - [Documentación operativa](doc/README.md): arquitectura, base de datos, rutas y permisos, instalación, seguridad y pruebas.
-- [Informe de ejecución del plan 05](doc/08-informe-plan-05.md): cambios, commits, pruebas y verificaciones pendientes.
 
 ## Estado y advertencias
-- 145 pruebas automáticas pasan sobre SQLite; **la migración y los flujos no se verificaron contra MariaDB real**.
+- La suite automatizada usa SQLite; consulta [pruebas](doc/06-pruebas.md) para conocer su alcance y límites.
 - Los PDF de ejemplo usan credenciales de práctica (`root/1234`): cámbialas en cualquier uso real.
 
 ## Empaquetado zip

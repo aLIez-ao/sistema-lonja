@@ -1,15 +1,27 @@
 # Documentación del Sistema Lonja
 
+Índice para entender, operar y mantener la versión 1. Empieza por la sección relacionada con tu tarea.
+
+## Referencia del sistema
+
 | Documento | Contenido |
 |---|---|
-| [01-arquitectura.md](01-arquitectura.md) | Capas, estructura de carpetas, flujo de una petición y decisiones técnicas |
-| [02-base-de-datos.md](02-base-de-datos.md) | Diagrama relacional, tablas, tipos y reglas de integridad |
-| [03-rutas-y-permisos.md](03-rutas-y-permisos.md) | Todas las rutas, quién puede usarlas y qué validan |
-| [04-instalacion-y-despliegue.md](04-instalacion-y-despliegue.md) | Puesta en marcha, variables de entorno, producción |
-| [05-seguridad.md](05-seguridad.md) | Medidas implementadas y límites conocidos |
-| [06-pruebas.md](06-pruebas.md) | Qué cubren las pruebas automáticas y qué NO se probó |
+| [01 — Arquitectura](01-arquitectura.md) | Capas, arranque y recorrido de una petición |
+| [02 — Base de datos](02-base-de-datos.md) | Tablas, relaciones, integridad y actualización del esquema |
+| [03 — Rutas y permisos](03-rutas-y-permisos.md) | Áreas de la aplicación, acceso y roles |
+| [04 — Instalación y despliegue](04-instalacion-y-despliegue.md) | Requisitos, configuración y operación |
+| [05 — Seguridad](05-seguridad.md) | Controles implementados y límites conocidos |
+| [06 — Pruebas](06-pruebas.md) | Cobertura automatizada y límites de verificación |
 
-Informe de ejecución: [plan 05](08-informe-plan-05.md). Las tareas pendientes se mantienen en [TODO.md](TODO.md).
+## Guía del código
+
+[Guía numerada](guia-codigo/README.md): explica el propósito de cada capa, los archivos que colaboran y los recorridos principales, para lectores técnicos y no técnicos.
+
+## Diagramas
+
+- [Esquema DBML](sistema-lonja.dbml)
+- [Diagrama SVG](sistema-lonja.svg)
+
+El DBML describe el esquema declarado por el código de esta rama. No certifica el estado de una base de datos desplegada.
 
 Ver también el [README principal](../README.md).
-Para una explicación archivo por archivo del código, consulta la [guía numerada](resolver/README.md).

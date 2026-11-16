@@ -36,8 +36,7 @@ Actualizado el 13 de noviembre de 2026, tras la auditoría del plan 04 (131 prue
 
 ## Documentación
 
-- [ ] **Unificar las dos guías del código** que quedaron en [`resolver/`](resolver/README.md) en una sola (se solapan en gran parte).
-- [x] La guía del código quedó en `doc/resolver/` y se versiona junto con la documentación operativa; `.gitignore` limita la regla `resolver/` a la carpeta raíz.
+- [x] Unificar las guías duplicadas en `doc/guia-codigo/`, con capítulos adaptados a la versión 1.
 
 ## Plan 05 — navegación, tienda, compra y usuarios
 
