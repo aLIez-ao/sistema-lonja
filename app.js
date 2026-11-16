@@ -33,6 +33,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 app.disable("x-powered-by");
+app.use((req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Content-Security-Policy", "frame-ancestors 'none'");
+  next();
+});
 
 // 400 kb: los formularios de usuario pueden llevar la foto de perfil (ya reducida) como data URL
 app.use(express.urlencoded({ extended: true, limit: "400kb" }));
