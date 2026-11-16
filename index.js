@@ -42,6 +42,9 @@ process.once("SIGTERM", () => apagar("SIGTERM"));
 
     // BD_SYNC: safe (solo crea lo que falta) | alter | force (borra todo)
     const modo = process.env.BD_SYNC || "safe";
+    if (process.env.NODE_ENV === "production" && ["alter", "force"].includes(modo)) {
+      throw new Error("BD_SYNC=alter/force está prohibido en producción.");
+    }
     await db.sync(modo === "force" ? { force: true } : modo === "alter" ? { alter: true } : {});
     console.log(`Modelos sincronizados (${modo}).`);
 
