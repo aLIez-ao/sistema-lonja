@@ -10,7 +10,7 @@ const Especie = db.define(
     nombre: { type: DataTypes.STRING(40), allowNull: false },
     imagen: { type: DataTypes.STRING(100), allowNull: true },
   },
-  { tableName: "especie", timestamps: false },
+  { tableName: "especie", timestamps: false, indexes: [{ fields: ["id_lte"] }] },
 );
 
 export default Especie;

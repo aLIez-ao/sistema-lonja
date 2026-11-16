@@ -23,6 +23,6 @@ const Pedido = db.define("Pedido", {
   fecha: { type: DataTypes.DATE, allowNull: false, defaultValue: DataTypes.NOW },
   fecha_pago: { type: DataTypes.DATE, allowNull: true },
   notas: { type: DataTypes.STRING(500), allowNull: true },
-}, { tableName: "pedido", timestamps: false });
+}, { tableName: "pedido", timestamps: false, indexes: [{ fields: ["estado", "reservado_hasta"] }] });
 
 export default Pedido;

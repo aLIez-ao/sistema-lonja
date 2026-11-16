@@ -7,6 +7,6 @@ const PedidoItem = db.define("PedidoItem", {
   kilos: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
   precio_kilo: { type: DataTypes.DECIMAL(10, 2), allowNull: false },
   subtotal: { type: DataTypes.DECIMAL(12, 2), allowNull: false },
-}, { tableName: "pedido_item", timestamps: false });
+}, { tableName: "pedido_item", timestamps: false, indexes: [{ fields: ["id_lte"] }] });
 
 export default PedidoItem;
