@@ -36,7 +36,8 @@ const credenciales = async (req, res) => {
   const errs = mensajesError(req);
   if (errs.length) return vistaLogin(res, errs, req.body.usuario, null, undefined, req.body.volver);
 
-  const { usuario, password } = req.body;
+  const usuario = String(req.body.usuario ?? "").trim();
+  const { password } = req.body;
   const clave = `${req.ip}|${String(usuario).toLowerCase()}`;
   if (limiteLogin.bloqueado(clave)) {
     return vistaLogin(res, [`Demasiados intentos fallidos. Intenta de nuevo en ${limiteLogin.minutosRestantes(clave)} min o recupera tu contraseña.`], usuario, null, 429, req.body.volver);
@@ -44,7 +45,7 @@ const credenciales = async (req, res) => {
 
   // Se acepta el nombre de usuario o el correo electrónico
   const us = await Usuario.findOne({
-    where: { [Op.or]: [{ usuario }, { correo: String(usuario).trim().toLowerCase() }, { correo: String(usuario).trim() }] },
+    where: { [Op.or]: [{ usuario }, { correo: usuario.toLowerCase() }] },
   });
   const claveCuenta = us ? `usuario:${us.id}` : `identificador:${String(usuario).trim().toLowerCase()}`;
   if (limiteLoginCuenta.bloqueado(claveCuenta)) {
@@ -90,7 +91,7 @@ const enviarRecuperacionPassword = async (req, res) => {
   }
   limiteRecuperacion.fallo(req.ip);
 
-  const us = await Usuario.findOne({ where: { [Op.or]: [{ correo: identificador.toLowerCase() }, { correo: identificador }, { usuario: identificador }] } });
+  const us = await Usuario.findOne({ where: { [Op.or]: [{ correo: identificador.toLowerCase() }, { usuario: identificador }] } });
   if (us && us.activo && us.correo) {
     try { await enviarEnlacePassword(req, us, "recuperacion"); } catch (e) { console.error("No se pudo enviar la recuperación:", e.message); }
   }

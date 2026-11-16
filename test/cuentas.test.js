@@ -59,6 +59,14 @@ test("el enlace de invitación permite crear la contraseña una sola vez y verif
   assert.equal((await Usuario.findOne({ where: { usuario: "ana" } })).email_verificado, true);
 });
 
+test("el modelo normaliza correos y el acceso acepta mayúsculas y espacios", async () => {
+  const ana = await Usuario.findOne({ where: { usuario: "ana" } });
+  await ana.update({ correo: " ANA@EXAMPLE.COM " });
+  assert.equal(ana.correo, "ana@example.com");
+  const acceso = await cliente(srv.base).entrar(" ANA@EXAMPLE.COM ", "Segura1234");
+  assert.equal(acceso.loc, "/dashboard");
+});
+
 test("cambiar la contraseña cierra las demás sesiones y conserva la actual", async () => {
   const a = cliente(srv.base), b = cliente(srv.base);
   await a.entrar("ana", "Segura1234");

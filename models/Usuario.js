@@ -66,7 +66,10 @@ const Usuario = db.define(
           u.password = await bcrypt.hash(u.password, 10);
           if (!u.isNewRecord) u.sesion_version = (u.sesion_version || 0) + 1;
         }
-        if (u.correo === "") u.correo = null; // el índice único no admite varias cadenas vacías
+        if (typeof u.correo === "string") {
+          u.correo = u.correo.trim().toLowerCase();
+          if (u.correo === "") u.correo = null; // el índice único no admite varias cadenas vacías
+        }
       },
     },
     scopes: { sinClave: { attributes: { exclude: ["password", "token_recuperacion", "token_verificacion"] } } },
