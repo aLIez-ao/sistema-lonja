@@ -6,9 +6,9 @@ npm test
 
 El proyecto usa `node:test`, SQLite en memoria y solicitudes HTTP contra la aplicación real. Las suites inicializan una base limpia mediante `test/ayuda.js`, por lo que no requieren MariaDB ni envían correo real.
 
-## Resultado verificado
+## Último resultado registrado
 
-La suite completa tiene **145 pruebas aprobadas, 0 fallidas** (12 de noviembre de 2026).
+La última ejecución registrada en este documento tuvo **145 pruebas aprobadas, 0 fallidas** (12 de noviembre de 2026). Esta cifra describe esa ejecución, no una nueva verificación de esta revisión documental.
 
 | Archivo | Alcance |
 |---|---|

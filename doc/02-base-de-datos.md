@@ -85,6 +85,8 @@ Diseño relacional entregado por el cliente (PDF *Sistema Lonja*, pág. 2), impl
 
 `compra.id_ped` relaciona la venta tradicional existente con un pedido en línea; es `NULL` para mostrador.
 
+El archivo [sistema-lonja.dbml](sistema-lonja.dbml) refleja los campos y asociaciones de los modelos de esta rama; no se obtuvo de una base desplegada. En instalaciones heredadas, `helpers/migraciones.js` declara `SET NULL` al añadir `especie.id_cat`, mientras que el modelo actual establece `RESTRICT` al crear la relación. Conviene revisar esa diferencia antes de comparar el diagrama con una base existente.
+
 ## Reglas de integridad en la aplicación
 
 - Un lote **ya comprado** no se puede editar ni eliminar (cambiaría el importe cobrado).

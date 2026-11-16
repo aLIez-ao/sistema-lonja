@@ -44,7 +44,6 @@ Datos de ejemplo (opcional, después del primer arranque): `npm run demo`. La ca
 | ENVIO_COSTO | `150` | Cargo base de envío a domicilio |
 | ENVIO_GRATIS_DESDE | `2500` | Total del carrito a partir del cual el envío cuesta cero |
 | RESERVA_MINUTOS | `15` | Duración de la reserva mientras se confirma el pago |
-| RESERVA_EFECTIVO_MINUTOS | `120` | Reserva ampliada al pagar en la lonja; el máximo permitido es 24 horas |
 | RESERVA_EFECTIVO_MINUTOS | `120` | Reserva ampliada para pedidos que se pagan en efectivo/terminal al recoger (máximo 24 h) |
 | NODE_ENV | `production` | Activa la cookie `secure` (solo HTTPS) |
 
