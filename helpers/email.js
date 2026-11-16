@@ -325,6 +325,7 @@ export async function enviarBoletinClientes({ asunto, titulo, mensaje, tipo = "e
           <p style="font-size: 13px; color: #64748b;">Si tiene dudas o requiere apoyo, por favor comuníquese a la oficina de administración de la Lonja.</p>
           <hr style="border: none; border-top: 1px solid #e2e8f0; margin: 24px 0;">
           <p style="font-size: 12px; color: #94a3b8; margin: 0;">Lonja Pesquera de Veracruz · Aviso enviado a clientes registrados.</p>
+          <p style="font-size: 12px; color: #64748b; margin: 12px 0 0;">Si ya no quieres recibir estos avisos, <a href="${esc(c.bajaUrl || "#")}">date de baja aquí</a>.</p>
         </div>
       </div>
     `;
@@ -333,7 +334,7 @@ export async function enviarBoletinClientes({ asunto, titulo, mensaje, tipo = "e
       para: c.correo,
       asunto: `${asunto} - Lonja de Veracruz`,
       html,
-      texto: mensaje,
+      texto: `${mensaje}\n\nPara dejar de recibir avisos: ${c.bajaUrl || ""}`,
     });
     resultados.push({ comprador: c.correo, resultado: res });
   }

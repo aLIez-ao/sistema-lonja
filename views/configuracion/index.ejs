@@ -217,6 +217,12 @@
                 <input type="tel" class="form-control" id="cuentaTelefono" name="telefono" maxlength="20" pattern="[0-9+() \-]{7,20}" value="<%= us.telefono || '' %>">
               </div>
             </div>
+            <% if (us.rol === 'comprador') { %>
+              <div class="form-check mt-3">
+                <input class="form-check-input" type="checkbox" id="recibir_avisos" name="recibir_avisos" <%= us.recibir_avisos ? 'checked' : '' %>>
+                <label class="form-check-label small" for="recibir_avisos">Recibir avisos de subastas y novedades por correo. Puedes darte de baja desde cualquier aviso.</label>
+              </div>
+            <% } %>
             <button class="btn btn-primary mt-3" type="submit">Guardar datos</button>
           </form>
 
@@ -272,13 +278,13 @@
         <div class="card p-4">
           <div class="d-flex justify-content-between align-items-center mb-3">
             <div>
-              <h4 class="h5 fw-bold mb-0 text-primary">Enviar Comunicado a Clientes Registrados</h4>
-              <p class="text-muted small mb-0">Envía correos sobre eventos, cambios de políticas, vedas y horarios de subasta.</p>
+              <h4 class="h5 fw-bold mb-0 text-primary">Enviar aviso a compradores suscritos</h4>
+              <p class="text-muted small mb-0">Se enviará solo a compradores con correo verificado que aceptaron recibir estos avisos.</p>
             </div>
-            <span class="badge bg-info text-dark"><%= totalCompradores %> compradores en catálogo</span>
+            <span class="badge bg-info text-dark"><%= totalCompradores %> suscriptores activos</span>
           </div>
 
-          <form action="/configuracion/enviar-aviso-clientes" method="POST" data-confirmar="¿Confirmas el envío de este correo a todos los compradores registrados?">
+          <form action="/configuracion/enviar-aviso-clientes" method="POST" data-confirmar="¿Confirmas el envío de este aviso a los compradores suscritos?">
             <div class="row g-3">
               <div class="col-md-4">
                 <label class="form-label fw-semibold">Tipo de Comunicado</label>
@@ -290,21 +296,21 @@
               </div>
               <div class="col-md-8">
                 <label class="form-label fw-semibold">Asunto del Correo</label>
-                <input type="text" name="asunto" class="form-control" placeholder="Ej. Gran arribo de Huachinango fresco y Robalo de altura" required>
+                <input type="text" name="asunto" class="form-control" maxlength="120" placeholder="Ej. Gran arribo de Huachinango fresco y Robalo de altura" required>
               </div>
               <div class="col-12">
                 <label class="form-label fw-semibold">Título Encabezado (dentro del correo)</label>
-                <input type="text" name="titulo" class="form-control" placeholder="Ej. Invitación a la Subasta Extraordinaria del Puerto">
+                <input type="text" name="titulo" class="form-control" maxlength="120" placeholder="Ej. Invitación a la Subasta Extraordinaria del Puerto">
               </div>
               <div class="col-12">
                 <label class="form-label fw-semibold">Mensaje para los Compradores</label>
-                <textarea name="mensaje" rows="6" class="form-control" placeholder="Escribe aquí los detalles del evento, los precios base esperados, las políticas de cobro o la información relevante..." required></textarea>
+                <textarea name="mensaje" rows="6" maxlength="4000" class="form-control" placeholder="Escribe aquí los detalles del evento, los precios base esperados, las políticas de cobro o la información relevante..." required></textarea>
               </div>
             </div>
             <div class="mt-4">
               <button type="submit" class="btn btn-primary">
                 <%- icono('send', 16, 'me-1') %>
-                Enviar Correo a Todos los Compradores
+                Enviar aviso a compradores suscritos
               </button>
             </div>
           </form>

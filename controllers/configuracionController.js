@@ -1,11 +1,12 @@
 import bcrypt from "bcryptjs";
+import { Op } from "sequelize";
 import db from "../config/db.js";
 import { Usuario, Comprador } from "../models/index.js";
 import { enviarBoletinClientes, enviarEmailPasswordCambiada, estadoCorreo, enviarCorreoPrueba } from "../helpers/email.js";
 import { enviarVerificacionCorreo, limiteVerificacion, segundosEsperaVerificacion, urlBase } from "../helpers/cuentas.js";
 import { prepararFoto } from "../helpers/avatar.js";
 import { problemasPassword } from "../helpers/seguridad.js";
-import { JWTGenera, opcionesCookieSesion } from "../helpers/tokens.js";
+import { JWTGenera, opcionesCookieSesion, crearTokenBajaAvisos } from "../helpers/tokens.js";
 import { aMensaje } from "../helpers/utiles.js";
 import { compradorDe, compradorPorCorreo } from "../helpers/comprador.js";
 import { prefValida } from "../middleware/preferencias.js";
@@ -13,7 +14,7 @@ import { CATEGORIAS, COOKIE_DE_PREF, aplicarConsentimiento, guardarCookiePrefere
 
 const renderConfiguracion = async (req, res, adicionales = {}) => {
   const us = await Usuario.findByPk(req.usuario.id);
-  const totalCompradores = await Comprador.count();
+  const totalCompradores = await Usuario.count({ where: { rol: "comprador", activo: true, email_verificado: true, recibir_avisos: true, codigo_cpr: { [Op.ne]: null } } });
   res.render("configuracion/index", {
     us,
     totalCompradores,
@@ -114,6 +115,7 @@ export const actualizarCuenta = async (req, res) => {
       us.token_verificacion = null;
       us.token_verificacion_expira = null;
     }
+    if (us.rol === "comprador") us.recibir_avisos = req.body.recibir_avisos === "on";
     fotoPreparada = await prepararFoto(us, { fotoData: req.body.foto_data, quitar: req.body.foto_quitar === "on" });
     us.foto = fotoPreparada.foto;
     await db.transaction(async (transaction) => {
@@ -213,14 +215,32 @@ export const cambiarPasswordCuenta = async (req, res) => {
 };
 
 export const enviarAvisoClientes = async (req, res) => {
-  const { asunto, titulo, mensaje, tipo } = req.body;
+  const asunto = String(req.body.asunto ?? "").trim();
+  const titulo = String(req.body.titulo ?? "").trim();
+  const mensaje = String(req.body.mensaje ?? "").trim();
+  const tipo = String(req.body.tipo ?? "evento");
+  if (!asunto || asunto.length > 120 || /[\r\n]/.test(asunto)) return res.redirect(`/configuracion?${aError("El asunto es obligatorio y admite hasta 120 caracteres.")}#pane-avisos`);
+  if (titulo.length > 120) return res.redirect(`/configuracion?${aError("El título admite hasta 120 caracteres.")}#pane-avisos`);
+  if (!mensaje || mensaje.length > 4000) return res.redirect(`/configuracion?${aError("El mensaje es obligatorio y admite hasta 4000 caracteres.")}#pane-avisos`);
+  if (!["evento", "politica", "urgente"].includes(tipo)) return res.redirect(`/configuracion?${aError("El tipo de aviso no es válido.")}#pane-avisos`);
 
-  if (!asunto || !mensaje) {
-    return res.redirect(`/configuracion?error=${encodeURIComponent("Asunto y mensaje son requeridos")}`);
-  }
-
-  const compradores = await Comprador.findAll();
-  await enviarBoletinClientes({ asunto, titulo, mensaje, tipo, compradores });
-
-  res.redirect(`/configuracion?${aMensaje(`Aviso enviado a ${compradores.length} clientes registrados`)}#pane-avisos`);
+  const usuarios = await Usuario.findAll({
+    where: { rol: "comprador", activo: true, email_verificado: true, recibir_avisos: true },
+    include: [{ model: Comprador, as: "comprador", required: true }],
+  });
+  const baseUrl = urlBase(req);
+  const compradores = usuarios.map((usuario) => ({
+    ...usuario.comprador.get({ plain: true }),
+    correo: usuario.correo,
+    bajaUrl: `${baseUrl}/avisos/baja/${crearTokenBajaAvisos(usuario.id)}`,
+  }));
+  if (!compradores.length) return res.redirect(`/configuracion?${aMensaje("No hay compradores suscritos con correo verificado.")}#pane-avisos`);
+  const resultados = await enviarBoletinClientes({ asunto, titulo, mensaje, tipo, compradores });
+  const enviados = resultados.filter(({ resultado }) => resultado.ok).length;
+  const simulados = resultados.filter(({ resultado }) => resultado.simulado).length;
+  const fallidos = resultados.length - enviados - simulados;
+  const aviso = simulados && !enviados
+    ? "El correo está en modo simulador; no se enviaron los avisos."
+    : `Avisos enviados: ${enviados} de ${resultados.length}${fallidos ? `; ${fallidos} fallaron` : ""}.`;
+  res.redirect(`/configuracion?${aMensaje(aviso)}#pane-avisos`);
 };

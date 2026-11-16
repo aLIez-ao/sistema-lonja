@@ -20,6 +20,7 @@ const datosFormulario = (b = {}) => ({
   apellido_materno: b.apellido_materno || "",
   correo: b.correo || "",
   telefono: b.telefono || "",
+  recibir_avisos: b.recibir_avisos || "",
 });
 
 /** Parte local del correo convertida en un nombre de usuario único. */
@@ -114,6 +115,7 @@ const registrar = async (req, res) => {
             nombre_completo: `${nombre} ${paterno}${materno ? ` ${materno}` : ""}`,
             correo,
             telefono: String(req.body.telefono ?? "").trim() || null,
+            recibir_avisos: req.body.recibir_avisos === "on",
             rol: "comprador",
             password: req.body.password,
           }, { transaction: t });

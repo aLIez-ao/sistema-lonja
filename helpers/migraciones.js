@@ -7,6 +7,7 @@ import { Especie, EspecieCatalogo } from "../models/index.js";
 const COLUMNAS_USUARIO = {
   correo: { type: DataTypes.STRING(80), allowNull: true, unique: true },
   email_verificado: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+  recibir_avisos: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
   token_verificacion: { type: DataTypes.STRING(100), allowNull: true },
   token_verificacion_expira: { type: DataTypes.DATE, allowNull: true },
   token_verificacion_envio: { type: DataTypes.DATE, allowNull: true },

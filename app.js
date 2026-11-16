@@ -23,6 +23,7 @@ import router_tienda from "./routes/tienda_router.js";
 import router_carrito from "./routes/carrito_router.js";
 import router_pedido from "./routes/pedido_router.js";
 import router_pedido_admin from "./routes/pedido_admin_router.js";
+import router_avisos from "./routes/avisos_router.js";
 import * as social from "./controllers/socialController.js";
 import { formatoFechaHora } from "./helpers/fechas.js";
 import { icono } from "./helpers/iconos.js";
@@ -111,6 +112,7 @@ app.use("/", router_login);
 app.use("/registro", router_registro);
 // La portada (GET /) y las páginas /tienda/* son públicas.
 app.use("/", router_tienda);
+app.use("/avisos", router_avisos);
 
 // Solo personal de la lonja (admin y capturista): pantallas de administración
 const soloPersonal = [rutaProteger, permitir("admin", "capturista")];
