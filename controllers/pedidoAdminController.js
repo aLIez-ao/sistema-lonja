@@ -1,12 +1,11 @@
 import { Op } from 'sequelize';
-import db from '../config/db.js';
 import { Pedido, Usuario, Comprador, PedidoItem, Lote, Especie, Compra } from '../models/index.js';
 import { enviarEmailPedido } from '../helpers/email.js';
-import { cobrar } from '../helpers/pasarela.js';
 import { aError, aMensaje } from '../helpers/utiles.js';
 import { errorDeSitio } from '../helpers/navegacion.js';
 import { encolarTrabajo } from '../helpers/colaTrabajos.js';
-import { ESTADOS_PEDIDO, ESTADO_PEDIDO, ETIQUETA_ESTADO_PEDIDO, METODO_PAGO_PEDIDO } from '../models/Pedido.js';
+import { ESTADOS_PEDIDO, ESTADO_PEDIDO, ETIQUETA_ESTADO_PEDIDO } from '../models/Pedido.js';
+import { confirmarCobro as confirmarCobroServicio } from '../servicios/pedidos.js';
 
 const ESTADOS = ESTADOS_PEDIDO;
 const avanzan = {
@@ -122,52 +121,8 @@ export async function cambiarEstado(req, res) {
 }
 
 export async function confirmarCobro(req, res) {
-  const salida = await db.transaction(async (transaction) => {
-    const pedido = await Pedido.findByPk(req.params.id, { transaction, lock: transaction.LOCK?.UPDATE });
-    if (!pedido) return { error: 'No encontramos ese pedido.' };
-    if (
-      pedido.estado !== ESTADO_PEDIDO.PENDIENTE_PAGO ||
-      pedido.pago_metodo !== METODO_PAGO_PEDIDO.EFECTIVO_LONJA ||
-      pedido.entrega !== 'recoger'
-    )
-      return { error: 'Solo se confirma el cobro de pedidos pendientes que se pagan en la lonja.' };
-    if (!pedido.reservado_hasta || new Date(pedido.reservado_hasta) <= new Date()) {
-      await pedido.update({ estado: ESTADO_PEDIDO.EXPIRADO }, { transaction });
-      return { error: 'La reserva venció y el pedido se liberó.' };
-    }
-    const items = await PedidoItem.findAll({
-      where: { id_ped: pedido.id_ped },
-      transaction,
-      lock: transaction.LOCK?.UPDATE,
-    });
-    if (!items.length) return { error: 'El pedido no tiene artículos.' };
-    if (await Compra.findOne({ where: { id_ped: pedido.id_ped }, transaction, lock: transaction.LOCK?.UPDATE }))
-      return { pedido, repetido: true };
-    const pago = await cobrar({
-      metodo: 'efectivo',
-      monto: Number(pedido.total),
-      referencia: `pedido-${pedido.id_ped}`,
-    });
-    const fecha = new Date();
-    for (const item of items)
-      await Compra.create(
-        {
-          id_cmp: item.id_lte,
-          codigo_cpr: pedido.codigo_cpr,
-          precio_kilo_final: item.precio_kilo,
-          precio_total: item.subtotal,
-          fecha,
-          id_ped: pedido.id_ped,
-        },
-        { transaction },
-      );
-    await pedido.update(
-      { estado: ESTADO_PEDIDO.PAGADO, fecha_pago: fecha, pago_ref: pago.referencia },
-      { transaction },
-    );
-    return { pedido, items };
-  });
-  if (salida.error) return res.redirect(`/pedidos/${req.params.id}?error=${encodeURIComponent(salida.error)}`);
+  const salida = await confirmarCobroServicio({ pedidoId: req.params.id });
+  if (!salida.ok) return res.redirect(`/pedidos/${req.params.id}?error=${encodeURIComponent(salida.mensaje)}`);
   const mensaje = salida.repetido ? 'El pedido ya estaba confirmado.' : 'Cobro confirmado y compra registrada.';
   if (salida.items) {
     const usuario = await Usuario.findByPk(salida.pedido.id_usuario);
