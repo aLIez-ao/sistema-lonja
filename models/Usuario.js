@@ -28,6 +28,7 @@ const Usuario = db.define(
     },
     email_verificado: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
     recibir_avisos: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+    aviso_suscripcion_descartado: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
     token_verificacion: { type: DataTypes.STRING(100), allowNull: true },
     token_recuperacion: { type: DataTypes.STRING(100), allowNull: true },
     token_recuperacion_expira: { type: DataTypes.DATE, allowNull: true },

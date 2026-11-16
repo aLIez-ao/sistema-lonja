@@ -25,22 +25,22 @@ const COLUMNAS_USUARIO = {
 };
 
 /** Agrega la columna si falta; los fallos de esquema detienen el arranque. */
-export async function asegurarColumna(tabla, nombre, definicion) {
+export async function asegurarColumna(tabla, nombre, definicion, transaction) {
   const qi = db.getQueryInterface();
-  const actuales = await qi.describeTable(tabla);
+  const actuales = await qi.describeTable(tabla, { transaction });
   if (actuales[nombre]) return false;
-  await qi.addColumn(tabla, nombre, definicion);
+  await qi.addColumn(tabla, nombre, definicion, { transaction });
   console.log(`Columna '${nombre}' agregada a la tabla ${tabla}`);
   return true;
 }
 
 /** Ensancha una columna si su longitud actual es menor que la pedida. No recorta nunca. */
-export async function asegurarAncho(tabla, nombre, longitud) {
+export async function asegurarAncho(tabla, nombre, longitud, transaction) {
   const qi = db.getQueryInterface();
-  const actuales = await qi.describeTable(tabla);
+  const actuales = await qi.describeTable(tabla, { transaction });
   const col = actuales[nombre];
   if (!col) {
-    await qi.addColumn(tabla, nombre, { type: DataTypes.STRING(longitud), allowNull: true });
+    await qi.addColumn(tabla, nombre, { type: DataTypes.STRING(longitud), allowNull: true }, { transaction });
     console.log(`Columna '${nombre}' agregada a la tabla ${tabla}`);
     return true;
   }
@@ -54,7 +54,7 @@ export async function asegurarAncho(tabla, nombre, longitud) {
   if (col.defaultValue !== null && col.defaultValue !== undefined) {
     definicion.defaultValue = col.defaultValue;
   }
-  await qi.changeColumn(tabla, nombre, definicion);
+  await qi.changeColumn(tabla, nombre, definicion, { transaction });
   console.log(`Columna '${tabla}.${nombre}' ampliada de ${actual} a ${longitud}`);
   return true;
 }
@@ -65,15 +65,18 @@ export async function asegurarColumnasUsuario() {
 }
 
 /** Busca un catálogo por nombre sin distinguir mayúsculas. */
-const catalogoPorNombre = (nombre) =>
-  EspecieCatalogo.findOne({ where: sqlWhere(fn('LOWER', col('nombre')), String(nombre).trim().toLowerCase()) });
+const catalogoPorNombre = (nombre, transaction) =>
+  EspecieCatalogo.findOne({
+    where: sqlWhere(fn('LOWER', col('nombre')), String(nombre).trim().toLowerCase()),
+    transaction,
+  });
 
 /**
  * Rellena `especie.id_cat` a partir de las especies ya capturadas.
  * Idempotente: si vuelve a ejecutarse no crea catálogos duplicados.
  */
-export async function rellenarCatalogoEspecies() {
-  const pendientes = await Especie.findAll({ where: { id_cat: null } });
+export async function rellenarCatalogoEspecies({ transaction } = {}) {
+  const pendientes = await Especie.findAll({ where: { id_cat: null }, transaction });
   if (!pendientes.length) return { creados: 0, asignados: 0 };
 
   // Agrupa por nombre normalizado y elige la capitalización y el tipo más frecuentes.
@@ -100,12 +103,15 @@ export async function rellenarCatalogoEspecies() {
       console.warn(`El nombre "${nombre}" aparece con varios tipos; se usó el más frecuente (${idTpo}).`);
     }
 
-    let catalogo = await catalogoPorNombre(clave);
+    let catalogo = await catalogoPorNombre(clave, transaction);
     if (!catalogo) {
-      catalogo = await EspecieCatalogo.create({ nombre, id_tpo: idTpo, imagen: g.imagenes[0] || null, activo: true });
+      catalogo = await EspecieCatalogo.create(
+        { nombre, id_tpo: idTpo, imagen: g.imagenes[0] || null, activo: true },
+        { transaction },
+      );
       creados += 1;
     }
-    await Especie.update({ id_cat: catalogo.id_cat }, { where: { id_epe: g.filas.map((f) => f.id_epe) } });
+    await Especie.update({ id_cat: catalogo.id_cat }, { where: { id_epe: g.filas.map((f) => f.id_epe) }, transaction });
     asignados += g.filas.length;
   }
 
@@ -114,44 +120,103 @@ export async function rellenarCatalogoEspecies() {
 }
 
 /** Primera migración: actualiza el esquema histórico y consolida el catálogo. */
-async function migrarEsquemaActual() {
+async function migrarEsquemaActual({ transaction }) {
   for (const [nombre, definicion] of Object.entries(COLUMNAS_USUARIO)) {
-    await asegurarColumna('usuario', nombre, definicion);
+    await asegurarColumna('usuario', nombre, definicion, transaction);
   }
 
   // Catálogo de especies (Fase 1)
-  await asegurarColumna('especie', 'id_cat', {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-    references: { model: 'catalogo_especie', key: 'id_cat' },
-    onDelete: 'SET NULL',
-    onUpdate: 'CASCADE',
-  });
-  await asegurarAncho('especie', 'nombre', 40);
-  await asegurarAncho('comprador', 'nombre', 40);
-  await asegurarAncho('comprador', 'apellido_paterno', 40);
-  await asegurarAncho('comprador', 'apellido_materno', 40);
+  await asegurarColumna(
+    'especie',
+    'id_cat',
+    {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: { model: 'catalogo_especie', key: 'id_cat' },
+      onDelete: 'SET NULL',
+      onUpdate: 'CASCADE',
+    },
+    transaction,
+  );
+  await asegurarAncho('especie', 'nombre', 40, transaction);
+  await asegurarAncho('comprador', 'nombre', 40, transaction);
+  await asegurarAncho('comprador', 'apellido_paterno', 40, transaction);
+  await asegurarAncho('comprador', 'apellido_materno', 40, transaction);
 
   // La tabla pedido se crea desde el modelo; esta FK permite conservar compras antiguas.
-  await asegurarColumna('compra', 'id_ped', {
-    type: DataTypes.INTEGER,
-    allowNull: true,
-    references: { model: 'pedido', key: 'id_ped' },
-    onDelete: 'SET NULL',
-    onUpdate: 'CASCADE',
-  });
+  await asegurarColumna(
+    'compra',
+    'id_ped',
+    {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      references: { model: 'pedido', key: 'id_ped' },
+      onDelete: 'SET NULL',
+      onUpdate: 'CASCADE',
+    },
+    transaction,
+  );
 
-  await rellenarCatalogoEspecies();
+  await rellenarCatalogoEspecies({ transaction });
 }
 
-const migraciones = [{ id: '001_esquema_actual', up: migrarEsquemaActual }];
+async function revertirEsquemaActual({ transaction }) {
+  const qi = db.getQueryInterface();
+  for (const [tabla, nombre] of [
+    ['compra', 'id_ped'],
+    ['especie', 'id_cat'],
+  ]) {
+    if ((await qi.describeTable(tabla, { transaction }))[nombre]) await qi.removeColumn(tabla, nombre, { transaction });
+  }
+  for (const nombre of Object.keys(COLUMNAS_USUARIO).reverse()) {
+    if ((await qi.describeTable('usuario', { transaction }))[nombre]) {
+      await qi.removeColumn('usuario', nombre, { transaction });
+    }
+  }
+}
+
+const migraciones = [
+  { id: '001_esquema_actual', up: migrarEsquemaActual, down: revertirEsquemaActual },
+  {
+    id: '002_aviso_suscripcion_descartado',
+    up: ({ transaction }) =>
+      asegurarColumna(
+        'usuario',
+        'aviso_suscripcion_descartado',
+        { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
+        transaction,
+      ),
+    down: async ({ transaction }) => {
+      const qi = db.getQueryInterface();
+      if ((await qi.describeTable('usuario', { transaction })).aviso_suscripcion_descartado) {
+        await qi.removeColumn('usuario', 'aviso_suscripcion_descartado', { transaction });
+      }
+    },
+  },
+];
 
 /** Ejecuta una vez cada migración pendiente y registra su versión aplicada. */
 export async function asegurarEsquema() {
   for (const migracion of migraciones) {
     if (await Migracion.findByPk(migracion.id)) continue;
-    await migracion.up();
-    await Migracion.create({ id: migracion.id, aplicado_en: new Date() });
+    await db.transaction(async (transaction) => {
+      await migracion.up({ transaction });
+      await Migracion.create({ id: migracion.id, aplicado_en: new Date() }, { transaction });
+    });
     console.log(`Migración aplicada: ${migracion.id}`);
   }
+}
+
+/** Revierte la última migración conocida; el llamador debe haber detenido versiones nuevas de la app. */
+export async function revertirUltimaMigracion() {
+  for (const migracion of [...migraciones].reverse()) {
+    if (!(await Migracion.findByPk(migracion.id))) continue;
+    if (!migracion.down) throw new Error(`La migración ${migracion.id} no tiene una reversión definida.`);
+    await db.transaction(async (transaction) => {
+      await migracion.down({ transaction });
+      await Migracion.destroy({ where: { id: migracion.id }, transaction });
+    });
+    return migracion.id;
+  }
+  return null;
 }

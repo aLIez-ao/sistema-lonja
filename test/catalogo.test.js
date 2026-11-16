@@ -1,8 +1,8 @@
 // Fase 1: catálogo de especies, migración de las existentes y alta desde el formulario.
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { arrancar, cliente, modelos } from './ayuda.js';
-import { asegurarEsquema, rellenarCatalogoEspecies } from '../helpers/migraciones.js';
+import { arrancar, cliente, modelos, db } from './ayuda.js';
+import { asegurarEsquema, rellenarCatalogoEspecies, revertirUltimaMigracion } from '../helpers/migraciones.js';
 
 const { Lote, Especie, EspecieCatalogo, Migracion } = modelos;
 let srv, admin;
@@ -40,6 +40,11 @@ test('la migración crea el catálogo desde las especies existentes y es idempot
   assert.equal(await Especie.count({ where: { id_cat: null } }), 0);
   await asegurarEsquema();
   assert.equal(await Migracion.count({ where: { id: '001_esquema_actual' } }), 1);
+  assert.equal(await Migracion.count({ where: { id: '002_aviso_suscripcion_descartado' } }), 1);
+  assert.equal(await revertirUltimaMigracion(), '002_aviso_suscripcion_descartado');
+  assert.equal((await db.getQueryInterface().describeTable('usuario')).aviso_suscripcion_descartado, undefined);
+  await asegurarEsquema();
+  assert.ok((await db.getQueryInterface().describeTable('usuario')).aviso_suscripcion_descartado);
 });
 
 test('el catálogo se lista, se busca y rechaza nombres duplicados sin distinguir mayúsculas', async () => {
