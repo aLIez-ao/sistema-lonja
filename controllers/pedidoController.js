@@ -168,7 +168,7 @@ export const pagar = async (req, res) => {
 
       const items = await PedidoItem.findAll({
         where: { id_ped: pedido.id_ped },
-        include: [{ model: Lote, as: "lote", lock: transaction.LOCK?.UPDATE }],
+        include: [{ model: Lote, as: "lote" }],
         transaction,
       });
       if (!items.length) return { estado: "sin_items", pedido };
