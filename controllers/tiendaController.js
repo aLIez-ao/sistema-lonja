@@ -40,8 +40,8 @@ const conEspecies = () =>
   });
 
 const noReservado = (ahora = new Date()) =>
-  sqlWhere(literal(`(SELECT COUNT(*) FROM pedido_item pi INNER JOIN pedido p ON p.id_ped = pi.id_ped WHERE pi.id_lte = \`Lote\`.\`id_lte\` AND p.estado = 'pendiente_pago' AND p.reservado_hasta > ${db.escape(ahora)})`), {
-    [Op.eq]: 0,
+  sqlWhere(literal(`NOT EXISTS (SELECT 1 FROM pedido_item pi INNER JOIN pedido p ON p.id_ped = pi.id_ped WHERE pi.id_lte = \`Lote\`.\`id_lte\` AND p.estado = 'pendiente_pago' AND p.reservado_hasta > ${db.escape(ahora)})`), {
+    [Op.eq]: true,
   });
 
 const disponible = () => combinarWhere(sinCompra(), conEspecies(), noReservado());
