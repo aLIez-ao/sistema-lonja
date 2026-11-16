@@ -5,7 +5,7 @@ import { arrancar, cliente, modelos } from './ayuda.js';
 
 const { Compra, Lote, Comprador, Especie, Tipo } = modelos;
 
-let srv, c, especieHuach, especiePorcentaje, comprador;
+let srv, c, especieHuach, comprador;
 
 before(async () => {
   srv = await arrancar();
@@ -25,7 +25,7 @@ before(async () => {
     fecha: new Date(2026, 10, 5, 8, 0, 0),
   });
   especieHuach = await Especie.create({ nombre: 'Huachinango', id_lte: lote.id_lte, id_tpo: tipo.id_tpo });
-  especiePorcentaje = await Especie.create({ nombre: 'Pez 100%', id_lte: lote.id_lte, id_tpo: tipo.id_tpo });
+  await Especie.create({ nombre: 'Pez 100%', id_lte: lote.id_lte, id_tpo: tipo.id_tpo });
   await Compra.create({
     id_cmp: lote.id_lte,
     codigo_cpr: comprador.codigo_cpr,

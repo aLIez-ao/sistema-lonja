@@ -1,7 +1,7 @@
 import { Op } from 'sequelize';
 import db from '../config/db.js';
 import { DireccionEntrega } from '../models/index.js';
-import { aMensaje, aError } from '../helpers/utiles.js';
+import { aMensaje } from '../helpers/utiles.js';
 import { ESTADOS, MUNICIPIOS_VERACRUZ } from '../helpers/mexico.js';
 import { telefonoValido } from '../helpers/validacion.js';
 

@@ -218,15 +218,13 @@ const registrar = async (req, res) => {
       errs.push(mensajeBD(e));
     }
   }
-  res
-    .status(400)
-    .render('compras/formulario', {
-      compra: req.body,
-      editando: false,
-      action: '/compras',
-      errores: errs,
-      ...(await catalogos()),
-    });
+  res.status(400).render('compras/formulario', {
+    compra: req.body,
+    editando: false,
+    action: '/compras',
+    errores: errs,
+    ...(await catalogos()),
+  });
 };
 
 const editar = async (req, res) => {
@@ -266,15 +264,13 @@ const actualizar = async (req, res) => {
       errs.push(mensajeBD(e));
     }
   }
-  res
-    .status(400)
-    .render('compras/formulario', {
-      compra: { ...req.body, id_cmp: compra.id_cmp },
-      editando: true,
-      action: `/compras/${compra.id_cmp}?_method=PUT`,
-      errores: errs,
-      ...(await catalogos(compra.id_cmp)),
-    });
+  res.status(400).render('compras/formulario', {
+    compra: { ...req.body, id_cmp: compra.id_cmp },
+    editando: true,
+    action: `/compras/${compra.id_cmp}?_method=PUT`,
+    errores: errs,
+    ...(await catalogos(compra.id_cmp)),
+  });
 };
 
 const eliminar = async (req, res) => {
@@ -373,7 +369,7 @@ const enviarFacturaPorCorreo = async (req, res) => {
         `/compras/${compra.id_cmp}/factura?error=${encodeURIComponent('Error al enviar correo: ' + (resultado.error || 'Desconocido'))}`,
       );
     }
-  } catch (err) {
+  } catch {
     return res.redirect(
       `/compras/${compra.id_cmp}/factura?error=${encodeURIComponent('Error al procesar envío de correo')}`,
     );

@@ -90,21 +90,19 @@ const actualizar = async (req, res) => {
       errs.push(mensajeBD(e));
     }
   }
-  res
-    .status(400)
-    .render('tipos/formulario', {
-      tipo: { ...req.body, id_tpo: tipo.id_tpo },
-      action: `/tipos/${tipo.id_tpo}?_method=PUT`,
-      method: 'POST',
-      errores: errs,
-    });
+  res.status(400).render('tipos/formulario', {
+    tipo: { ...req.body, id_tpo: tipo.id_tpo },
+    action: `/tipos/${tipo.id_tpo}?_method=PUT`,
+    method: 'POST',
+    errores: errs,
+  });
 };
 
 const eliminar = async (req, res) => {
   try {
     await Tipo.destroy({ where: { id_tpo: req.params.id } });
     res.redirect(`/tipos?${aMensaje('Tipo eliminado')}`);
-  } catch (e) {
+  } catch {
     res.redirect(`/tipos?${aMensaje('No se puede eliminar: hay especies de este tipo')}`);
   }
 };
