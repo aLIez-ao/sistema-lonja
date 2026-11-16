@@ -20,6 +20,7 @@ const HASH_FALSO = bcrypt.hashSync("no-existe", 10);
 
 // 5 intentos fallidos por usuario+IP bloquean 15 minutos; 5 solicitudes de recuperación por IP cada hora
 export const limiteLogin = crearLimite({ max: 5, ventanaMs: 15 * 60 * 1000 });
+export const limiteLoginCuenta = crearLimite({ max: 20, ventanaMs: 15 * 60 * 1000 });
 export const limiteRecuperacion = crearLimite({ max: 5, ventanaMs: 60 * 60 * 1000 });
 
 const vistaLogin = (res, errores = [], usuario = "", mensaje = null, estado, volver = "") =>
@@ -45,14 +46,20 @@ const credenciales = async (req, res) => {
   const us = await Usuario.findOne({
     where: { [Op.or]: [{ usuario }, { correo: String(usuario).trim().toLowerCase() }, { correo: String(usuario).trim() }] },
   });
+  const claveCuenta = us ? `usuario:${us.id}` : `identificador:${String(usuario).trim().toLowerCase()}`;
+  if (limiteLoginCuenta.bloqueado(claveCuenta)) {
+    return vistaLogin(res, ["Demasiados intentos para esta cuenta. Intenta de nuevo más tarde o recupera tu contraseña."], usuario, null, 429, req.body.volver);
+  }
   const coincide = await bcrypt.compare(password, us ? us.password : HASH_FALSO);
 
   if (!us || !coincide || !us.activo) {
     limiteLogin.fallo(clave);
+    limiteLoginCuenta.fallo(claveCuenta);
     return vistaLogin(res, ["Revisa las credenciales"], usuario, null, undefined, req.body.volver);
   }
 
   limiteLogin.limpiar(clave);
+  limiteLoginCuenta.limpiar(claveCuenta);
   return res.cookie("_token", JWTGenera(us), opcionesCookieSesion()).redirect(destinoTrasEntrar(us, req.body.volver));
 };
 

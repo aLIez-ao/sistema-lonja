@@ -2,6 +2,7 @@
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { arrancar, cliente, modelos } from "./ayuda.js";
+import { limiteLoginCuenta } from "../controllers/loginController.js";
 
 const { Usuario } = modelos;
 let srv, admin;
@@ -127,4 +128,13 @@ test("cinco intentos fallidos bloquean temporalmente el inicio de sesión de ese
   assert.equal(bloqueado.status, 429);
   assert.match(bloqueado.texto, /Demasiados intentos/);
   assert.equal((await cliente(srv.base).entrar(...ADMIN)).loc, "/dashboard", "otros usuarios no se ven afectados");
+});
+
+test("el límite adicional de inicio de sesión se comparte por cuenta", () => {
+  limiteLoginCuenta.reiniciar();
+  const clave = "usuario:cuenta-compartida";
+  for (let i = 0; i < 20; i += 1) limiteLoginCuenta.fallo(clave);
+  assert.equal(limiteLoginCuenta.bloqueado(clave), true);
+  limiteLoginCuenta.limpiar(clave);
+  assert.equal(limiteLoginCuenta.bloqueado(clave), false);
 });
