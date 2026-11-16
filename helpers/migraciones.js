@@ -23,43 +23,33 @@ const COLUMNAS_USUARIO = {
   razon_social: { type: DataTypes.STRING(100), allowNull: true },
 };
 
-/** Agrega la columna si falta; no falla si la tabla no existe todavía. */
+/** Agrega la columna si falta; los fallos de esquema detienen el arranque. */
 export async function asegurarColumna(tabla, nombre, definicion) {
-  try {
-    const qi = db.getQueryInterface();
-    const actuales = await qi.describeTable(tabla);
-    if (actuales[nombre]) return false;
-    await qi.addColumn(tabla, nombre, definicion);
-    console.log(`Columna '${nombre}' agregada a la tabla ${tabla}`);
-    return true;
-  } catch (err) {
-    console.warn(`Aviso al agregar ${tabla}.${nombre}:`, err.message);
-    return false;
-  }
+  const qi = db.getQueryInterface();
+  const actuales = await qi.describeTable(tabla);
+  if (actuales[nombre]) return false;
+  await qi.addColumn(tabla, nombre, definicion);
+  console.log(`Columna '${nombre}' agregada a la tabla ${tabla}`);
+  return true;
 }
 
 /** Ensancha una columna si su longitud actual es menor que la pedida. No recorta nunca. */
 export async function asegurarAncho(tabla, nombre, longitud) {
-  try {
-    const qi = db.getQueryInterface();
-    const actuales = await qi.describeTable(tabla);
-    const col = actuales[nombre];
-    if (!col) {
-      await qi.addColumn(tabla, nombre, { type: DataTypes.STRING(longitud), allowNull: true });
-      console.log(`Columna '${nombre}' agregada a la tabla ${tabla}`);
-      return true;
-    }
-    const tipo = String(col.type || "");
-    const m = /\((\d+)\)/.exec(tipo);
-    const actual = m ? Number(m[1]) : 255;
-    if (actual >= longitud) return false;
-    await qi.changeColumn(tabla, nombre, { ...col, type: DataTypes.STRING(longitud) });
-    console.log(`Columna '${tabla}.${nombre}' ampliada de ${actual} a ${longitud}`);
+  const qi = db.getQueryInterface();
+  const actuales = await qi.describeTable(tabla);
+  const col = actuales[nombre];
+  if (!col) {
+    await qi.addColumn(tabla, nombre, { type: DataTypes.STRING(longitud), allowNull: true });
+    console.log(`Columna '${nombre}' agregada a la tabla ${tabla}`);
     return true;
-  } catch (err) {
-    console.warn(`Aviso al ampliar ${tabla}.${nombre}:`, err.message);
-    return false;
   }
+  const tipo = String(col.type || "");
+  const m = /\((\d+)\)/.exec(tipo);
+  const actual = m ? Number(m[1]) : 255;
+  if (actual >= longitud) return false;
+  await qi.changeColumn(tabla, nombre, { ...col, type: DataTypes.STRING(longitud) });
+  console.log(`Columna '${tabla}.${nombre}' ampliada de ${actual} a ${longitud}`);
+  return true;
 }
 
 /** Compatibilidad con llamadas anteriores. */
