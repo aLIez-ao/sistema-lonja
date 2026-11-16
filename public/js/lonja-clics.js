@@ -388,14 +388,32 @@
           tarjeta.dataset.nombre = e.nombre;
           tarjeta.dataset.tipo = e.tipo;
           tarjeta.setAttribute('aria-pressed', 'true');
-          tarjeta.innerHTML = `
-            <input type="checkbox" name="especies" value="${e.id_cat}" checked class="tarjeta-control">
-            <span class="tarjeta-imagen">${e.imagen ? `<img src="${e.imagen}" alt="">` : '<span class="sin-imagen">🐟</span>'}</span>
-            <span class="tarjeta-nombre"></span>
-            <span class="tarjeta-tipo"></span>`;
-          tarjeta.querySelector('.tarjeta-nombre').textContent = e.nombre;
-          tarjeta.querySelector('.tarjeta-tipo').textContent = e.tipo;
-          const control = tarjeta.querySelector('input');
+          const control = document.createElement('input');
+          control.type = 'checkbox';
+          control.name = 'especies';
+          control.value = String(e.id_cat);
+          control.checked = true;
+          control.className = 'tarjeta-control';
+          const imagen = document.createElement('span');
+          imagen.className = 'tarjeta-imagen';
+          if (e.imagen) {
+            const img = document.createElement('img');
+            img.setAttribute('src', String(e.imagen));
+            img.setAttribute('alt', '');
+            imagen.append(img);
+          } else {
+            const sinImagen = document.createElement('span');
+            sinImagen.className = 'sin-imagen';
+            sinImagen.textContent = '🐟';
+            imagen.append(sinImagen);
+          }
+          const nombre = document.createElement('span');
+          nombre.className = 'tarjeta-nombre';
+          nombre.textContent = e.nombre;
+          const tipo = document.createElement('span');
+          tipo.className = 'tarjeta-tipo';
+          tipo.textContent = e.tipo;
+          tarjeta.append(control, imagen, nombre, tipo);
           control.addEventListener('change', () => {
             tarjeta.classList.toggle('tarjeta-seleccionada', control.checked);
             tarjeta.setAttribute('aria-pressed', control.checked ? 'true' : 'false');
