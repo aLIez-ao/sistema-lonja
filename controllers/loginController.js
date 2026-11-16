@@ -124,6 +124,7 @@ const restablecerPassword = async (req, res) => {
   us.token_recuperacion_expira = null;
   us.email_verificado = true; // el enlace llegó a su correo: queda comprobado que es suyo
   await us.save();
+  limiteLoginCuenta.limpiar(`usuario:${us.id}`);
   enviarEmailPasswordCambiada({ usuario: us, correo: us.correo }).catch(() => {});
 
   res.clearCookie("_token", opcionesCookieSesion());

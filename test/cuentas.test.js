@@ -92,10 +92,14 @@ test("recuperación: misma respuesta exista o no la cuenta; por usuario o correo
 
 test("el administrador puede enviar un enlace de restablecimiento", async () => {
   const u = await Usuario.findOne({ where: { usuario: "ana" } });
+  const claveLimite = `usuario:${u.id}`;
+  for (let i = 0; i < 20; i += 1) limiteLoginCuenta.fallo(claveLimite);
+  assert.equal(limiteLoginCuenta.bloqueado(claveLimite), true);
   const r = await admin.post(`/usuarios/${u.id}/restablecer`);
   const ruta = enlaceDe(r.loc);
   const c = cliente(srv.base);
   assert.equal((await c.post(ruta, { password: "Tercera123", password_confirmar: "Tercera123" })).status, 302);
+  assert.equal(limiteLoginCuenta.bloqueado(claveLimite), false);
   assert.equal((await c.entrar("ana", "Tercera123")).loc, "/dashboard");
 });
 
