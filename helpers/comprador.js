@@ -7,8 +7,8 @@ export const compradorDe = (usuario) =>
   usuario?.codigo_cpr ? Comprador.findByPk(usuario.codigo_cpr) : Promise.resolve(null);
 
 /** Busca un comprador por correo sin distinguir mayúsculas. */
-export const compradorPorCorreo = (correo) =>
-  Comprador.findOne({ where: sqlWhere(fn("LOWER", col("correo")), String(correo).trim().toLowerCase()) });
+export const compradorPorCorreo = (correo, options = {}) =>
+  Comprador.findOne({ where: sqlWhere(fn("LOWER", col("correo")), String(correo).trim().toLowerCase()), ...options });
 
 /**
  * Vincula la cuenta con el comprador que ya tiene su correo.

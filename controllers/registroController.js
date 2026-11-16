@@ -23,7 +23,7 @@ const datosFormulario = (b = {}) => ({
 });
 
 /** Parte local del correo convertida en un nombre de usuario único. */
-async function usuarioLibre(correo) {
+async function usuarioLibre(correo, transaction) {
   const base = String(correo).split("@")[0]
     .toLowerCase()
     .normalize("NFD")
@@ -32,7 +32,7 @@ async function usuarioLibre(correo) {
     .slice(0, 30) || "comprador";
   let candidato = base;
   let n = 0;
-  while (await Usuario.findOne({ where: { usuario: candidato } })) {
+  while (await Usuario.findOne({ where: { usuario: candidato }, transaction })) {
     n += 1;
     candidato = `${base.slice(0, 36)}${n}`;
   }
@@ -103,28 +103,40 @@ const registrar = async (req, res) => {
   let enlace = null;
 
   try {
-    const us = await db.transaction(async (t) => {
-      const nuevo = await Usuario.create({
-        usuario: await usuarioLibre(correo),
-        nombre_completo: `${nombre} ${paterno}${materno ? ` ${materno}` : ""}`,
-        correo,
-        telefono: String(req.body.telefono ?? "").trim() || null,
-        rol: "comprador",
-        password: req.body.password,
-      }, { transaction: t });
+    let resultado;
+    for (let intento = 0; intento < 3; intento += 1) {
+      try {
+        resultado = await db.transaction(async (t) => {
+          const yaRegistrado = await Usuario.findOne({ where: sqlWhere(fn("LOWER", col("correo")), correo), transaction: t });
+          if (yaRegistrado) return { existente: true };
+          const nuevo = await Usuario.create({
+            usuario: await usuarioLibre(correo, t),
+            nombre_completo: `${nombre} ${paterno}${materno ? ` ${materno}` : ""}`,
+            correo,
+            telefono: String(req.body.telefono ?? "").trim() || null,
+            rol: "comprador",
+            password: req.body.password,
+          }, { transaction: t });
 
-      // Si ya existe un comprador de mostrador con ese correo, se vincula al
-      // verificar el correo (no antes), para no apropiarse de historiales ajenos.
-      const previo = await compradorPorCorreo(correo);
-      if (!previo) {
-        const cpr = await Comprador.create({
-          nombre, apellido_paterno: paterno, apellido_materno: materno, correo,
-        }, { transaction: t });
-        nuevo.codigo_cpr = cpr.codigo_cpr;
-        await nuevo.save({ transaction: t });
+          // Si ya existe un comprador de mostrador con ese correo, se vincula al
+          // verificar el correo (no antes), para no apropiarse de historiales ajenos.
+          const previo = await compradorPorCorreo(correo, { transaction: t });
+          if (!previo) {
+            const cpr = await Comprador.create({
+              nombre, apellido_paterno: paterno, apellido_materno: materno, correo,
+            }, { transaction: t });
+            nuevo.codigo_cpr = cpr.codigo_cpr;
+            await nuevo.save({ transaction: t });
+          }
+          return { us: nuevo };
+        });
+        break;
+      } catch (e) {
+        if (e?.name !== "SequelizeUniqueConstraintError" || intento === 2) throw e;
       }
-      return nuevo;
-    });
+    }
+    if (resultado?.existente) return vistaRevisa(res, { correo });
+    const us = resultado.us;
 
     const envio = await enviarVerificacionCorreo(req, us).catch((e) => {
       console.error("No se pudo enviar la verificación del registro:", e.message);
