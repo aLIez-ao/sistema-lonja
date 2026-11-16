@@ -24,7 +24,7 @@ import router_carrito from "./routes/carrito_router.js";
 import router_pedido from "./routes/pedido_router.js";
 import router_pedido_admin from "./routes/pedido_admin_router.js";
 import * as social from "./controllers/socialController.js";
-import { dinero, formatoFechaHora } from "./helpers/fechas.js";
+import { formatoFechaHora } from "./helpers/fechas.js";
 import { icono } from "./helpers/iconos.js";
 import { CarritoItem, Lista, ListaItem } from "./models/index.js";
 
@@ -54,7 +54,6 @@ app.get("/favicon.ico", (req, res) => res.redirect(301, "/img/favicon.svg"));
 // Identificación pasiva de usuario para navbar si tiene sesión
 app.use(async (req, res, next) => {
   if (req.path === "/tienda/sugerencias" || /\.(?:pdf|json)$/i.test(req.path)) return next();
-  res.locals.dinero = dinero;
   res.locals.fechaHora = formatoFechaHora;
   res.locals.icono = icono;
   res.locals.rutaActual = req.path;

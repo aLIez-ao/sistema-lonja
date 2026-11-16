@@ -2,7 +2,7 @@ import { Op } from "sequelize";
 import db from "../config/db.js";
 import { CarritoItem, Pedido, PedidoItem, Usuario, Comprador, DireccionEntrega, Lote, Especie, Tipo, Compra } from "../models/index.js";
 import { aMensaje, mensajeBD } from "../helpers/utiles.js";
-import { dinero, redondea } from "../helpers/fechas.js";
+import { redondea } from "../helpers/fechas.js";
 import { generarFacturaPDF } from "../helpers/facturaPdf.js";
 import { datosFactura } from "../helpers/factura.js";
 import { enviarEmailPedido } from "../helpers/email.js";
@@ -127,7 +127,6 @@ export const crear = async (req, res) => {
     });
     return res.redirect(`/pedido/${pedido.id_ped}/pago`);
   } catch (error) {
-    const estado = error.status || 400;
     if (!error.status) console.error("No se pudo crear el pedido:", mensajeBD(error));
     return res.redirect(`/pedido/nuevo?error=${encodeURIComponent(error.status ? error.message : "No se pudo crear el pedido. Revisa el carrito e inténtalo otra vez.")}&entrega=${encodeURIComponent(entrega)}`);
   }
@@ -331,4 +330,3 @@ export const facturaCuentaPdf = async (req, res) => {
   res.send(pdf);
 };
 
-export { dinero };
