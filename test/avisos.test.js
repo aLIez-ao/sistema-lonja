@@ -2,6 +2,7 @@ import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { arrancar, cliente, modelos } from "./ayuda.js";
 import { fijarTransporteParaPruebas } from "../helpers/email.js";
+import { esperarColaTrabajos } from "../helpers/colaTrabajos.js";
 
 const { Usuario, Comprador } = modelos;
 let srv;
@@ -21,6 +22,8 @@ test("los avisos solo llegan a compradores suscritos y el enlace permite confirm
 
   const respuesta = await admin.post("/configuracion/enviar-aviso-clientes", { asunto: "Horario de subasta", titulo: "Cambio de horario", mensaje: "La subasta iniciará a las 9:00.", tipo: "evento" });
   assert.equal(respuesta.status, 302);
+  assert.match(decodeURIComponent(respuesta.loc), /Aviso en cola para 1 suscriptores/);
+  await esperarColaTrabajos();
   assert.equal(enviados.length, 1);
   assert.equal(enviados[0].to, suscrita.correo);
   assert.match(enviados[0].html, /date de baja aquí/);

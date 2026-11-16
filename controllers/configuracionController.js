@@ -9,6 +9,7 @@ import { problemasPassword } from "../helpers/seguridad.js";
 import { JWTGenera, opcionesCookieSesion, crearTokenBajaAvisos } from "../helpers/tokens.js";
 import { aMensaje, ErrorImagen } from "../helpers/utiles.js";
 import { compradorDe, compradorPorCorreo } from "../helpers/comprador.js";
+import { encolarTrabajo } from "../helpers/colaTrabajos.js";
 import { prefValida } from "../middleware/preferencias.js";
 import { CATEGORIAS, COOKIE_DE_PREF, aplicarConsentimiento, guardarCookiePreferencia } from "../helpers/cookies.js";
 import { correoValido, telefonoValido } from "../helpers/validacion.js";
@@ -235,12 +236,13 @@ export const enviarAvisoClientes = async (req, res) => {
     bajaUrl: `${baseUrl}/avisos/baja/${crearTokenBajaAvisos(usuario.id)}`,
   }));
   if (!compradores.length) return res.redirect(`/configuracion?${aMensaje("No hay compradores suscritos con correo verificado.")}#pane-avisos`);
-  const resultados = await enviarBoletinClientes({ asunto, titulo, mensaje, tipo, compradores });
-  const enviados = resultados.filter(({ resultado }) => resultado.ok).length;
-  const simulados = resultados.filter(({ resultado }) => resultado.simulado).length;
-  const fallidos = resultados.length - enviados - simulados;
-  const aviso = simulados && !enviados
-    ? "El correo está en modo simulador; no se enviaron los avisos."
-    : `Avisos enviados: ${enviados} de ${resultados.length}${fallidos ? `; ${fallidos} fallaron` : ""}.`;
-  res.redirect(`/configuracion?${aMensaje(aviso)}#pane-avisos`);
+  const encolado = encolarTrabajo(`aviso masivo (${compradores.length} suscriptores)`, async () => {
+    const resultados = await enviarBoletinClientes({ asunto, titulo, mensaje, tipo, compradores });
+    const enviados = resultados.filter(({ resultado }) => resultado.ok).length;
+    const simulados = resultados.filter(({ resultado }) => resultado.simulado).length;
+    const fallidos = resultados.length - enviados - simulados;
+    console.info("Aviso masivo completado:", { destinatarios: resultados.length, enviados, simulados, fallidos });
+  });
+  if (!encolado) return res.redirect(`/configuracion?${aError("La cola de correo está llena. Inténtalo de nuevo más tarde.")}#pane-avisos`);
+  res.redirect(`/configuracion?${aMensaje(`Aviso en cola para ${compradores.length} suscriptores.`)}#pane-avisos`);
 };
