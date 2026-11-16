@@ -74,6 +74,14 @@ test('la CSP estricta permite solo scripts del mismo origen y prohíbe marcos', 
   );
 });
 
+test('los módulos del cliente se sirven como JavaScript desde el mismo origen', async () => {
+  for (const archivo of ['lonja-preferencias', 'lonja-ventas', 'lonja-cuenta', 'lonja-busqueda', 'lonja-facturas']) {
+    const respuesta = await sesion().get(`/js/${archivo}.js`);
+    assert.equal(respuesta.status, 200, archivo);
+    assert.match(respuesta.headers.get('content-type'), /javascript/i, archivo);
+  }
+});
+
 test('login: credenciales malas rechazadas, buenas entran con cookie httpOnly', async () => {
   const mal = await sesion().post('/credenciales', { usuario: 'admin', password: 'incorrecta' });
   assert.equal(mal.status, 401);
