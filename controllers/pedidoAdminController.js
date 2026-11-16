@@ -6,7 +6,7 @@ import { cobrar } from "../helpers/pasarela.js";
 import { aError, aMensaje } from "../helpers/utiles.js";
 import { errorDeSitio } from "../helpers/navegacion.js";
 import { encolarTrabajo } from "../helpers/colaTrabajos.js";
-import { ESTADOS_PEDIDO, ESTADO_PEDIDO, METODO_PAGO_PEDIDO } from "../models/Pedido.js";
+import { ESTADOS_PEDIDO, ESTADO_PEDIDO, ETIQUETA_ESTADO_PEDIDO, METODO_PAGO_PEDIDO } from "../models/Pedido.js";
 
 const ESTADOS = ESTADOS_PEDIDO;
 const avanzan = { [ESTADO_PEDIDO.PAGADO]: ESTADO_PEDIDO.PREPARANDO, [ESTADO_PEDIDO.PREPARANDO]: ESTADO_PEDIDO.ENVIADO, [ESTADO_PEDIDO.ENVIADO]: ESTADO_PEDIDO.ENTREGADO };
@@ -51,15 +51,14 @@ export async function cambiarEstado(req, res) {
   if (!pedido) return errorDeSitio(req, res, 404, "No encontramos ese pedido.", "/pedidos");
   const siguiente = avanzan[pedido.estado];
   if (!siguiente || req.body.estado !== siguiente) {
-    const etiqueta = { pendiente_pago: "pendiente de pago", pagado: "pagado", preparando: "preparando", enviado: "enviado", entregado: "entregado", cancelado: "cancelado", expirado: "expirado" };
-    const solicitada = etiqueta[req.body.estado] || "estado desconocido";
-    const actual = etiqueta[pedido.estado] || pedido.estado;
+    const solicitada = ETIQUETA_ESTADO_PEDIDO[req.body.estado] || "estado desconocido";
+    const actual = ETIQUETA_ESTADO_PEDIDO[pedido.estado] || pedido.estado;
     return res.redirect(`/pedidos/${pedido.id_ped}?${aError(`No se puede pasar el pedido de «${actual}» a «${solicitada}».`)}`);
   }
   await pedido.update({ estado: siguiente });
-  if (["enviado", "entregado"].includes(siguiente) && pedido.usuario?.correo) {
-    const parrafos = siguiente === "enviado" ? ["Tu pedido está en camino."] : ["Tu pedido fue marcado como entregado."];
-    const encolado = encolarTrabajo(`aviso de estado del pedido ${pedido.id_ped}`, () => enviarEmailPedido({ usuario: pedido.usuario, correo: pedido.usuario.correo, pedido, items: pedido.items, asunto: "Actualización de pedido", titulo: siguiente === "enviado" ? "Pedido enviado" : "Pedido entregado", parrafos }));
+  if ([ESTADO_PEDIDO.ENVIADO, ESTADO_PEDIDO.ENTREGADO].includes(siguiente) && pedido.usuario?.correo) {
+    const parrafos = siguiente === ESTADO_PEDIDO.ENVIADO ? ["Tu pedido está en camino."] : ["Tu pedido fue marcado como entregado."];
+    const encolado = encolarTrabajo(`aviso de estado del pedido ${pedido.id_ped}`, () => enviarEmailPedido({ usuario: pedido.usuario, correo: pedido.usuario.correo, pedido, items: pedido.items, asunto: "Actualización de pedido", titulo: siguiente === ESTADO_PEDIDO.ENVIADO ? "Pedido enviado" : "Pedido entregado", parrafos }));
     if (!encolado) console.warn("No se encoló la notificación del pedido: la cola de trabajos está llena.");
   }
   res.redirect(`/pedidos/${pedido.id_ped}?${aMensaje("Estado actualizado.")}`);
@@ -71,7 +70,7 @@ export async function confirmarCobro(req, res) {
     if (!pedido) return { error: "No encontramos ese pedido." };
     if (pedido.estado !== ESTADO_PEDIDO.PENDIENTE_PAGO || pedido.pago_metodo !== METODO_PAGO_PEDIDO.EFECTIVO_LONJA || pedido.entrega !== "recoger") return { error: "Solo se confirma el cobro de pedidos pendientes que se pagan en la lonja." };
     if (!pedido.reservado_hasta || new Date(pedido.reservado_hasta) <= new Date()) {
-      await pedido.update({ estado: "expirado" }, { transaction });
+      await pedido.update({ estado: ESTADO_PEDIDO.EXPIRADO }, { transaction });
       return { error: "La reserva venció y el pedido se liberó." };
     }
     const items = await PedidoItem.findAll({ where: { id_ped: pedido.id_ped }, transaction, lock: transaction.LOCK?.UPDATE });

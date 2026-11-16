@@ -11,6 +11,15 @@ export const ESTADO_PEDIDO = Object.freeze({
   EXPIRADO: "expirado",
 });
 export const ESTADOS_PEDIDO = Object.freeze(Object.values(ESTADO_PEDIDO));
+export const ETIQUETA_ESTADO_PEDIDO = Object.freeze({
+  [ESTADO_PEDIDO.PENDIENTE_PAGO]: "pendiente de pago",
+  [ESTADO_PEDIDO.PAGADO]: "pagado",
+  [ESTADO_PEDIDO.PREPARANDO]: "preparando",
+  [ESTADO_PEDIDO.ENVIADO]: "enviado",
+  [ESTADO_PEDIDO.ENTREGADO]: "entregado",
+  [ESTADO_PEDIDO.CANCELADO]: "cancelado",
+  [ESTADO_PEDIDO.EXPIRADO]: "expirado",
+});
 export const METODO_PAGO_PEDIDO = Object.freeze({ EFECTIVO_LONJA: "Efectivo en lonja" });
 export const OPCIONES_PAGO_PEDIDO = Object.freeze({ TARJETA: "tarjeta", TRANSFERENCIA: "transferencia", EFECTIVO: "efectivo" });
 export const OPCIONES_PAGO_PEDIDO_VALIDAS = Object.freeze(Object.values(OPCIONES_PAGO_PEDIDO));
