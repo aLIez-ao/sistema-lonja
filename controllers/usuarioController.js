@@ -7,6 +7,7 @@ import { aplicarFoto, borrarFoto } from "../helpers/avatar.js";
 import { enviarEnlacePassword, enviarVerificacionCorreo, resumenEnvio } from "../helpers/cuentas.js";
 import { condicionBusqueda } from "../helpers/busqueda.js";
 import { reglaCorreo, reglaTelefono } from "../helpers/validacion.js";
+import { anexarParametrosQuery } from "../helpers/listado.js";
 
 const reglas = [
   body("usuario").trim().isLength({ min: 3, max: 40 }).withMessage("El usuario debe tener entre 3 y 40 caracteres").matches(/^[\w.-]+$/).withMessage("El usuario solo admite letras, números, punto, guion y guion bajo"),
@@ -66,14 +67,15 @@ const lista = async (req, res) => {
   const pedidosPorUsuario = Object.fromEntries(conteos.map((x) => [x.id_usuario, Number(x.total)]));
   const paginaUrl = (prefijo, pagina) => {
     const params = new URLSearchParams();
-    for (const [key, value] of Object.entries(req.query)) if (!key.startsWith(`pagina${prefijo}`) && !["mensaje", "error"].includes(key)) params.set(key, value);
+    anexarParametrosQuery(params, req.query, (key) => key.startsWith(`pagina${prefijo}`) || ["mensaje", "error"].includes(key));
     params.set(`pagina${prefijo}`, String(pagina));
     return `/usuarios?${params.toString()}`;
   };
   const ordenUrl = (prefijo, campo) => {
     const params = new URLSearchParams();
-    for (const [key, value] of Object.entries(req.query)) if (!key.startsWith(`pagina${prefijo}`) && !key.startsWith(`orden${prefijo}`) && !key.startsWith(`dir${prefijo}`) && !["mensaje", "error"].includes(key)) params.set(key, value);
-    const actual = req.query[`orden${prefijo}`] || "nombre";
+    anexarParametrosQuery(params, req.query, (key) => key.startsWith(`pagina${prefijo}`) || key.startsWith(`orden${prefijo}`) || key.startsWith(`dir${prefijo}`) || ["mensaje", "error"].includes(key));
+    const solicitado = req.query[`orden${prefijo}`];
+    const actual = (Array.isArray(solicitado) ? solicitado[0] : solicitado) || "nombre";
     params.set(`orden${prefijo}`, campo);
     params.set(`dir${prefijo}`, actual === campo && String(req.query[`dir${prefijo}`]).toUpperCase() !== "DESC" ? "DESC" : "ASC");
     return `/usuarios?${params.toString()}`;

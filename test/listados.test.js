@@ -3,8 +3,16 @@
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { arrancar, cliente, modelos } from "./ayuda.js";
+import { anexarParametrosQuery } from "../helpers/listado.js";
 
 const { Compra, Lote, Comprador, Especie, Tipo } = modelos;
+
+test("conserva query params repetidos y omite objetos anidados", () => {
+  const params = anexarParametrosQuery(new URLSearchParams(), { filtro: ["activo", "inactivo"], nested: { x: 1 }, paginaT: "1" }, (k) => k === "paginaT");
+  assert.deepEqual(params.getAll("filtro"), ["activo", "inactivo"]);
+  assert.equal(params.has("nested"), false);
+  assert.equal(params.has("paginaT"), false);
+});
 
 let srv, c;
 

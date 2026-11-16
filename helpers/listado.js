@@ -8,6 +8,20 @@ import { Op } from "sequelize";
 
 const DIRECCIONES = ["asc", "desc"];
 
+/** Añade parámetros de una query evitando coerciones de arreglos u objetos anidados. */
+export function anexarParametrosQuery(params, query, excluir = () => false) {
+  for (const [clave, valor] of Object.entries(query || {})) {
+    if (excluir(clave)) continue;
+    const valores = Array.isArray(valor) ? valor : [valor];
+    for (const elemento of valores) {
+      if (["string", "number", "boolean"].includes(typeof elemento) && String(elemento) !== "") {
+        params.append(clave, String(elemento));
+      }
+    }
+  }
+  return params;
+}
+
 /** Combina varios where ignorando los vacíos. */
 export function combinarWhere(...wheres) {
   // Object.keys ignora las claves símbolo de Sequelize (Op.or, Op.and…),
