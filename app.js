@@ -53,6 +53,7 @@ app.get("/favicon.ico", (req, res) => res.redirect(301, "/img/favicon.svg"));
 
 // Identificación pasiva de usuario para navbar si tiene sesión
 app.use(async (req, res, next) => {
+  if (req.path === "/tienda/sugerencias" || /\.(?:pdf|json)$/i.test(req.path)) return next();
   res.locals.dinero = dinero;
   res.locals.fechaHora = formatoFechaHora;
   res.locals.icono = icono;
@@ -69,10 +70,13 @@ app.use(async (req, res, next) => {
     req.usuario = usuario;
     res.locals.usuario = usuario;
     if (usuario.rol === "comprador") {
-      res.locals.carritoCount = await CarritoItem.count({ where: { id_usuario: usuario.id } });
-      const lista = await Lista.findOne({ where: { id_usuario: usuario.id, nombre: "Favoritos" } });
+      const [carritoCount, lista] = await Promise.all([
+        CarritoItem.count({ where: { id_usuario: usuario.id } }),
+        Lista.findOne({ where: { id_usuario: usuario.id, nombre: "Favoritos" }, include: [{ model: ListaItem, as: "items", attributes: ["tipo", "id_ref"] }] }),
+      ]);
+      res.locals.carritoCount = carritoCount;
       if (lista) {
-        const items = await ListaItem.findAll({ where: { id_lista: lista.id_lista }, attributes: ["tipo", "id_ref"] });
+        const items = lista.items || [];
         for (const item of items) res.locals.favoritos[item.tipo].add(String(item.id_ref));
         res.locals.favoritosCount = items.length;
       }
