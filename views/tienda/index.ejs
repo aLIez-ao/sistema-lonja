@@ -4,6 +4,12 @@
 %>
 
 <div class="tienda">
+  <% if (usuario?.rol === 'comprador' && !usuario.recibir_avisos) { %>
+    <aside class="alert alert-info alert-dismissible fade show mx-auto mt-3" style="max-width: 72rem" role="status" data-aviso-suscripcion>
+      <strong>Recibe novedades de la lonja.</strong> Activa los avisos por correo desde tu <a href="/configuracion">configuración</a>. Puedes darte de baja en cualquier momento.
+      <button type="button" class="btn-close" aria-label="Cerrar aviso" data-cerrar-aviso-suscripcion></button>
+    </aside>
+  <% } %>
   <!-- ===================== HÉROE ===================== -->
   <section class="tienda-heroe" aria-label="Lotes destacados">
     <% if (destacados.length) { %>

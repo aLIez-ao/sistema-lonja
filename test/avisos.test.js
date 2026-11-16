@@ -41,6 +41,23 @@ test("los avisos solo llegan a compradores suscritos y el enlace permite confirm
   assert.equal(suscrita.recibir_avisos, false);
 });
 
+test("la tienda informa a compradores sin suscripción y omite el aviso a quienes ya aceptaron", async () => {
+  const c1 = await Comprador.create({ nombre: "Sin", apellido_paterno: "Avisos", correo: "sinavisos@example.com" });
+  const sinAvisos = await Usuario.create({ usuario: "cliente_sin_avisos", nombre_completo: "Cliente Sin Avisos", correo: c1.correo, password: "Clave1234", rol: "comprador", codigo_cpr: c1.codigo_cpr, activo: true, email_verificado: true, recibir_avisos: false });
+  const c2 = await Comprador.create({ nombre: "Con", apellido_paterno: "Avisos", correo: "conavisos@example.com" });
+  const conAvisos = await Usuario.create({ usuario: "cliente_con_avisos", nombre_completo: "Cliente Con Avisos", correo: c2.correo, password: "Clave1234", rol: "comprador", codigo_cpr: c2.codigo_cpr, activo: true, email_verificado: true, recibir_avisos: true });
+
+  const clienteSin = cliente(srv.base);
+  await clienteSin.entrar(sinAvisos.usuario, "Clave1234");
+  const paginaSin = await clienteSin.get("/");
+  assert.match(paginaSin.texto, /data-aviso-suscripcion/);
+  assert.match(paginaSin.texto, /href="\/configuracion"/);
+
+  const clienteCon = cliente(srv.base);
+  await clienteCon.entrar(conAvisos.usuario, "Clave1234");
+  assert.doesNotMatch((await clienteCon.get("/")).texto, /data-aviso-suscripcion/);
+});
+
 test("los avisos rechazan asuntos y mensajes fuera de los límites", async () => {
   const admin = cliente(srv.base); await admin.entrar("admin", "AdminPrueba123");
   const r = await admin.post("/configuracion/enviar-aviso-clientes", { asunto: "x".repeat(121), mensaje: "Mensaje válido", tipo: "evento" });

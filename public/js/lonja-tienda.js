@@ -11,6 +11,16 @@ import { indiceSiguiente, extremosDeFila } from './tienda-utils.js';
   const qs = (sel, ctx = document) => ctx.querySelector(sel);
   const qsa = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
 
+  const avisoSuscripcion = qs('[data-aviso-suscripcion]');
+  if (avisoSuscripcion) {
+    const claveAviso = 'lonja:aviso-suscripcion-cerrado';
+    if (localStorage.getItem(claveAviso) === '1') avisoSuscripcion.remove();
+    avisoSuscripcion.querySelector('[data-cerrar-aviso-suscripcion]')?.addEventListener('click', () => {
+      localStorage.setItem(claveAviso, '1');
+      avisoSuscripcion.remove();
+    });
+  }
+
   // ------------------------------------------------------------------
   // Avisos flotantes
   // ------------------------------------------------------------------
