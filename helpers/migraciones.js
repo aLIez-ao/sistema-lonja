@@ -48,7 +48,13 @@ export async function asegurarAncho(tabla, nombre, longitud) {
   const m = /\((\d+)\)/.exec(tipo);
   const actual = m ? Number(m[1]) : 255;
   if (actual >= longitud) return false;
-  await qi.changeColumn(tabla, nombre, { ...col, type: DataTypes.STRING(longitud) });
+  const definicion = { type: DataTypes.STRING(longitud), allowNull: col.allowNull };
+  // describeTable devuelve `defaultValue: null` también cuando SQL no tiene DEFAULT;
+  // pasarlo a changeColumn genera `DEFAULT NULL`, inválido para columnas NOT NULL.
+  if (col.defaultValue !== null && col.defaultValue !== undefined) {
+    definicion.defaultValue = col.defaultValue;
+  }
+  await qi.changeColumn(tabla, nombre, definicion);
   console.log(`Columna '${tabla}.${nombre}' ampliada de ${actual} a ${longitud}`);
   return true;
 }
