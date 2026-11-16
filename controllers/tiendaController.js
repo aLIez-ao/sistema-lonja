@@ -29,14 +29,14 @@ const INCLUDE_ESPECIES = [
 
 /** Lote sin compra registrada. */
 const sinCompra = () =>
-  sqlWhere(literal("(SELECT COUNT(*) FROM compra WHERE compra.id_cmp = `Lote`.`id_lte`)"), {
-    [Op.eq]: 0,
+  sqlWhere(literal("NOT EXISTS (SELECT 1 FROM compra WHERE compra.id_cmp = `Lote`.`id_lte`)"), {
+    [Op.eq]: true,
   });
 
 /** Lote que tiene al menos una especie capturada. */
 const conEspecies = () =>
-  sqlWhere(literal("(SELECT COUNT(*) FROM especie WHERE especie.id_lte = `Lote`.`id_lte`)"), {
-    [Op.gt]: 0,
+  sqlWhere(literal("EXISTS (SELECT 1 FROM especie WHERE especie.id_lte = `Lote`.`id_lte`)"), {
+    [Op.eq]: true,
   });
 
 const noReservado = (ahora = new Date()) =>
