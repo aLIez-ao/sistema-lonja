@@ -58,7 +58,7 @@ views/ · public/ · scripts/ · test/ · doc/ · doc/guia-codigo/
 ## Documentación
 - [Guía del código](doc/guia-codigo/README.md): guía por capas y recorridos para lectores técnicos y no técnicos.
 - [Documentación operativa](doc/README.md): arquitectura, base de datos, rutas y permisos, instalación, seguridad y pruebas.
-- [Informe de ejecución del plan 05](doc/.reports/08-informe-plan-05.md): cambios, commits, pruebas y verificaciones pendientes.
+Los planes e informes internos se mantienen localmente y no forman parte de la documentación versionada.
 
 ## Estado y advertencias
 - 181 pruebas automáticas pasan sobre SQLite; **las migraciones y los flujos no se verificaron contra MariaDB real**.

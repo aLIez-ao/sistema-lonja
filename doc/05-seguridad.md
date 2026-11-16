@@ -27,7 +27,7 @@
 | Contenido público malicioso | Preguntas, respuestas y opiniones se imprimen escapadas mediante EJS `<%= %>` |
 | Correo falso/indisponible | Nuevas direcciones requieren verificación; preguntas y cambios de estado usan el transporte de correo configurado |
 
-## Límites conocidos (ver también [TODO](.reports/TODO.md))
+## Límites conocidos
 
 - Los límites de registro (5/h por IP), login (5/15 min por IP y 20/15 min por cuenta), recuperación (5/h por IP), verificación (5/h por cuenta), preguntas (5/h por cuenta) y sugerencias de tienda (30/min por IP) se guardan en memoria. Se reinician al reiniciar Node y no se comparten entre instancias; despliega una sola instancia de Node para que los límites sean efectivos.
 - No se emite un token CSRF. Como mitigación, las peticiones con efectos validan `Origin`/`Referer` y la cookie usa `SameSite=Strict`; esta defensa depende de que el origen de confianza esté bien configurado.

@@ -92,7 +92,7 @@ La suite `npm test` cubre estas reglas con SQLite, pero la ejecución observada 
    responden 403 porque `Origin`/`Referer` no coincide con el host recibido por Node.
 3. Usuario de MariaDB con permisos solo sobre su esquema (no `root`).
 4. Respaldos periódicos de la base de datos.
-5. Los cambios de esquema se registran en la tabla `migracion`; añade una migración versionada en lugar de depender de `alter` (ver [pendientes](.reports/TODO.md)).
+5. Los cambios de esquema se registran en la tabla `migracion`; añade una migración versionada en lugar de depender de `alter`.
    En MariaDB cada `ALTER TABLE` confirma por sí mismo: la transacción de una migración no deshace las columnas ya
    creadas si un paso posterior falla. Escribe cada paso idempotente (comprobar antes de crear) y respalda la base
    antes de desplegar. No reviertas la migración `001`: su `down` borra columnas con datos.

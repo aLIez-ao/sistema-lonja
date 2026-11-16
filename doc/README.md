@@ -23,13 +23,11 @@ Los planes de trabajo se conservan en `doc/.plan/`. El plan 09 se dejó fuera de
 
 ## Informes y pendientes
 
-- Informes de avance: `doc/.reports/`.
-- Pendientes consolidados: [.reports/TODO.md](.reports/TODO.md).
-- Informes anteriores de los planes 04 y 05: [plan 04](.reports/07-informe-plan-04.md) y [plan 05](.reports/08-informe-plan-05.md).
+Los planes, informes y listas de pendientes internos se mantienen en carpetas locales ignoradas; no forman parte de esta documentación versionada.
 
-## Entrega congelada
+## Documentación de v1
 
-[`entregas/v1/`](entregas/v1/) muestra directamente la carpeta `doc/` de la rama local `entrega/v1`; no es una segunda copia. Para abrirla se usa un worktree local.
+La documentación incluida en la entrega v1 se recupera de forma estable desde la etiqueta `v1.0.0`; no hay una copia paralela dentro de este directorio. Para leer el índice de esa versión usa `git show v1.0.0:doc/README.md`; para recuperar todo su directorio de documentación usa `git archive v1.0.0 doc`. Los planes e informes locales no estaban incluidos en el commit de v1, así que no forman parte de esa entrega.
 
 ## Material de diseño
 

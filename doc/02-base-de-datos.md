@@ -89,7 +89,7 @@ Diseño relacional entregado por el cliente (PDF *Sistema Lonja*, pág. 2), impl
 
 La tabla `migracion` guarda el identificador de cada cambio aplicado. Las migraciones nuevas declaran operaciones `up` y `down`, por lo que se pueden aplicar y revertir en orden. La migración `002_aviso_suscripcion_descartado` agrega a `usuario.aviso_suscripcion_descartado` el estado persistente del aviso de suscripción. `usuario.recibir_avisos` registra si la cuenta acepta comunicaciones. Los correos se normalizan a minúsculas al validar y guardar para evitar duplicados por diferencias de mayúsculas.
 
-La referencia por archivo de modelos y asociaciones está en [guía del código](guia-codigo/02-controladores-y-servicios.md); las tareas pendientes de base de datos se reúnen en [.reports/TODO.md](.reports/TODO.md).
+La referencia por archivo de modelos y asociaciones está en [guía del código](guia-codigo/02-controladores-y-servicios.md). Las tareas internas de operación de base de datos se mantienen fuera de esta documentación versionada.
 
 ## Reglas de integridad en la aplicación
 
