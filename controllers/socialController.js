@@ -1,5 +1,5 @@
 import { Op } from "sequelize";
-import { Lista, ListaItem, Pregunta, Opinion, EspecieCatalogo, Especie, Lote, Compra, Pedido, Usuario, CarritoItem } from "../models/index.js";
+import { Lista, ListaItem, Pregunta, Opinion, EspecieCatalogo, Especie, Lote, Compra, Pedido, Usuario, CarritoItem, Tipo } from "../models/index.js";
 import { crearLimite } from "../helpers/seguridad.js";
 import { enviarEmailRespuestaPregunta } from "../helpers/email.js";
 import { errorDeSitio, rutaReferer, volverA } from "../helpers/navegacion.js";
@@ -33,8 +33,8 @@ export function protegerAccionComprador(req, res, next) {
 }
 
 export async function listas(req, res) {
-  let favoritas = await Lista.findOne({ where: { id_usuario: req.usuario.id, nombre: "Favoritos" } });
-  if (!favoritas) favoritas = await Lista.create({ id_usuario: req.usuario.id, nombre: "Favoritos" });
+  const favoritas = await Lista.findOne({ where: { id_usuario: req.usuario.id, nombre: "Favoritos" } });
+  if (!favoritas) await Lista.create({ id_usuario: req.usuario.id, nombre: "Favoritos" });
   const filas = await Lista.findAll({
     where: { id_usuario: req.usuario.id },
     include: [{ model: ListaItem, as: "items", attributes: ["tipo", "id_ref", "fecha"] }],
