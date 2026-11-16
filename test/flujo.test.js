@@ -8,6 +8,7 @@ process.env.BD_STORAGE = ":memory:";
 process.env.SC_JWT = "clave_de_pruebas";
 process.env.ADMIN_USER = "admin";
 process.env.ADMIN_PASSWORD = "AdminPrueba123";
+process.env.APP_URL = "";
 
 const { default: db } = await import("../config/db.js");
 await import("../models/index.js");

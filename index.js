@@ -1,4 +1,4 @@
-import dotenv from "dotenv";
+import "./config/entorno.js";
 import db from "./config/db.js";
 import "./models/index.js";
 import app from "./app.js";
@@ -9,7 +9,6 @@ import { liberarPedidosVencidos } from "./helpers/pedidos.js";
 import { validarSecretosInicio } from "./helpers/validacionSecretos.js";
 import { esperarColaTrabajos } from "./helpers/colaTrabajos.js";
 
-dotenv.config({ path: ".env" });
 const port = process.env.PORT || 2800;
 let servidor;
 let barridoReservas;

@@ -1,6 +1,5 @@
 import { Sequelize } from "sequelize";
-import dotenv from "dotenv";
-dotenv.config({ path: ".env" });
+import "./entorno.js";
 
 const dialect = process.env.BD_DIALEC || "mariadb";
 

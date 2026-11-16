@@ -1,6 +1,5 @@
-import dotenv from "dotenv";
+import "../config/entorno.js";
 import { Tipo, Usuario } from "../models/index.js";
-dotenv.config({ path: ".env" });
 
 /** Crea el administrador inicial (ADMIN_USER / ADMIN_PASSWORD) si no existe. */
 export async function crearAdministradorInicial() {

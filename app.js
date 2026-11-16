@@ -3,7 +3,7 @@ import cookieParser from "cookie-parser";
 import methodOverride from "method-override";
 import path from "path";
 import { fileURLToPath } from "url";
-import dotenv from "dotenv";
+import "./config/entorno.js";
 import rutaProteger, { permitir, usuarioDesdeToken } from "./middleware/protegerRutas.js";
 import { middlewarePreferencias } from "./middleware/preferencias.js";
 import router_login from "./routes/login_router.js";
@@ -30,7 +30,6 @@ import { icono } from "./helpers/iconos.js";
 import { CarritoItem, Lista, ListaItem } from "./models/index.js";
 import { origenDePeticionValido } from "./helpers/navegacion.js";
 
-dotenv.config({ path: ".env" });
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();

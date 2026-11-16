@@ -1,7 +1,6 @@
 import jwt from "jsonwebtoken";
-import dotenv from "dotenv";
+import "../config/entorno.js";
 import crypto from "node:crypto";
-dotenv.config({ path: ".env" });
 
 const secreto = () => {
   if (!process.env.SC_JWT) throw new Error("Falta SC_JWT en el archivo .env");

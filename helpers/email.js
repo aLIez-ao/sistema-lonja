@@ -1,9 +1,7 @@
 import nodemailer from "nodemailer";
-import dotenv from "dotenv";
+import "../config/entorno.js";
 import { enmascararCorreo } from "./correoUtils.js";
 export { enmascararCorreo };
-
-dotenv.config({ path: ".env" });
 
 // Transporte inyectable para las pruebas (nunca se envían correos reales desde `npm test`).
 let transportePruebas = null;
