@@ -1,5 +1,6 @@
 import { DataTypes } from "sequelize";
 import db from "../config/db.js";
+import { correoValido } from "../helpers/validacion.js";
 
 const Comprador = db.define(
   "Comprador",
@@ -13,7 +14,11 @@ const Comprador = db.define(
       type: DataTypes.STRING(80),
       allowNull: false,
       unique: true, // "U" en el diagrama
-      validate: { isEmail: true },
+      validate: {
+        correoValido(valor) {
+          if (!correoValido(valor)) throw new Error("Formato de correo no válido");
+        },
+      },
     },
   },
   { tableName: "comprador", timestamps: false },

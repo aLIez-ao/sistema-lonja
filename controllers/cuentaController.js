@@ -3,9 +3,8 @@ import { aMensaje, aError } from "../helpers/utiles.js";
 import { aplicarFoto } from "../helpers/avatar.js";
 import { compradorDe, compradorPorCorreo, partirNombre } from "../helpers/comprador.js";
 import { enviarVerificacionCorreo, segundosEsperaVerificacion } from "../helpers/cuentas.js";
+import { correoValido, telefonoValido } from "../helpers/validacion.js";
 
-const CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const TELEFONO = /^[0-9+() -]{7,20}$/;
 const RFC = /^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/i;
 
 export const usuarioActual = (req) => Usuario.findByPk(req.usuario.id);
@@ -94,8 +93,8 @@ export const actualizarDatos = async (req, res) => {
   if (!nombre || nombre.length > 40) errores.push("El nombre es obligatorio (máximo 40 caracteres)");
   if (!paterno || paterno.length > 40) errores.push("El apellido paterno es obligatorio (máximo 40 caracteres)");
   if (materno.length > 40) errores.push("El apellido materno admite máximo 40 caracteres");
-  if (!CORREO.test(correo) || correo.length > 80) errores.push("Escribe un correo electrónico válido");
-  if (telefono && !TELEFONO.test(telefono)) errores.push("El teléfono no es válido");
+  if (!correoValido(correo) || correo.length > 80) errores.push("Escribe un correo electrónico válido");
+  if (telefono && !telefonoValido(telefono)) errores.push("El teléfono no es válido");
   if (rfc && !RFC.test(rfc)) errores.push("El RFC no tiene un formato válido (ej. XAXX010101000)");
   if (razon.length > 100) errores.push("La razón social admite máximo 100 caracteres");
   if (`${nombre} ${paterno} ${materno}`.trim().length > 80) errores.push("El nombre completo admite máximo 80 caracteres");

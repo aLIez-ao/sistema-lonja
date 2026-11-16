@@ -1,6 +1,7 @@
 import { DataTypes } from "sequelize";
 import bcrypt from "bcryptjs";
 import db from "../config/db.js";
+import { correoValido } from "../helpers/validacion.js";
 
 // Roles: admin (todo, incluye usuarios y borrados) | capturista (captura y consulta)
 // | comprador (tienda en línea; solo se crea desde el registro público).
@@ -19,7 +20,7 @@ const Usuario = db.define(
       validate: {
         len: { args: [0, 80], msg: "El correo admite máximo 80 caracteres" },
         isEmailOrEmpty(val) {
-          if (val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
+          if (val && !correoValido(val)) {
             throw new Error("Formato de correo no válido");
           }
         },

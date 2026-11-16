@@ -3,8 +3,8 @@ import db from "../config/db.js";
 import { DireccionEntrega } from "../models/index.js";
 import { aMensaje, aError } from "../helpers/utiles.js";
 import { ESTADOS, MUNICIPIOS_VERACRUZ } from "../helpers/mexico.js";
+import { telefonoValido } from "../helpers/validacion.js";
 
-const TELEFONO = /^[0-9+() -]{7,20}$/;
 const CP = /^\d{5}$/;
 const MAX_DIRECCIONES = 10;
 
@@ -36,7 +36,7 @@ function erroresDireccion(d) {
   largo(d.municipio, 60, "El municipio");
   if (!d.estado) errs.push("Selecciona el estado");
   else if (!ESTADOS.includes(d.estado)) errs.push("El estado seleccionado no es válido");
-  if (!TELEFONO.test(d.telefono)) errs.push("El teléfono debe tener entre 7 y 20 caracteres");
+  if (!telefonoValido(d.telefono)) errs.push("El teléfono debe tener entre 7 y 20 caracteres");
   if (!CP.test(d.cp)) errs.push("El código postal debe tener exactamente 5 dígitos");
   if (d.num_int && d.num_int.length > 10) errs.push("El número interior admite máximo 10 caracteres");
   if (d.referencias && d.referencias.length > 200) errs.push("Las referencias admiten máximo 200 caracteres");

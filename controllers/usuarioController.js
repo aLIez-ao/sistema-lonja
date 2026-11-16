@@ -6,12 +6,13 @@ import { problemasPassword, passwordInutilizable } from "../helpers/seguridad.js
 import { aplicarFoto, borrarFoto } from "../helpers/avatar.js";
 import { enviarEnlacePassword, enviarVerificacionCorreo, resumenEnvio } from "../helpers/cuentas.js";
 import { condicionBusqueda } from "../helpers/busqueda.js";
+import { reglaCorreo, reglaTelefono } from "../helpers/validacion.js";
 
 const reglas = [
   body("usuario").trim().isLength({ min: 3, max: 40 }).withMessage("El usuario debe tener entre 3 y 40 caracteres").matches(/^[\w.-]+$/).withMessage("El usuario solo admite letras, números, punto, guion y guion bajo"),
   body("nombre_completo").trim().notEmpty().withMessage("El nombre completo es obligatorio").isLength({ max: 80 }).withMessage("Nombre completo: máximo 80 caracteres"),
-  body("correo").trim().isEmail().withMessage("Escribe un correo electrónico válido").isLength({ max: 80 }).withMessage("Correo: máximo 80 caracteres").normalizeEmail({ gmail_remove_dots: false }),
-  body("telefono").trim().optional({ values: "falsy" }).matches(/^[0-9+() -]{7,20}$/).withMessage("Teléfono: entre 7 y 20 caracteres (dígitos, espacios, +, paréntesis o guiones)"),
+  reglaCorreo().isLength({ max: 80 }).withMessage("Correo: máximo 80 caracteres").normalizeEmail({ gmail_remove_dots: false }),
+  reglaTelefono(),
   body("puesto").trim().optional({ values: "falsy" }).isLength({ max: 60 }).withMessage("Puesto: máximo 60 caracteres"),
   body("rol").isIn(ROLES).withMessage("Rol inválido"),
 ];

@@ -11,6 +11,7 @@ import { aMensaje } from "../helpers/utiles.js";
 import { compradorDe, compradorPorCorreo } from "../helpers/comprador.js";
 import { prefValida } from "../middleware/preferencias.js";
 import { CATEGORIAS, COOKIE_DE_PREF, aplicarConsentimiento, guardarCookiePreferencia } from "../helpers/cookies.js";
+import { correoValido, telefonoValido } from "../helpers/validacion.js";
 
 const renderConfiguracion = async (req, res, adicionales = {}) => {
   const us = await Usuario.findByPk(req.usuario.id);
@@ -90,8 +91,8 @@ export const actualizarCuenta = async (req, res) => {
   const telefono = String(req.body.telefono ?? "").trim();
 
   if (!nombre || nombre.length > 80) return res.redirect(`/configuracion?${aError("El nombre es obligatorio (máximo 80 caracteres)")}#pane-cuenta`);
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo) || correo.length > 80) return res.redirect(`/configuracion?${aError("Escribe un correo electrónico válido")}#pane-cuenta`);
-  if (telefono && !/^[0-9+() -]{7,20}$/.test(telefono)) return res.redirect(`/configuracion?${aError("El teléfono no es válido")}#pane-cuenta`);
+  if (!correoValido(correo) || correo.length > 80) return res.redirect(`/configuracion?${aError("Escribe un correo electrónico válido")}#pane-cuenta`);
+  if (telefono && !telefonoValido(telefono)) return res.redirect(`/configuracion?${aError("El teléfono no es válido")}#pane-cuenta`);
 
   let fotoPreparada = null;
   let transaccionConfirmada = false;

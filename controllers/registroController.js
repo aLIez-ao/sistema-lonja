@@ -4,14 +4,13 @@ import { Usuario, Comprador } from "../models/index.js";
 import { crearLimite, problemasPassword } from "../helpers/seguridad.js";
 import { enviarVerificacionCorreo } from "../helpers/cuentas.js";
 import { compradorPorCorreo } from "../helpers/comprador.js";
+import { correoValido, telefonoValido } from "../helpers/validacion.js";
 
 const HORA = 60 * 60 * 1000;
 
 // 5 intentos de registro por IP cada hora.
 export const limiteRegistro = crearLimite({ max: 5, ventanaMs: HORA });
 
-const CORREO = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const TELEFONO = /^[0-9+() -]{7,20}$/;
 const CAMPOS_TRAMPA = ["sitio_web", "empresa_web"];
 
 const datosFormulario = (b = {}) => ({
@@ -52,8 +51,8 @@ function erroresRegistro(b) {
   if (!paterno) errs.push("El apellido paterno es obligatorio");
   else if (paterno.length > 40) errs.push("Apellido paterno: máximo 40 caracteres");
   if (materno.length > 40) errs.push("Apellido materno: máximo 40 caracteres");
-  if (!CORREO.test(correo) || correo.length > 80) errs.push("Escribe un correo electrónico válido (máximo 80 caracteres)");
-  if (b.telefono && !TELEFONO.test(String(b.telefono).trim())) {
+  if (!correoValido(correo) || correo.length > 80) errs.push("Escribe un correo electrónico válido (máximo 80 caracteres)");
+  if (b.telefono && !telefonoValido(b.telefono)) {
     errs.push("Teléfono: entre 7 y 20 caracteres (dígitos, espacios, +, paréntesis o guiones)");
   }
   if (`${nombre} ${paterno} ${materno}`.trim().length > 80) errs.push("El nombre completo admite máximo 80 caracteres");

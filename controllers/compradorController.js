@@ -1,4 +1,5 @@
 import { body } from "express-validator";
+import { reglaCorreo } from "../helpers/validacion.js";
 import { literal } from "sequelize";
 import { Comprador, Compra, Lote, Especie, Tipo, Usuario } from "../models/index.js";
 import { mensajesError, mensajeBD, aMensaje, aError } from "../helpers/utiles.js";
@@ -11,7 +12,7 @@ const reglas = [
   body("apellido_paterno").trim().notEmpty().withMessage("El apellido paterno es obligatorio").isLength({ max: 15 }).withMessage("Apellido paterno: máximo 15 caracteres"),
   body("apellido_materno").trim().isLength({ max: 15 }).withMessage("Apellido materno: máximo 15 caracteres"),
   body("direccion").trim().isLength({ max: 200 }).withMessage("Dirección: máximo 200 caracteres"),
-  body("correo").trim().isEmail().withMessage("Correo inválido").isLength({ max: 80 }).withMessage("Correo: máximo 80 caracteres"),
+  reglaCorreo().withMessage("Correo inválido").isLength({ max: 80 }).withMessage("Correo: máximo 80 caracteres"),
 ];
 
 const datos = (b) => ({
