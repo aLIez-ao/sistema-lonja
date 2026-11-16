@@ -32,9 +32,17 @@ const incluye = [
 
 /** Lotes que aún no tienen compra (+ el lote indicado, útil al editar). */
 const lotesDisponibles = async (incluirId) => {
-  const vendidos = (await Compra.findAll({ attributes: ["id_cmp"] })).map((c) => c.id_cmp).filter((id) => String(id) !== String(incluirId));
-  const where = vendidos.length ? { id_lte: { [Op.notIn]: vendidos } } : {};
-  return Lote.findAll({ where, order: [["id_lte", "DESC"]], include: [{ model: Especie, as: "especies", include: [{ model: Tipo, as: "tipo" }] }] });
+  const where = incluirId
+    ? { [Op.or]: [{ "$compra.id_cmp$": null }, { id_lte: incluirId }] }
+    : { "$compra.id_cmp$": null };
+  return Lote.findAll({
+    where,
+    order: [["id_lte", "DESC"]],
+    include: [
+      { model: Compra, as: "compra", required: false, attributes: [] },
+      { model: Especie, as: "especies", include: [{ model: Tipo, as: "tipo" }] },
+    ],
+  });
 };
 
 const catalogos = async (incluirId) => {
