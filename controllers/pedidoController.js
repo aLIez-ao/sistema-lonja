@@ -329,4 +329,3 @@ export const facturaCuentaPdf = async (req, res) => {
   res.set({ "Content-Type": "application/pdf", "Content-Disposition": `attachment; filename="Factura-Lonja-FAC-${String(compra.id_cmp).padStart(6, "0")}.pdf"`, "Content-Length": pdf.length });
   res.send(pdf);
 };
-
