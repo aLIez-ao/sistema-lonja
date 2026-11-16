@@ -32,4 +32,4 @@ flowchart LR
   Navegador --> Public[CSS, JavaScript e imágenes]
 ```
 
-Para operación, instalación, seguridad, base de datos y permisos, usa la [documentación de referencia](../README.md). Para verificaciones que siguen abiertas, consulta [TODO](../reports/TODO.md).
+Para operación, instalación, seguridad, base de datos y permisos, usa la [documentación de referencia](../README.md). Para verificaciones que siguen abiertas, consulta [TODO](../.reports/TODO.md).
