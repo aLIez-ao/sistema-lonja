@@ -43,6 +43,7 @@ export function cliente(base) {
   const tarro = new Map();
   const req = async (metodo, ruta, datos, json = false) => {
     const headers = { cookie: [...tarro].map(([k, v]) => `${k}=${v}`).join("; ") };
+    if (!["GET", "HEAD", "OPTIONS"].includes(metodo)) headers.origin = new URL(base).origin;
     let body;
     if (datos && json) { headers["content-type"] = "application/json"; body = JSON.stringify(datos); }
     else if (datos) { headers["content-type"] = "application/x-www-form-urlencoded"; body = new URLSearchParams(datos).toString(); }

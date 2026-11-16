@@ -45,7 +45,7 @@ test("no permite borrar una cuenta que conserva pedidos", async () => {
   await Pedido.create({ id_usuario: usuario.id, codigo_cpr: comprador.codigo_cpr, estado: "cancelado", entrega: "recoger", subtotal: 10, costo_envio: 0, total: 10 });
 
   const cookie = [...admin.cookies].map(([k, v]) => `${k}=${v}`).join("; ");
-  const respuesta = await fetch(`${srv.base}/usuarios/${usuario.id}`, { method: "DELETE", redirect: "manual", headers: { cookie } });
+  const respuesta = await fetch(`${srv.base}/usuarios/${usuario.id}`, { method: "DELETE", redirect: "manual", headers: { cookie, origin: new URL(srv.base).origin } });
   assert.equal(respuesta.status, 302);
   assert.match(decodeURIComponent(respuesta.headers.get("location")), /tiene pedidos; desactívalo en su lugar/);
   assert.ok(await Usuario.findByPk(usuario.id));

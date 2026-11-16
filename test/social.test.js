@@ -41,9 +41,8 @@ test("listas privadas: creación, duplicados y control de acceso al detalle", as
   const cookies = [...a.web.cookies].map(([k, v]) => `${k}=${v}`).join("; ");
   for (const referer of ["https://evil.example/x", "//evil.example/x"]) {
     const r = await fetch(`${srv.base}/cuenta/favoritos`, { method: "POST", redirect: "manual", headers: { cookie: cookies, referer, "content-type": "application/x-www-form-urlencoded" }, body: new URLSearchParams({ tipo: "lote", id_ref: String(lote.id_lte) }) });
-    assert.equal(r.status, 302);
-    assert.ok(r.headers.get("location").startsWith("/cuenta/listas"));
-    assert.equal(r.headers.get("location").includes("evil"), false);
+    assert.equal(r.status, 403);
+    assert.equal(r.headers.get("location"), null);
   }
 });
 

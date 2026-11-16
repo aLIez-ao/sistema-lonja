@@ -34,6 +34,22 @@ export function rutaReferer(req, porDefecto = "/") {
   }
 }
 
+/** Valida que un método con efectos venga del mismo host y tenga origen explícito. */
+export function origenDePeticionValido(req) {
+  const host = String(req.get?.("host") || "").toLowerCase();
+  if (!host) return false;
+  const fuentes = [req.get?.("origin"), req.get?.("referer")].filter(Boolean);
+  if (!fuentes.length) return false;
+  try {
+    return fuentes.every((fuente) => {
+      const url = new URL(fuente);
+      return ["http:", "https:"].includes(url.protocol) && url.host.toLowerCase() === host;
+    });
+  } catch {
+    return false;
+  }
+}
+
 /** Redirige a una ruta interna y añade un aviso de éxito o error legible. */
 export function volverA(req, res, porDefecto = "/", { mensaje, error } = {}) {
   const destino = rutaReferer(req, porDefecto);

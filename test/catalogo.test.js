@@ -67,6 +67,7 @@ test("el alta por fetch devuelve JSON y la desactivación conserva el catálogo"
     redirect: "manual",
     headers: {
       cookie: [...admin.cookies].map(([k, v]) => `${k}=${v}`).join("; "),
+      origin: new URL(srv.base).origin,
       "content-type": "application/x-www-form-urlencoded",
       accept: "application/json",
     },

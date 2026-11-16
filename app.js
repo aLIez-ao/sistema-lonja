@@ -27,6 +27,7 @@ import * as social from "./controllers/socialController.js";
 import { formatoFechaHora } from "./helpers/fechas.js";
 import { icono } from "./helpers/iconos.js";
 import { CarritoItem, Lista, ListaItem } from "./models/index.js";
+import { origenDePeticionValido } from "./helpers/navegacion.js";
 
 dotenv.config({ path: ".env" });
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -94,6 +95,16 @@ app.use(async (req, res, next) => {
 
 // Middleware de Preferencias y Cookies
 app.use(middlewarePreferencias);
+
+app.use((req, res, next) => {
+  if (["GET", "HEAD", "OPTIONS"].includes(req.method) || origenDePeticionValido(req)) return next();
+  if (req.accepts(["html", "json"]) === "json") return res.status(403).json({ ok: false, mensaje: "Origen de la solicitud no permitido." });
+  return res.status(403).render("error", {
+    codigo: 403,
+    mensaje: "No se pudo validar el origen de esta solicitud. Vuelve a cargar la página e inténtalo de nuevo.",
+    accion: { texto: "Volver", url: "/" },
+  });
+});
 
 // Rutas públicas: tienda, acceso, recuperación y registro de compradores
 app.use("/", router_login);
