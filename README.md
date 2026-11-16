@@ -23,7 +23,7 @@ Requisitos: **Node.js ≥ 20** y **MariaDB ≥ 10.6**.
 ```bash
 mariadb -u root -p
 CREATE DATABASE lonja_veracruz CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER 'lonja'@'localhost' IDENTIFIED BY 'REDACTED_DATABASE_PASSWORD';
+CREATE USER 'lonja'@'localhost' IDENTIFIED BY '<tu_clave>';
 CREATE DATABASE lonja_veracruz CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 GRANT ALL PRIVILEGES ON lonja_veracruz.* TO 'lonja'@'localhost';
 FLUSH PRIVILEGES;
