@@ -1,5 +1,5 @@
 import { CarritoItem, Lote, Especie, Tipo, EspecieCatalogo, Compra } from "../models/index.js";
-import { loteDisponible, reservasActivas, liberarPedidosVencidos, totalLineas } from "../helpers/pedidos.js";
+import { loteDisponible, reservasActivas, totalLineas } from "../helpers/pedidos.js";
 import { prepararLote } from "../helpers/tienda.js";
 import { aMensaje } from "../helpers/utiles.js";
 
@@ -25,7 +25,6 @@ async function responder(req, res, { ok, mensaje, estado = 200 } = {}) {
 }
 
 export const verCarrito = async (req, res) => {
-  await liberarPedidosVencidos();
   const filas = await CarritoItem.findAll({
     where: { id_usuario: req.usuario.id },
     include: [includeLote],
@@ -56,7 +55,6 @@ export const verCarrito = async (req, res) => {
 };
 
 export const agregar = async (req, res) => {
-  await liberarPedidosVencidos();
   const id = Number(req.params.id_lte);
   const { lote, motivo } = await loteDisponible(id, { usuarioId: req.usuario.id });
   if (!lote || motivo) {

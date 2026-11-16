@@ -9,7 +9,7 @@ import { textoBusqueda } from "../helpers/busqueda.js";
 import { rangoDelDia, hoy, dinero } from "../helpers/fechas.js";
 import { crearLimite } from "../helpers/seguridad.js";
 import { prepararLote, imagenDeEspecie, precioMinimo } from "../helpers/tienda.js";
-import { liberarPedidosVencidos, reservasActivas } from "../helpers/pedidos.js";
+import { reservasActivas } from "../helpers/pedidos.js";
 import { ponerOpinionesEnFicha, preguntasPublicas } from "./socialController.js";
 
 // 30 sugerencias por minuto y por IP (se reinicia en las pruebas).
@@ -169,7 +169,6 @@ const ORDEN_PORTADA = {
 
 /** GET / — portada pública de la tienda. */
 export const portada = async (req, res) => {
-  await liberarPedidosVencidos();
   const inicioHoy = rangoDelDia(hoy()).inicio;
   const l = leerListado(req, {
     porPagina: [24],
@@ -265,7 +264,6 @@ export const portada = async (req, res) => {
 
 /** GET /tienda/lote/:id — detalle público de un lote. */
 export const detalleLote = async (req, res) => {
-  await liberarPedidosVencidos();
   const id = filtroEntero(req.params.id);
   const lote = id
     ? await Lote.findByPk(id, {
@@ -313,7 +311,6 @@ export const detalleLote = async (req, res) => {
 
 /** GET /tienda/especie/:id — ficha pública de una especie del catálogo. */
 export const fichaEspecie = async (req, res) => {
-  await liberarPedidosVencidos();
   const id = filtroEntero(req.params.id);
   const catalogo = id
     ? await EspecieCatalogo.findByPk(id, {
@@ -367,7 +364,6 @@ export const fichaEspecie = async (req, res) => {
 
 /** GET /tienda/sugerencias?q=… — sugerencias públicas del buscador. */
 export const sugerencias = async (req, res) => {
-  await liberarPedidosVencidos();
   if (limiteSugerencias.bloqueado(req.ip)) {
     return res.status(429).json({ error: "Demasiadas sugerencias. Espera un momento." });
   }

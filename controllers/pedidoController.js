@@ -35,7 +35,6 @@ const subtotalCarrito = (filas) => totalLineas(filas.filter((f) => f.lote).map((
 const limitePagosFallidos = crearLimite({ max: 5, ventanaMs: 60 * 60 * 1000 });
 
 export const verNuevo = async (req, res) => {
-  await liberarPedidosVencidos();
   const usuario = await Usuario.findByPk(req.usuario.id);
   if (!usuario?.email_verificado) {
     return res.redirect(`/cuenta?${aMensaje("Verifica tu correo antes de iniciar un pedido")}`);
@@ -134,7 +133,6 @@ export const crear = async (req, res) => {
 };
 
 export const verPago = async (req, res) => {
-  await liberarPedidosVencidos();
   const pedido = await Pedido.findOne({ where: { id_ped: req.params.id, id_usuario: req.usuario.id }, include: [includeItems] });
   if (!pedido) return errorDe(res, "No encontramos ese pedido.", 404);
   if (pedido.estado !== "pendiente_pago") return res.redirect(`/cuenta/pedidos/${pedido.id_ped}`);
@@ -289,7 +287,6 @@ export const cancelar = async (req, res) => {
 };
 
 export const listaCuenta = async (req, res) => {
-  await liberarPedidosVencidos();
   const pedidos = await Pedido.findAll({
     where: { id_usuario: req.usuario.id },
     include: [includeItems],
@@ -299,7 +296,6 @@ export const listaCuenta = async (req, res) => {
 };
 
 export const detalleCuenta = async (req, res) => {
-  await liberarPedidosVencidos();
   const pedido = await Pedido.findOne({
     where: { id_ped: req.params.id, id_usuario: req.usuario.id },
     include: [includeItems, { model: Compra, as: "compras" }],

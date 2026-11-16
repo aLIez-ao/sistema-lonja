@@ -20,7 +20,6 @@ export const totalLineas = (lotes) => redondea(lotes.reduce(
 
 /** Devuelve el pedido activo que mantiene reservado cada lote. */
 export async function reservasActivas({ ahora = new Date(), exceptoPedido = null, transaction } = {}) {
-  await liberarPedidosVencidos(ahora, transaction);
   const filas = await PedidoItem.findAll({
     attributes: ["id_lte"],
     include: [{
