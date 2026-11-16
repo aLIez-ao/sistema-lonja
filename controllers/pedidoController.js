@@ -7,7 +7,7 @@ import { generarFacturaPDF } from "../helpers/facturaPdf.js";
 import { datosFactura } from "../helpers/factura.js";
 import { enviarEmailPedido } from "../helpers/email.js";
 import { cobrar } from "../helpers/pasarela.js";
-import { costoEnvio, liberarPedidosVencidos, loteDisponible, reservaMinutos, reservaEfectivoMinutos, reservasActivas, textoDireccion, totalLineas } from "../helpers/pedidos.js";
+import { costoEnvio, disponibilidadDeLotes, liberarPedidosVencidos, reservaMinutos, reservaEfectivoMinutos, reservasActivas, textoDireccion, totalLineas } from "../helpers/pedidos.js";
 import { prepararLote } from "../helpers/tienda.js";
 import { crearLimite } from "../helpers/seguridad.js";
 
@@ -85,10 +85,11 @@ export const crear = async (req, res) => {
       }
 
       const lotes = [];
+      const estados = await disponibilidadDeLotes(carrito.map((fila) => fila.id_lte), { usuarioId: usuario.id, transaction });
       for (const fila of carrito) {
-        const comprobacion = await loteDisponible(fila.id_lte, { usuarioId: usuario.id, transaction });
-        if (!comprobacion.lote || comprobacion.motivo) {
-          const texto = comprobacion.motivo === "reservado" || comprobacion.motivo === "reservado_propio"
+        const comprobacion = estados.get(Number(fila.id_lte));
+        if (!comprobacion || comprobacion.motivo) {
+          const texto = comprobacion?.motivo === "reservado" || comprobacion?.motivo === "reservado_propio"
             ? `El lote #${fila.id_lte} ya está reservado.`
             : `El lote #${fila.id_lte} ya no está disponible.`;
           throw Object.assign(new Error(texto), { status: 409 });

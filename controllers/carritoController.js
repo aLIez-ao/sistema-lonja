@@ -1,5 +1,5 @@
-import { CarritoItem, Lote, Especie, Tipo, EspecieCatalogo, Compra } from "../models/index.js";
-import { loteDisponible, reservasActivas, totalLineas } from "../helpers/pedidos.js";
+import { CarritoItem, Lote, Especie, Tipo, EspecieCatalogo } from "../models/index.js";
+import { loteDisponible, disponibilidadDeLotes, totalLineas } from "../helpers/pedidos.js";
 import { prepararLote } from "../helpers/tienda.js";
 import { aMensaje } from "../helpers/utiles.js";
 
@@ -30,17 +30,17 @@ export const verCarrito = async (req, res) => {
     include: [includeLote],
     order: [["fecha", "DESC"]],
   });
-  const reservas = await reservasActivas();
-  const items = await Promise.all(filas.map(async (fila) => {
+  const estados = await disponibilidadDeLotes(filas.map((fila) => fila.id_lte), { usuarioId: req.usuario.id });
+  const items = filas.map((fila) => {
     const lote = fila.lote;
-    const reserva = reservas.get(Number(fila.id_lte));
-    const compra = await Compra.findByPk(fila.id_lte);
+    const estado = estados.get(Number(fila.id_lte));
+    const reserva = estado?.reserva;
     const problema = !lote ? "El lote ya no existe"
-      : compra ? "Este lote ya fue vendido"
+      : estado?.motivo === "vendido" ? "Este lote ya fue vendido"
         : reserva && reserva.id_usuario !== req.usuario.id ? "Está reservado por otro comprador"
           : reserva ? "Ya está en un pedido tuyo" : null;
     return { id_lte: fila.id_lte, lote: lote ? prepararLote(lote) : null, problema };
-  }));
+  });
   const disponibles = items.filter((i) => !i.problema && i.lote);
   const subtotal = totalLineas(disponibles.map((i) => ({
     kilos: i.lote.kilos,

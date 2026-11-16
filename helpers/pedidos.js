@@ -54,6 +54,55 @@ export async function loteDisponible(idLote, { usuarioId = null, transaction, ex
   return { lote, motivo: null };
 }
 
+/** Resuelve ventas y reservas de varios lotes con consultas agrupadas. */
+export async function disponibilidadDeLotes(ids, { usuarioId = null, transaction, exceptoPedido = null, ahora = new Date() } = {}) {
+  const idsUnicos = [...new Set((ids || []).map(Number).filter((id) => Number.isInteger(id) && id > 0))];
+  const salida = new Map();
+  if (!idsUnicos.length) return salida;
+
+  const opcionesTx = transaction ? { transaction } : {};
+  const lotes = await Lote.findAll({
+    where: { id_lte: { [Op.in]: idsUnicos } },
+    attributes: ["id_lte"],
+    ...opcionesTx,
+    ...(transaction?.LOCK?.UPDATE ? { lock: transaction.LOCK.UPDATE } : {}),
+  });
+  const existentes = new Set(lotes.map((lote) => Number(lote.id_lte)));
+  const [ventas, filas] = await Promise.all([
+    Compra.findAll({ where: { id_cmp: { [Op.in]: idsUnicos } }, attributes: ["id_cmp"], ...opcionesTx }),
+    PedidoItem.findAll({
+      where: { id_lte: { [Op.in]: idsUnicos } },
+      attributes: ["id_lte"],
+      include: [{
+        model: Pedido,
+        as: "pedido",
+        attributes: ["id_ped", "id_usuario", "reservado_hasta"],
+        where: {
+          estado: "pendiente_pago",
+          reservado_hasta: { [Op.gt]: ahora },
+          ...(exceptoPedido ? { id_ped: { [Op.ne]: exceptoPedido } } : {}),
+        },
+        required: true,
+      }],
+      ...opcionesTx,
+    }),
+  ]);
+  const vendidos = new Set(ventas.map((compra) => Number(compra.id_cmp)));
+  const reservas = new Map(filas.map((fila) => [Number(fila.id_lte), {
+    id_ped: fila.pedido.id_ped,
+    id_usuario: fila.pedido.id_usuario,
+    reservado_hasta: fila.pedido.reservado_hasta,
+  }]));
+  for (const id of idsUnicos) {
+    const reserva = reservas.get(id) || null;
+    const motivo = !existentes.has(id) ? "no_existe"
+      : vendidos.has(id) ? "vendido"
+        : reserva ? (reserva.id_usuario === usuarioId ? "reservado_propio" : "reservado") : null;
+    salida.set(id, { motivo, reserva });
+  }
+  return salida;
+}
+
 /** Marca como expirados los pedidos cuya reserva venció. */
 export async function liberarPedidosVencidos(ahora = new Date(), transaction = null) {
   const [cantidad] = await Pedido.update({ estado: "expirado" }, {

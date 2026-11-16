@@ -4,7 +4,7 @@ import { crearLimite } from "../helpers/seguridad.js";
 import { enviarEmailRespuestaPregunta } from "../helpers/email.js";
 import { errorDeSitio, rutaReferer, volverA } from "../helpers/navegacion.js";
 import { nombrePublico, prepararLote, imagenDeEspecie } from "../helpers/tienda.js";
-import { loteDisponible } from "../helpers/pedidos.js";
+import { disponibilidadDeLotes } from "../helpers/pedidos.js";
 
 const esJson = (req) => req.is("json") || req.accepts(["html", "json"]) === "json";
 const tipoValido = (tipo) => tipo === "lote" || tipo === "especie";
@@ -93,13 +93,14 @@ export async function detalleLista(req, res) {
   const lista = await Lista.findOne({ where: { id_lista: req.params.id, id_usuario: req.usuario.id } });
   if (!lista) return errorDeSitio(req, res, 404, "No encontramos esa lista.", "/cuenta/listas");
   const items = await ListaItem.findAll({ where: { id_lista: lista.id_lista }, order: [["fecha", "DESC"]] });
+  const disponibilidad = await disponibilidadDeLotes(items.filter((item) => item.tipo === "lote").map((item) => item.id_ref), { usuarioId: req.usuario.id });
   const datos = await Promise.all(items.map(async (i) => {
     const elemento = i.tipo === "lote" ? await Lote.findByPk(i.id_ref, { include: [{ model: Especie, as: "especies" }, { model: Compra, as: "compra" }] }) : await EspecieCatalogo.findByPk(i.id_ref);
     if (!elemento) return null;
-    const loteState = i.tipo === "lote" ? await loteDisponible(i.id_ref, { usuarioId: req.usuario.id }) : null;
+    const loteState = i.tipo === "lote" ? disponibilidad.get(Number(i.id_ref)) : null;
     const plain = typeof elemento.get === "function" ? elemento.get({ plain: true }) : elemento;
     const vista = i.tipo === "lote" ? prepararLote(plain) : { ...plain, imagen: plain.imagen || imagenDeEspecie(plain) };
-    return { tipo: i.tipo, elemento: vista, vendido: i.tipo === "lote" && (Boolean(plain.compra) || loteState.motivo === "vendido"), reservado: i.tipo === "lote" && ["reservado", "reservado_propio"].includes(loteState.motivo), disponible: i.tipo === "lote" && !loteState.motivo };
+    return { tipo: i.tipo, elemento: vista, vendido: i.tipo === "lote" && (Boolean(plain.compra) || loteState?.motivo === "vendido"), reservado: i.tipo === "lote" && ["reservado", "reservado_propio"].includes(loteState?.motivo), disponible: i.tipo === "lote" && !loteState?.motivo };
   }));
   res.render("cuenta/lista", { lista, items: datos.filter(Boolean) });
 }
@@ -147,10 +148,11 @@ export async function agregarDisponiblesLista(req, res) {
   const lista = await Lista.findOne({ where: { id_lista: req.params.id, id_usuario: req.usuario.id } });
   if (!lista) return esJson(req) ? res.status(404).json({ ok: false }) : errorDeSitio(req, res, 404, "No encontramos esa lista.", "/cuenta/listas");
   const items = await ListaItem.findAll({ where: { id_lista: lista.id_lista, tipo: "lote" } });
+  const disponibilidad = await disponibilidadDeLotes(items.map((item) => item.id_ref), { usuarioId: req.usuario.id });
   let agregados = 0;
   const noDisponibles = [];
   for (const item of items) {
-    const { motivo } = await loteDisponible(item.id_ref, { usuarioId: req.usuario.id });
+    const { motivo } = disponibilidad.get(Number(item.id_ref)) || { motivo: "no_existe" };
     if (motivo) { noDisponibles.push({ id: item.id_ref, motivo }); continue; }
     const [, creado] = await CarritoItem.findOrCreate({ where: { id_usuario: req.usuario.id, id_lte: item.id_ref }, defaults: { fecha: new Date() } });
     if (creado) agregados++;
