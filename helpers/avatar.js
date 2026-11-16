@@ -5,7 +5,7 @@ import { fileURLToPath } from "url";
 import { borrarImagen, guardarImagenDataURL } from "./imagenes.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-export const DIR_AVATARES = path.join(__dirname, "..", "public", "uploads", "avatares");
+export const DIR_AVATARES = path.join(process.env.UPLOADS_DIR || path.join(__dirname, "..", "public", "uploads"), "avatares");
 const URL_BASE = "/uploads/avatares/";
 const MAX_BYTES = 300 * 1024;
 

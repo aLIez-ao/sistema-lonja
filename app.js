@@ -47,6 +47,7 @@ app.set("views", path.join(__dirname, "views"));
 app.use("/bootstrap", express.static(path.join(__dirname, "node_modules/bootstrap/dist")));
 // Chart.js local (gráficas de inicio y reportes)
 app.use("/vendor/chartjs", express.static(path.join(__dirname, "node_modules/chart.js/dist")));
+app.use("/uploads", express.static(process.env.UPLOADS_DIR || path.join(__dirname, "public", "uploads")));
 app.use(express.static(path.join(__dirname, "public")));
 // Los navegadores piden /favicon.ico por su cuenta
 app.get("/favicon.ico", (req, res) => res.redirect(301, "/img/favicon.svg"));

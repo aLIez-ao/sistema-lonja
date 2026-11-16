@@ -10,7 +10,7 @@ import { condicionFiltros, filtroEntero, filtroLista } from "../helpers/filtros.
 import { borrarImagen, guardarImagenDataURL } from "../helpers/imagenes.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DIR_ESPECIES = path.join(__dirname, "..", "public", "uploads", "especies");
+const DIR_ESPECIES = path.join(process.env.UPLOADS_DIR || path.join(__dirname, "..", "public", "uploads"), "especies");
 const URL_ESPECIES = "/uploads/especies/";
 
 const reglas = [
