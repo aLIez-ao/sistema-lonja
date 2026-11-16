@@ -18,6 +18,13 @@ test("administración de pedidos filtra, avanza estado y notifica enviado/entreg
   await PedidoItem.create({ id_ped: pedido.id_ped, id_lte: lote.id_lte, kilos: 10, precio_kilo: 50, subtotal: 500 });
   await Compra.create({ id_cmp: lote.id_lte, codigo_cpr: c.codigo_cpr, id_ped: pedido.id_ped, precio_kilo_final: 50, precio_total: 500 });
   const admin = cliente(srv.base); await admin.entrar("admin", "AdminPrueba123");
+  const inexistente = await admin.get("/pedidos/999999");
+  assert.equal(inexistente.status, 404);
+  assert.match(inexistente.texto, /No encontramos ese pedido/);
+  assert.match(inexistente.texto, /Volver/);
+  const estadoInexistente = await admin.post("/pedidos/999999/estado", { estado: "preparando" });
+  assert.equal(estadoInexistente.status, 404);
+  assert.match(estadoInexistente.texto, /No encontramos ese pedido/);
   assert.equal((await admin.get("/pedidos?q=maria")).status, 200);
   const transicionInvalida = await admin.post(`/pedidos/${pedido.id_ped}/estado`, { estado: "enviado" });
   assert.equal(transicionInvalida.status, 302, "salta preparando y no permite avanzar más de una etapa");

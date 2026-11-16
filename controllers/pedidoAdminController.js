@@ -4,6 +4,7 @@ import { Pedido, Usuario, Comprador, PedidoItem, Lote, Especie, Compra } from ".
 import { enviarEmailPedido } from "../helpers/email.js";
 import { cobrar } from "../helpers/pasarela.js";
 import { aError, aMensaje } from "../helpers/utiles.js";
+import { errorDeSitio } from "../helpers/navegacion.js";
 
 const ESTADOS = ["pendiente_pago", "pagado", "preparando", "enviado", "entregado", "cancelado", "expirado"];
 const avanzan = { pagado: "preparando", preparando: "enviado", enviado: "entregado" };
@@ -38,14 +39,14 @@ export async function lista(req, res) {
 
 export async function detalle(req, res) {
   const pedido = await Pedido.findByPk(req.params.id, { include: incluir });
-  if (!pedido) return res.sendStatus(404);
+  if (!pedido) return errorDeSitio(req, res, 404, "No encontramos ese pedido.", "/pedidos");
   const compras = await Compra.findAll({ where: { id_ped: pedido.id_ped } });
   res.render("pedidos/detalle", { pedido, compras, siguiente: avanzan[pedido.estado] || null, mensaje: req.query.mensaje, error: req.query.error });
 }
 
 export async function cambiarEstado(req, res) {
   const pedido = await Pedido.findByPk(req.params.id, { include: incluir });
-  if (!pedido) return res.sendStatus(404);
+  if (!pedido) return errorDeSitio(req, res, 404, "No encontramos ese pedido.", "/pedidos");
   const siguiente = avanzan[pedido.estado];
   if (!siguiente || req.body.estado !== siguiente) {
     const etiqueta = { pendiente_pago: "pendiente de pago", pagado: "pagado", preparando: "preparando", enviado: "enviado", entregado: "entregado", cancelado: "cancelado", expirado: "expirado" };
