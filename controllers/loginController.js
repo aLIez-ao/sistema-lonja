@@ -125,7 +125,7 @@ const restablecerPassword = async (req, res) => {
 
 const verificarEmailToken = async (req, res) => {
   const hash = hashToken(req.params.token);
-  const us = await Usuario.findOne({ where: { token_verificacion: hash } });
+  const us = await Usuario.findOne({ where: { token_verificacion: hash, activo: true } });
 
   if (!us) {
     return res.status(400).render("error", {

@@ -35,6 +35,18 @@ test("verificar correo explica y registra cuando el comprador ya está ligado a 
   assert.equal(advertencias.length, 1);
 });
 
+test("un enlace de verificación no activa cuentas desactivadas", async () => {
+  const usuario = await Usuario.create({ usuario: "inactivo-token", nombre_completo: "Cuenta Inactiva", correo: "inactivo@example.com", password: "Clave1234", rol: "comprador", activo: false });
+  const token = "token-cuenta-inactiva";
+  await usuario.update({ token_verificacion: hashToken(token), token_verificacion_expira: new Date(Date.now() + 60_000) });
+  const respuesta = await cliente(srv.base).get(`/verificar-email/${token}`);
+  assert.equal(respuesta.status, 400);
+  assert.match(respuesta.texto, /enlace de verificación no existe o ya se usó/i);
+  await usuario.reload();
+  assert.equal(usuario.email_verificado, false);
+  assert.equal(usuario.activo, false);
+});
+
 test("cambiar correo del comprador sincroniza su ficha y rechaza un correo de cliente ajeno", async () => {
   const cpr = await Comprador.create({ nombre: "Ana", apellido_paterno: "Ruiz", correo: "ana-original@example.com" });
   const us = await Usuario.create({ usuario: "ana-link", nombre_completo: "Ana Ruiz", correo: "ana-original@example.com", password: "Clave1234", rol: "comprador", codigo_cpr: cpr.codigo_cpr, email_verificado: true });
