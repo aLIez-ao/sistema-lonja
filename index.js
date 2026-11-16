@@ -6,13 +6,16 @@ import { crearAdministradorInicial, crearTiposIniciales } from "./helpers/semill
 import { asegurarEsquema } from "./helpers/migraciones.js";
 import { verificarTransporte } from "./helpers/email.js";
 import { liberarPedidosVencidos } from "./helpers/pedidos.js";
+import { validarSecretosInicio } from "./helpers/validacionSecretos.js";
 
 dotenv.config({ path: ".env" });
 const port = process.env.PORT || 2800;
 
 (async () => {
   try {
-    if (!process.env.SC_JWT) throw new Error("Falta SC_JWT en .env (firma de los tokens)");
+    const validacion = validarSecretosInicio();
+    for (const aviso of validacion.avisos) console.warn(`Configuración de seguridad: ${aviso}`);
+    if (validacion.errores.length) throw new Error(`Configuración de seguridad inválida: ${validacion.errores.join(" ")}`);
     await db.authenticate();
     console.log("Conexión a la base de datos establecida.");
 
