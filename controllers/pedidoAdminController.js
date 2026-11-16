@@ -5,6 +5,7 @@ import { enviarEmailPedido } from "../helpers/email.js";
 import { cobrar } from "../helpers/pasarela.js";
 import { aError, aMensaje } from "../helpers/utiles.js";
 import { errorDeSitio } from "../helpers/navegacion.js";
+import { encolarTrabajo } from "../helpers/colaTrabajos.js";
 
 const ESTADOS = ["pendiente_pago", "pagado", "preparando", "enviado", "entregado", "cancelado", "expirado"];
 const avanzan = { pagado: "preparando", preparando: "enviado", enviado: "entregado" };
@@ -57,8 +58,8 @@ export async function cambiarEstado(req, res) {
   await pedido.update({ estado: siguiente });
   if (["enviado", "entregado"].includes(siguiente) && pedido.usuario?.correo) {
     const parrafos = siguiente === "enviado" ? ["Tu pedido está en camino."] : ["Tu pedido fue marcado como entregado."];
-    try { await enviarEmailPedido({ usuario: pedido.usuario, correo: pedido.usuario.correo, pedido, items: pedido.items, asunto: "Actualización de pedido", titulo: siguiente === "enviado" ? "Pedido enviado" : "Pedido entregado", parrafos }); }
-    catch (error) { console.warn("El estado del pedido cambió pero no se pudo enviar el correo:", error.message); }
+    const encolado = encolarTrabajo(`aviso de estado del pedido ${pedido.id_ped}`, () => enviarEmailPedido({ usuario: pedido.usuario, correo: pedido.usuario.correo, pedido, items: pedido.items, asunto: "Actualización de pedido", titulo: siguiente === "enviado" ? "Pedido enviado" : "Pedido entregado", parrafos }));
+    if (!encolado) console.warn("No se encoló la notificación del pedido: la cola de trabajos está llena.");
   }
   res.redirect(`/pedidos/${pedido.id_ped}?${aMensaje("Estado actualizado.")}`);
 }
@@ -82,13 +83,13 @@ export async function confirmarCobro(req, res) {
     return { pedido, items };
   });
   if (salida.error) return res.redirect(`/pedidos/${req.params.id}?error=${encodeURIComponent(salida.error)}`);
+  const mensaje = salida.repetido ? "El pedido ya estaba confirmado." : "Cobro confirmado y compra registrada.";
   if (salida.items) {
     const usuario = await Usuario.findByPk(salida.pedido.id_usuario);
     if (usuario?.correo) {
-      try { await enviarEmailPedido({ usuario, correo: usuario.correo, pedido: salida.pedido, items: salida.items, asunto: "Cobro confirmado", titulo: "Pago en la lonja confirmado", parrafos: ["El personal confirmó el cobro de tu pedido."] }); }
-      catch (error) { console.warn("El cobro se confirmó pero no se pudo enviar el correo:", error.message); }
+      const encolado = encolarTrabajo(`aviso de cobro del pedido ${salida.pedido.id_ped}`, () => enviarEmailPedido({ usuario, correo: usuario.correo, pedido: salida.pedido, items: salida.items, asunto: "Cobro confirmado", titulo: "Pago en la lonja confirmado", parrafos: ["El personal confirmó el cobro de tu pedido."] }));
+      if (!encolado) console.warn("No se encoló el aviso de cobro: la cola de trabajos está llena.");
     }
   }
-  const mensaje = salida.repetido ? "El pedido ya estaba confirmado." : "Cobro confirmado y compra registrada.";
   return res.redirect(`/pedidos/${req.params.id}?mensaje=${encodeURIComponent(mensaje)}`);
 }

@@ -11,6 +11,7 @@ import { leerListado, consultarListado, combinarWhere } from "../helpers/listado
 import { condicionBusqueda } from "../helpers/busqueda.js";
 import { condicionFiltros, filtroEntero, filtroFecha, filtroNumero } from "../helpers/filtros.js";
 import { loteDisponible, reservasActivas } from "../helpers/pedidos.js";
+import { encolarTrabajo } from "../helpers/colaTrabajos.js";
 
 const reglas = [
   body("precio_kilo_final").isFloat({ gt: 0, max: 99999999 }).withMessage("El precio final por kilo debe ser un número mayor a 0"),
@@ -163,7 +164,7 @@ const registrar = async (req, res) => {
 
           // Si el comprador tiene correo, enviar comprobante / factura opcional o automáticamente
           if (comprador.correo) {
-            try {
+            const encolado = encolarTrabajo(`factura de compra ${nuevaCompra.id_cmp}`, async () => {
               nuevaCompra.lote = lote;
               nuevaCompra.comprador = comprador;
               const pdfBuffer = await generarFacturaPDF(nuevaCompra);
@@ -173,9 +174,8 @@ const registrar = async (req, res) => {
                 pdfBuffer,
                 folio: nuevaCompra.id_cmp,
               });
-            } catch (errEmail) {
-              console.warn("Aviso: no se pudo enviar correo de compra:", errEmail.message);
-            }
+            });
+            if (!encolado) console.warn("No se encoló la factura: la cola de trabajos está llena.");
           }
 
           return res.redirect(`/compras/${nuevaCompra.id_cmp}/factura?${aMensaje("Compra registrada y factura generada con éxito")}`);

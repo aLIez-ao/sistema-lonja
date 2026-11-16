@@ -2,6 +2,7 @@ import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { arrancar, cliente, modelos } from "./ayuda.js";
 import { fijarTransporteParaPruebas } from "../helpers/email.js";
+import { esperarColaTrabajos } from "../helpers/colaTrabajos.js";
 
 const { Usuario, Comprador, Tipo, Lote, Especie, Pedido, PedidoItem, Compra } = modelos;
 let srv; const correos = [];
@@ -37,6 +38,7 @@ test("administración de pedidos filtra, avanza estado y notifica enviado/entreg
   const entrega = await admin.post(`/pedidos/${pedido.id_ped}/estado`, { estado: "entregado" });
   assert.equal(entrega.status, 302);
   assert.match(decodeURIComponent(entrega.loc), /Estado actualizado\./);
+  await esperarColaTrabajos();
   assert.equal((await Pedido.findByPk(pedido.id_ped)).estado, "entregado");
   assert.equal(correos.length, 1, "la entrega se guarda aunque falle su correo de notificación");
   const inicio = await admin.get("/dashboard");

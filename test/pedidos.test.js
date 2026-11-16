@@ -3,6 +3,7 @@ import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { arrancar, cliente, modelos } from "./ayuda.js";
 import { fijarTransporteParaPruebas } from "../helpers/email.js";
+import { esperarColaTrabajos } from "../helpers/colaTrabajos.js";
 
 const { Usuario, Comprador, Tipo, Lote, Especie, EspecieCatalogo, DireccionEntrega, CarritoItem, Pedido, PedidoItem, Compra } = modelos;
 let srv;
@@ -104,6 +105,7 @@ test("pago rechazado no vende; aprobado crea compras, factura y es idempotente",
   const aprobado = await a.web.post(pagoUrl, { numero: "4242424242424242", mes: "12", anio: "2030", cvv: "123" });
   assert.equal(aprobado.status, 302);
   assert.match(aprobado.loc, new RegExp(`/cuenta/pedidos/${id}`));
+  await esperarColaTrabajos();
   const p = await Pedido.findByPk(id);
   assert.equal(p.estado, "pagado");
   assert.equal(p.pago_ultimos4, "4242");
@@ -142,6 +144,7 @@ test("SPEI se simula y registra la compra real con el total calculado por servid
   assert.match(pantalla.texto, /000000000000000000/);
   assert.match(pantalla.texto, /PAGO SIMULADO/);
   await a.web.post(`/pedido/${id}/pagar`, { metodo: "transferencia" });
+  await esperarColaTrabajos();
   const pedido = await Pedido.findByPk(id);
   assert.equal(pedido.estado, "pagado"); assert.equal(pedido.pago_metodo, "Simulado SPEI");
   assert.match(pedido.pago_ref, /^SPEI-/); assert.equal(pedido.pago_ultimos4, null);
@@ -165,6 +168,7 @@ test("efectivo conserva reserva hasta cobro del personal y solo aplica a recoger
   const admin = cliente(srv.base); await admin.entrar("admin", "AdminPrueba123");
   assert.match((await admin.get(`/pedidos/${id}`)).texto, /Confirmar cobro/);
   await admin.post(`/pedidos/${id}/confirmar-cobro`, {});
+  await esperarColaTrabajos();
   pedido = await Pedido.findByPk(id);
   assert.equal(pedido.estado, "pagado"); assert.match(pedido.pago_ref, /^LONJA-/);
   assert.equal(await Compra.count({ where: { id_ped: id } }), 1);

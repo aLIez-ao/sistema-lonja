@@ -10,6 +10,7 @@ import { cobrar } from "../helpers/pasarela.js";
 import { costoEnvio, disponibilidadDeLotes, liberarPedidosVencidos, reservaMinutos, reservaEfectivoMinutos, reservasActivas, textoDireccion, totalLineas } from "../helpers/pedidos.js";
 import { prepararLote } from "../helpers/tienda.js";
 import { crearLimite } from "../helpers/seguridad.js";
+import { encolarTrabajo } from "../helpers/colaTrabajos.js";
 
 const errorDe = (res, mensaje, estado = 400) => res.status(estado).render("error", {
   codigo: estado,
@@ -247,7 +248,7 @@ export const pagar = async (req, res) => {
   }
 
   const pedido = resultado.pedido;
-  try {
+  const encolado = encolarTrabajo(`facturas de pedido ${pedido.id_ped}`, async () => {
     const compraIds = resultado.compras.map((c) => c.id_cmp);
     const completas = await Compra.findAll({
       where: { id_cmp: { [Op.in]: compraIds } },
@@ -272,9 +273,8 @@ export const pagar = async (req, res) => {
       titulo: "Pago confirmado",
       parrafos: ["Tu pago de prueba fue aprobado. Esta aplicación no realizó ningún cargo real."],
     });
-  } catch (error) {
-    console.warn("El pedido fue pagado pero no se pudo enviar el correo:", error.message);
-  }
+  });
+  if (!encolado) console.warn("No se encolaron las facturas del pedido: la cola de trabajos está llena.");
   return res.redirect(`/cuenta/pedidos/${pedido.id_ped}?${aMensaje("Pago de prueba aprobado. No se realizó ningún cargo real.")}`);
 };
 

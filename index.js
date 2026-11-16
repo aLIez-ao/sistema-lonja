@@ -7,6 +7,7 @@ import { asegurarEsquema } from "./helpers/migraciones.js";
 import { verificarTransporte } from "./helpers/email.js";
 import { liberarPedidosVencidos } from "./helpers/pedidos.js";
 import { validarSecretosInicio } from "./helpers/validacionSecretos.js";
+import { esperarColaTrabajos } from "./helpers/colaTrabajos.js";
 
 dotenv.config({ path: ".env" });
 const port = process.env.PORT || 2800;
@@ -21,7 +22,10 @@ const apagar = (senal) => {
       console.error(`Error al cerrar el servidor tras ${senal}:`, error);
       process.exitCode = 1;
     }
-    try { await db.close(); }
+    try {
+      await esperarColaTrabajos();
+      await db.close();
+    }
     catch (errorDb) {
       console.error("Error al cerrar la conexión a la base de datos:", errorDb);
       process.exitCode = 1;
