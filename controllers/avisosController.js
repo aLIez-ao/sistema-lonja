@@ -8,13 +8,11 @@ const resolverUsuario = async (token) => {
 
 export async function confirmarBajaAvisos(req, res) {
   if (!(await resolverUsuario(req.params.token))) {
-    return res
-      .status(400)
-      .render('error', {
-        codigo: 400,
-        mensaje: 'El enlace de baja no es válido o ya caducó.',
-        accion: { texto: 'Ir a la tienda', url: '/' },
-      });
+    return res.status(400).render('error', {
+      codigo: 400,
+      mensaje: 'El enlace de baja no es válido o ya caducó.',
+      accion: { texto: 'Ir a la tienda', url: '/' },
+    });
   }
   return res.render('avisos/baja', { token: req.params.token });
 }
@@ -22,13 +20,11 @@ export async function confirmarBajaAvisos(req, res) {
 export async function bajaAvisos(req, res) {
   const usuario = await resolverUsuario(req.params.token);
   if (!usuario) {
-    return res
-      .status(400)
-      .render('error', {
-        codigo: 400,
-        mensaje: 'El enlace de baja no es válido o ya caducó.',
-        accion: { texto: 'Ir a la tienda', url: '/' },
-      });
+    return res.status(400).render('error', {
+      codigo: 400,
+      mensaje: 'El enlace de baja no es válido o ya caducó.',
+      accion: { texto: 'Ir a la tienda', url: '/' },
+    });
   }
   await usuario.update({ recibir_avisos: false });
   return res.render('error', {
@@ -36,4 +32,9 @@ export async function bajaAvisos(req, res) {
     mensaje: 'Listo. Ya no recibirás avisos de subastas y novedades por correo.',
     accion: { texto: 'Ir a la tienda', url: '/' },
   });
+}
+
+export async function descartarAvisoSuscripcion(req, res) {
+  await req.usuario.update({ aviso_suscripcion_descartado: true });
+  return res.json({ ok: true });
 }

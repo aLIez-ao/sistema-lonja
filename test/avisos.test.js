@@ -112,6 +112,34 @@ test('la tienda informa a compradores sin suscripción y omite el aviso a quiene
   assert.doesNotMatch((await clienteCon.get('/')).texto, /data-aviso-suscripcion/);
 });
 
+test('cerrar el aviso de suscripción lo guarda en la cuenta y no reaparece en otra sesión', async () => {
+  const c = await Comprador.create({
+    nombre: 'Aviso',
+    apellido_paterno: 'Persistente',
+    correo: 'persistente@example.com',
+  });
+  const usuario = await Usuario.create({
+    usuario: 'aviso_persistente',
+    nombre_completo: 'Aviso Persistente',
+    correo: c.correo,
+    password: 'Clave1234',
+    rol: 'comprador',
+    codigo_cpr: c.codigo_cpr,
+    activo: true,
+    email_verificado: true,
+    recibir_avisos: false,
+  });
+  const sesion = cliente(srv.base);
+  await sesion.entrar(usuario.usuario, 'Clave1234');
+  assert.match((await sesion.get('/')).texto, /data-aviso-suscripcion/);
+  assert.equal((await sesion.postJSON('/avisos/descartar-suscripcion', {})).status, 200);
+  assert.equal((await Usuario.findByPk(usuario.id)).aviso_suscripcion_descartado, true);
+
+  const otraSesion = cliente(srv.base);
+  await otraSesion.entrar(usuario.usuario, 'Clave1234');
+  assert.doesNotMatch((await otraSesion.get('/')).texto, /data-aviso-suscripcion/);
+});
+
 test('los avisos rechazan asuntos y mensajes fuera de los límites', async () => {
   const admin = cliente(srv.base);
   await admin.entrar('admin', 'AdminPrueba123');

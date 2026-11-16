@@ -13,11 +13,16 @@ import { indiceSiguiente, extremosDeFila } from './tienda-utils.js';
 
   const avisoSuscripcion = qs('[data-aviso-suscripcion]');
   if (avisoSuscripcion) {
-    const claveAviso = 'lonja:aviso-suscripcion-cerrado';
-    if (localStorage.getItem(claveAviso) === '1') avisoSuscripcion.remove();
     avisoSuscripcion.querySelector('[data-cerrar-aviso-suscripcion]')?.addEventListener('click', () => {
-      localStorage.setItem(claveAviso, '1');
-      avisoSuscripcion.remove();
+      fetch('/avisos/descartar-suscripcion', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { Accept: 'application/json' },
+      })
+        .then((respuesta) => {
+          if (respuesta.ok) avisoSuscripcion.remove();
+        })
+        .catch(() => {});
     });
   }
 
