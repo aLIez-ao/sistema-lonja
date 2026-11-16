@@ -104,6 +104,18 @@ test("agregar disponibles desde lista omite lotes vendidos y reservados y devuel
   assert.equal(await CarritoItem.count({ where: { id_usuario: a.u.id } }), 1);
 });
 
+test("al borrar un lote se limpian sus referencias de listas", async () => {
+  const a = await comprador("lista_lote_eliminado");
+  const { lote } = await articulo();
+  const lista = await Lista.create({ id_usuario: a.u.id, nombre: "Lotes guardados" });
+  await ListaItem.create({ id_lista: lista.id_lista, tipo: "lote", id_ref: lote.id_lte });
+  const admin = cliente(srv.base); await admin.entrar("admin", "AdminPrueba123");
+  const respuesta = await admin.post(`/lotes/${lote.id_lte}?_method=DELETE`);
+  assert.equal(respuesta.status, 302);
+  assert.equal(await Lote.findByPk(lote.id_lte), null);
+  assert.equal(await ListaItem.count({ where: { id_lista: lista.id_lista, tipo: "lote", id_ref: lote.id_lte } }), 0);
+});
+
 test("las preguntas pendientes y ocultas nunca se publican; responder envía correo", async () => {
   const a = await comprador("pregunta_a");
   const { lote } = await articulo();

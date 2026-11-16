@@ -1,7 +1,7 @@
 import { body } from "express-validator";
 import { literal, Op } from "sequelize";
 import db from "../config/db.js";
-import { Lote, Especie, EspecieCatalogo, Tipo, Compra, Comprador } from "../models/index.js";
+import { Lote, Especie, EspecieCatalogo, Tipo, Compra, Comprador, ListaItem } from "../models/index.js";
 import { mensajesError, mensajeBD, aMensaje, aError } from "../helpers/utiles.js";
 import { leerListado, consultarListado, combinarWhere } from "../helpers/listado.js";
 import { condicionBusqueda } from "../helpers/busqueda.js";
@@ -201,7 +201,10 @@ const actualizar = async (req, res) => {
 const eliminar = async (req, res) => {
   try {
     const lote = await exigirLoteNoVendido(req.params.id);
-    await lote.destroy();
+    await db.transaction(async (transaction) => {
+      await lote.destroy({ transaction });
+      await ListaItem.destroy({ where: { tipo: "lote", id_ref: lote.id_lte }, transaction });
+    });
     res.redirect(`/lotes?${aMensaje("Lote eliminado")}`);
   } catch (e) {
     if (e instanceof LoteVendidoError) return responderErrorLote(res, e, { volver: `/lotes/${req.params.id}` });
