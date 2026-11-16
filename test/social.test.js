@@ -1,6 +1,6 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
-import { arrancar, cliente, modelos } from './ayuda.js';
+import { arrancar, cliente, modelos, db } from './ayuda.js';
 import { nombrePublico } from '../helpers/tienda.js';
 import { rutaReferer } from '../helpers/navegacion.js';
 
@@ -118,6 +118,36 @@ test('una especie desactivada permanece en Favoritos y se marca como no disponib
     await ListaItem.count({ where: { id_lista: favoritos.id_lista, tipo: 'especie', id_ref: catalogo.id_cat } }),
     1,
   );
+});
+
+test('el detalle de lista mantiene constante el número de consultas con uno o veinte elementos', async () => {
+  const a = await comprador('consultas_lista');
+  const tipo = await Tipo.findOne({ where: { nombre: 'Pescado' } });
+  const catalogos = await Promise.all(
+    Array.from({ length: 20 }, (_, i) =>
+      EspecieCatalogo.create({ nombre: `Consulta${Date.now()}${i}`, id_tpo: tipo.id_tpo, activo: true }),
+    ),
+  );
+  const una = await Lista.create({ id_usuario: a.u.id, nombre: 'Una especie' });
+  const veinte = await Lista.create({ id_usuario: a.u.id, nombre: 'Veinte especies' });
+  await ListaItem.create({ id_lista: una.id_lista, tipo: 'especie', id_ref: catalogos[0].id_cat });
+  await ListaItem.bulkCreate(
+    catalogos.map((catalogo) => ({ id_lista: veinte.id_lista, tipo: 'especie', id_ref: catalogo.id_cat })),
+  );
+
+  const contarConsultas = async (id) => {
+    const consultas = [];
+    const loggingAnterior = db.options.logging;
+    db.options.logging = (sql) => consultas.push(sql);
+    try {
+      assert.equal((await a.web.get(`/cuenta/listas/${id}`)).status, 200);
+    } finally {
+      db.options.logging = loggingAnterior;
+    }
+    return consultas.filter((sql) => /^\s*(SELECT|WITH)\b/i.test(sql)).length;
+  };
+
+  assert.equal(await contarConsultas(una.id_lista), await contarConsultas(veinte.id_lista));
 });
 
 test('favoritos alternan por comprador, persisten en la tienda y las listas JSON son privadas', async () => {
