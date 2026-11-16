@@ -174,8 +174,18 @@ const eliminar = async (req, res) => {
   if (Number(req.params.id) === req.usuario.id) return res.redirect(`/usuarios?${aMensaje("No puedes eliminar tu propio usuario")}`);
   const us = await Usuario.findByPk(req.params.id);
   if (us) {
-    await borrarFoto(us);
-    await us.destroy();
+    const pedidos = await Pedido.count({ where: { id_usuario: us.id } });
+    if (pedidos) return res.redirect(`/usuarios?${aMensaje("Este usuario tiene pedidos; desactívalo en su lugar")}`);
+    try {
+      await us.destroy();
+    } catch (e) {
+      // Un pedido concurrente puede aparecer después del conteo. La FK sigue siendo la última barrera.
+      if (e.name === "SequelizeForeignKeyConstraintError") {
+        return res.redirect(`/usuarios?${aMensaje("Este usuario tiene pedidos; desactívalo en su lugar")}`);
+      }
+      throw e;
+    }
+    try { await borrarFoto(us); } catch (e) { console.warn("No se pudo borrar la foto del usuario eliminado:", e.message); }
   }
   res.redirect(`/usuarios?${aMensaje("Usuario eliminado")}`);
 };

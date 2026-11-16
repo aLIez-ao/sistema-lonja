@@ -37,3 +37,16 @@ test("usuarios separa trabajadores y clientes con búsquedas y páginas independ
   const capt = cliente(srv.base); await capt.entrar(capturista.usuario, "Captura1234");
   assert.equal((await capt.get("/usuarios")).status, 403);
 });
+
+test("no permite borrar una cuenta que conserva pedidos", async () => {
+  const admin = cliente(srv.base); await admin.entrar("admin", "AdminPrueba123");
+  const comprador = await Comprador.create({ nombre: "Cliente", apellido_paterno: "ConPedidos", correo: "conpedidos@example.com" });
+  const usuario = await Usuario.create({ usuario: "clienteconpedidos", nombre_completo: "Cliente Con Pedidos", correo: "conpedidos@example.com", password: "Cliente1234", rol: "comprador", codigo_cpr: comprador.codigo_cpr });
+  await Pedido.create({ id_usuario: usuario.id, codigo_cpr: comprador.codigo_cpr, estado: "cancelado", entrega: "recoger", subtotal: 10, costo_envio: 0, total: 10 });
+
+  const cookie = [...admin.cookies].map(([k, v]) => `${k}=${v}`).join("; ");
+  const respuesta = await fetch(`${srv.base}/usuarios/${usuario.id}`, { method: "DELETE", redirect: "manual", headers: { cookie } });
+  assert.equal(respuesta.status, 302);
+  assert.match(decodeURIComponent(respuesta.headers.get("location")), /tiene pedidos; desactívalo en su lugar/);
+  assert.ok(await Usuario.findByPk(usuario.id));
+});
