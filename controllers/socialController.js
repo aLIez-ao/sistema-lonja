@@ -34,26 +34,46 @@ export function protegerAccionComprador(req, res, next) {
 export async function listas(req, res) {
   let favoritas = await Lista.findOne({ where: { id_usuario: req.usuario.id, nombre: "Favoritos" } });
   if (!favoritas) favoritas = await Lista.create({ id_usuario: req.usuario.id, nombre: "Favoritos" });
-  const filas = await Lista.findAll({ where: { id_usuario: req.usuario.id }, order: [["nombre", "ASC"]] });
-  const listas = await Promise.all(filas.map(async (l) => {
-    const items = await ListaItem.findAll({ where: { id_lista: l.id_lista }, order: [["fecha", "DESC"]] });
-    const vistaPrevia = await Promise.all(items.slice(0, 3).map(async (i) => {
-      const elemento = await elementoValido(i.tipo, i.id_ref);
-      if (!elemento) return null;
+  const filas = await Lista.findAll({
+    where: { id_usuario: req.usuario.id },
+    include: [{ model: ListaItem, as: "items", attributes: ["tipo", "id_ref", "fecha"] }],
+    order: [["nombre", "ASC"], [{ model: ListaItem, as: "items" }, "fecha", "DESC"]],
+  });
+  const items = filas.flatMap((lista) => lista.items || []);
+  const idsLotes = items.filter((item) => item.tipo === "lote").map((item) => item.id_ref);
+  const idsEspecies = items.filter((item) => item.tipo === "especie").map((item) => item.id_ref);
+  const [lotes, especies] = await Promise.all([
+    idsLotes.length ? Lote.findAll({ where: { id_lte: { [Op.in]: idsLotes } }, include: [{ model: Especie, as: "especies", include: [{ model: Tipo, as: "tipo" }] }] }) : [],
+    idsEspecies.length ? EspecieCatalogo.findAll({ where: { id_cat: { [Op.in]: idsEspecies } } }) : [],
+  ]);
+  const elementos = new Map([
+    ...lotes.map((lote) => [`lote:${lote.id_lte}`, lote]),
+    ...especies.map((especie) => [`especie:${especie.id_cat}`, especie]),
+  ]);
+  const listas = filas.map((lista) => {
+    const listaItems = lista.items || [];
+    const vistaPrevia = listaItems.slice(0, 3).flatMap((item) => {
+      const elemento = elementos.get(`${item.tipo}:${item.id_ref}`);
+      if (!elemento) return [];
       const plain = typeof elemento.get === "function" ? elemento.get({ plain: true }) : elemento;
-      return { tipo: i.tipo, nombre: i.tipo === "lote" ? `Lote #${plain.id_lte}` : plain.nombre, imagen: i.tipo === "lote" ? prepararLote(plain).imagen : (plain.imagen || imagenDeEspecie(plain)) };
-    }));
-    return { ...l.get({ plain: true }), total: items.length, vistaPrevia: vistaPrevia.filter(Boolean) };
-  }));
+      return [{ tipo: item.tipo, nombre: item.tipo === "lote" ? `Lote #${plain.id_lte}` : plain.nombre, imagen: item.tipo === "lote" ? prepararLote(plain).imagen : (plain.imagen || imagenDeEspecie(plain)) }];
+    });
+    return { ...lista.get({ plain: true }), total: listaItems.length, vistaPrevia };
+  });
   res.render("cuenta/listas", { listas });
 }
 export async function listarListasJson(req, res) {
   await listaFavoritos(req.usuario.id);
-  const listas = await Lista.findAll({ where: { id_usuario: req.usuario.id }, order: [["nombre", "ASC"]] });
-  const salida = await Promise.all(listas.map(async (lista) => ({
+  const listas = await Lista.findAll({
+    where: { id_usuario: req.usuario.id },
+    attributes: ["id_lista", "nombre"],
+    include: [{ model: ListaItem, as: "items", attributes: ["tipo", "id_ref"] }],
+    order: [["nombre", "ASC"]],
+  });
+  const salida = listas.map((lista) => ({
     id: lista.id_lista, nombre: lista.nombre,
-    items: (await ListaItem.findAll({ where: { id_lista: lista.id_lista }, attributes: ["tipo", "id_ref"] })).map(({ tipo, id_ref }) => ({ tipo, id_ref })),
-  })));
+    items: (lista.items || []).map(({ tipo, id_ref }) => ({ tipo, id_ref })),
+  }));
   res.json({ listas: salida });
 }
 export async function alternarFavorito(req, res) {
