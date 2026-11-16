@@ -5,10 +5,15 @@ export const inicioSegun = (usuario) => (usuario?.rol === "comprador" ? "/" : "/
 
 /** Solo rutas internas que empiecen con "/" y no con "//" ni "/\". */
 export function rutaVolver(valor) {
-  const ruta = String(valor ?? "").trim();
-  if (!ruta.startsWith("/") || ruta.startsWith("//") || ruta.startsWith("/\\")) return null;
-  if (/^\/\s*\/\s*evil/i.test(ruta)) return null;
-  return ruta;
+  const ruta = String(valor ?? "");
+  if (!ruta.startsWith("/") || /[\\\s\u0000-\u001f\u007f]/.test(ruta)) return null;
+  try {
+    const url = new URL(ruta, "http://lonja.local");
+    if (url.origin !== "http://lonja.local") return null;
+    return `${url.pathname}${url.search}${url.hash}`;
+  } catch {
+    return null;
+  }
 }
 
 /** Destino tras iniciar sesión: la ruta pedida si es segura, o el inicio del rol. */
