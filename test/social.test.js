@@ -66,6 +66,20 @@ test("Favoritos es una lista reservada y los nombres duplicados se muestran como
   assert.equal((await Lista.findByPk(mariscos.id_lista)).nombre, "Mariscos");
 });
 
+test("una especie desactivada permanece en Favoritos y se marca como no disponible", async () => {
+  const a = await comprador("favorito_especie_desactivada");
+  const { catalogo } = await articulo();
+  await a.web.post("/cuenta/favoritos", { tipo: "especie", id_ref: catalogo.id_cat });
+  const favoritos = await Lista.findOne({ where: { id_usuario: a.u.id, nombre: "Favoritos" } });
+
+  await catalogo.update({ activo: false });
+  const respuesta = await a.web.get(`/cuenta/listas/${favoritos.id_lista}`);
+
+  assert.equal(respuesta.status, 200);
+  assert.match(respuesta.texto, new RegExp(`${catalogo.nombre}[\\s\\S]*No disponible · especie desactivada`));
+  assert.equal(await ListaItem.count({ where: { id_lista: favoritos.id_lista, tipo: "especie", id_ref: catalogo.id_cat } }), 1);
+});
+
 test("favoritos alternan por comprador, persisten en la tienda y las listas JSON son privadas", async () => {
   const a = await comprador("favorito_a"), b = await comprador("favorito_b");
   const { lote, catalogo } = await articulo();

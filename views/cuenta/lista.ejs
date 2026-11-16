@@ -8,12 +8,12 @@
   </div>
   <% if (!items.length) { %><p class="text-muted">Esta lista aún no tiene elementos.</p><% } %>
   <div class="row g-3">
-    <% items.forEach(({tipo, elemento, vendido, reservado, disponible}) => { const id = tipo === 'lote' ? elemento.id_lte : elemento.id_cat; %>
+    <% items.forEach(({tipo, elemento, vendido, reservado, disponible, especieDesactivada}) => { const id = tipo === 'lote' ? elemento.id_lte : elemento.id_cat; %>
       <div class="col-md-6"><article class="card h-100 <%= disponible === false && tipo === 'lote' ? 'opacity-50' : '' %>"><div class="row g-0 h-100">
         <div class="col-4"><img src="<%= elemento.imagen %>" alt="" class="w-100 h-100 object-fit-cover rounded-start"></div>
         <div class="col-8"><div class="card-body"><h2 class="h6"><%= tipo === 'lote' ? `Lote #${elemento.id_lte}` : elemento.nombre %></h2>
           <% if (tipo === 'lote') { %><p class="small mb-2"><%= dinero(elemento.precio_kilo_salida) %>/kg · <%= Number(elemento.kilos).toLocaleString('es-MX') %> kg</p><% } %>
-          <% if (vendido || reservado) { %><p class="small text-muted">No disponible<%= vendido ? ' · vendido' : ' · reservado' %></p><% } %>
+          <% if (vendido || reservado || especieDesactivada) { %><p class="small text-muted">No disponible<%= vendido ? ' · vendido' : reservado ? ' · reservado' : ' · especie desactivada' %></p><% } %>
           <div class="d-flex gap-2 flex-wrap">
             <% if (tipo === 'lote' && disponible) { %><form action="/carrito/agregar/<%= elemento.id_lte %>" method="post"><button class="btn btn-sm btn-primary">Agregar al carrito</button></form><% } %>
             <form action="/cuenta/listas/<%= lista.id_lista %>/items?_method=DELETE" method="post"><input type="hidden" name="tipo" value="<%= tipo %>"><input type="hidden" name="id_ref" value="<%= id %>"><button class="btn btn-sm btn-outline-secondary">Quitar</button></form>

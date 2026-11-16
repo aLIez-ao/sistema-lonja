@@ -134,7 +134,14 @@ export async function detalleLista(req, res) {
     const loteState = i.tipo === "lote" ? disponibilidad.get(Number(i.id_ref)) : null;
     const plain = typeof elemento.get === "function" ? elemento.get({ plain: true }) : elemento;
     const vista = i.tipo === "lote" ? prepararLote(plain) : { ...plain, imagen: plain.imagen || imagenDeEspecie(plain) };
-    return { tipo: i.tipo, elemento: vista, vendido: i.tipo === "lote" && (Boolean(plain.compra) || loteState?.motivo === "vendido"), reservado: i.tipo === "lote" && ["reservado", "reservado_propio"].includes(loteState?.motivo), disponible: i.tipo === "lote" && !loteState?.motivo };
+    return {
+      tipo: i.tipo,
+      elemento: vista,
+      vendido: i.tipo === "lote" && (Boolean(plain.compra) || loteState?.motivo === "vendido"),
+      reservado: i.tipo === "lote" && ["reservado", "reservado_propio"].includes(loteState?.motivo),
+      disponible: i.tipo === "lote" && !loteState?.motivo,
+      especieDesactivada: i.tipo === "especie" && !plain.activo,
+    };
   });
   res.render("cuenta/lista", { lista, items: datos.filter(Boolean) });
 }
