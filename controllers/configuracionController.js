@@ -10,6 +10,7 @@ import { JWTGenera, opcionesCookieSesion, crearTokenBajaAvisos } from "../helper
 import { aMensaje, ErrorImagen } from "../helpers/utiles.js";
 import { compradorDe, compradorPorCorreo } from "../helpers/comprador.js";
 import { encolarTrabajo } from "../helpers/colaTrabajos.js";
+import { registro } from "../helpers/registro.js";
 import { prefValida } from "../middleware/preferencias.js";
 import { CATEGORIAS, COOKIE_DE_PREF, aplicarConsentimiento, guardarCookiePreferencia } from "../helpers/cookies.js";
 import { correoValido, telefonoValido } from "../helpers/validacion.js";
@@ -241,7 +242,7 @@ export const enviarAvisoClientes = async (req, res) => {
     const enviados = resultados.filter(({ resultado }) => resultado.ok).length;
     const simulados = resultados.filter(({ resultado }) => resultado.simulado).length;
     const fallidos = resultados.length - enviados - simulados;
-    console.info("Aviso masivo completado:", { destinatarios: resultados.length, enviados, simulados, fallidos });
+    registro.info("Aviso masivo completado", { destinatarios: resultados.length, enviados, simulados, fallidos });
   });
   if (!encolado) return res.redirect(`/configuracion?${aError("La cola de correo está llena. Inténtalo de nuevo más tarde.")}#pane-avisos`);
   res.redirect(`/configuracion?${aMensaje(`Aviso en cola para ${compradores.length} suscriptores.`)}#pane-avisos`);

@@ -1,3 +1,5 @@
+import { registro } from "./registro.js";
+
 const MAX_PENDIENTES = 500;
 const cola = [];
 const esperas = [];
@@ -14,8 +16,15 @@ function iniciar() {
   setImmediate(async () => {
     while (cola.length) {
       const trabajo = cola.shift();
-      try { await trabajo.ejecutar(); }
-      catch (error) { console.warn(`Falló el trabajo en segundo plano (${trabajo.nombre}):`, error.message); }
+      try {
+        const resultado = await trabajo.ejecutar();
+        if (resultado?.ok === false) registro.error("El trabajo en segundo plano informó un fallo", {
+          trabajo: trabajo.nombre,
+          error: resultado.error || resultado.mensaje || "El envío no fue confirmado",
+        });
+      } catch (error) {
+        registro.error("Falló el trabajo en segundo plano", { trabajo: trabajo.nombre, error });
+      }
     }
     procesando = false;
     resolverEsperas();
