@@ -37,7 +37,7 @@
           <td><%= e.id_epe %></td>
           <td>
             <% if (e.imagen) { %>
-              <img src="<%= e.imagen %>" alt="<%= e.nombre %>" height="38" class="rounded border" onerror="this.style.display='none'">
+              <img src="<%= e.imagen %>" alt="<%= e.nombre %>" height="38" class="rounded border" data-ocultar-si-falla>
             <% } else { %>
               <span class="text-muted">—</span>
             <% } %>

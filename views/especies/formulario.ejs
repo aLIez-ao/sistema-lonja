@@ -61,7 +61,7 @@
               <input class="tarjeta-control" type="radio" name="id_cat" value="<%= c.id_cat %>" <%= marcada ? 'checked' : '' %> required>
               <span class="tarjeta-imagen">
                 <% if (c.imagen) { %>
-                  <img src="<%= c.imagen %>" alt="" onerror="this.style.display='none'">
+                  <img src="<%= c.imagen %>" alt="" data-ocultar-si-falla>
                 <% } else { %>
                   <span class="sin-imagen" aria-hidden="true">🐟</span>
                 <% } %>

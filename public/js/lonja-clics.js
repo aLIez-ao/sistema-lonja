@@ -484,4 +484,8 @@
     ev.preventDefault();
     window.print();
   });
+
+  document.addEventListener('error', (ev) => {
+    if (ev.target.matches('img[data-ocultar-si-falla]')) ev.target.style.display = 'none';
+  }, true);
 })();

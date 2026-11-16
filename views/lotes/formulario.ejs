@@ -58,7 +58,7 @@
               <input class="tarjeta-control" type="checkbox" name="especies" value="<%= esp.id_cat %>" <%= marcada ? 'checked' : '' %>>
               <span class="tarjeta-imagen">
                 <% if (esp.imagen) { %>
-                  <img src="<%= esp.imagen %>" alt="" onerror="this.style.display='none'">
+                  <img src="<%= esp.imagen %>" alt="" data-ocultar-si-falla>
                 <% } else { %>
                   <span class="sin-imagen" aria-hidden="true">🐟</span>
                 <% } %>
