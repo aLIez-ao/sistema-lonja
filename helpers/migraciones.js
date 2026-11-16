@@ -1,6 +1,6 @@
 import db from '../config/db.js';
 import { DataTypes, col, fn, where as sqlWhere } from 'sequelize';
-import { Especie, EspecieCatalogo } from '../models/index.js';
+import { Especie, EspecieCatalogo, Migracion } from '../models/index.js';
 
 // Columnas agregadas a "usuario" después de la primera versión. Con BD_SYNC=safe, sync() no
 // altera tablas existentes, así que aquí se crean las que falten.
@@ -113,8 +113,8 @@ export async function rellenarCatalogoEspecies() {
   return { creados, asignados };
 }
 
-/** Crea/ajusta columnas de tablas existentes. Idempotente: puede ejecutarse en cada arranque. */
-export async function asegurarEsquema() {
+/** Primera migración: actualiza el esquema histórico y consolida el catálogo. */
+async function migrarEsquemaActual() {
   for (const [nombre, definicion] of Object.entries(COLUMNAS_USUARIO)) {
     await asegurarColumna('usuario', nombre, definicion);
   }
@@ -142,4 +142,16 @@ export async function asegurarEsquema() {
   });
 
   await rellenarCatalogoEspecies();
+}
+
+const migraciones = [{ id: '001_esquema_actual', up: migrarEsquemaActual }];
+
+/** Ejecuta una vez cada migración pendiente y registra su versión aplicada. */
+export async function asegurarEsquema() {
+  for (const migracion of migraciones) {
+    if (await Migracion.findByPk(migracion.id)) continue;
+    await migracion.up();
+    await Migracion.create({ id: migracion.id, aplicado_en: new Date() });
+    console.log(`Migración aplicada: ${migracion.id}`);
+  }
 }

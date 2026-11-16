@@ -2,9 +2,9 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { arrancar, cliente, modelos } from './ayuda.js';
-import { rellenarCatalogoEspecies } from '../helpers/migraciones.js';
+import { asegurarEsquema, rellenarCatalogoEspecies } from '../helpers/migraciones.js';
 
-const { Lote, Especie, EspecieCatalogo } = modelos;
+const { Lote, Especie, EspecieCatalogo, Migracion } = modelos;
 let srv, admin;
 
 before(async () => {
@@ -38,6 +38,8 @@ test('la migración crea el catálogo desde las especies existentes y es idempot
   assert.equal(huachi.imagen, '/img/Huachinango.webp');
   assert.equal(await Especie.count({ where: { id_cat: huachi.id_cat } }), 2);
   assert.equal(await Especie.count({ where: { id_cat: null } }), 0);
+  await asegurarEsquema();
+  assert.equal(await Migracion.count({ where: { id: '001_esquema_actual' } }), 1);
 });
 
 test('el catálogo se lista, se busca y rechaza nombres duplicados sin distinguir mayúsculas', async () => {
