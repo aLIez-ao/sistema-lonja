@@ -4,6 +4,7 @@
 import fs from "fs/promises";
 import path from "path";
 import crypto from "crypto";
+import { ErrorImagen } from "./utiles.js";
 
 const FIRMAS = [
   { ext: "jpg", mime: "image/jpeg", ok: (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff },
@@ -28,11 +29,11 @@ export async function guardarImagenDataURL(dataUrl, {
   maxBytes = 300 * 1024,
 } = {}) {
   const m = /^data:(image\/(?:jpeg|png|webp));base64,([A-Za-z0-9+/=]+)$/.exec(String(dataUrl || ""));
-  if (!m) throw new Error("La imagen debe ser un archivo JPG, PNG o WebP");
+  if (!m) throw new ErrorImagen("La imagen debe ser un archivo JPG, PNG o WebP");
   const datos = Buffer.from(m[2], "base64");
-  if (datos.length > maxBytes) throw new Error("La imagen es demasiado grande");
+  if (datos.length > maxBytes) throw new ErrorImagen("La imagen es demasiado grande");
   const formato = FIRMAS.find((f) => f.mime === m[1] && f.ok(datos));
-  if (!formato) throw new Error("El archivo no es una imagen válida");
+  if (!formato) throw new ErrorImagen("El archivo no es una imagen válida");
 
   await fs.mkdir(dir, { recursive: true });
   const nombre = `${prefijo}-${crypto.randomBytes(6).toString("hex")}.${formato.ext}`;

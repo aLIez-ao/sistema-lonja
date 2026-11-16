@@ -7,7 +7,7 @@ import { enviarVerificacionCorreo, limiteVerificacion, segundosEsperaVerificacio
 import { prepararFoto } from "../helpers/avatar.js";
 import { problemasPassword } from "../helpers/seguridad.js";
 import { JWTGenera, opcionesCookieSesion, crearTokenBajaAvisos } from "../helpers/tokens.js";
-import { aMensaje } from "../helpers/utiles.js";
+import { aMensaje, ErrorImagen } from "../helpers/utiles.js";
 import { compradorDe, compradorPorCorreo } from "../helpers/comprador.js";
 import { prefValida } from "../middleware/preferencias.js";
 import { CATEGORIAS, COOKIE_DE_PREF, aplicarConsentimiento, guardarCookiePreferencia } from "../helpers/cookies.js";
@@ -147,8 +147,7 @@ export const actualizarCuenta = async (req, res) => {
       try { await fotoPreparada?.revertir(); } catch (error) { console.warn("No se pudo limpiar la foto preparada:", error.message); }
     }
     console.error("No se pudo actualizar la cuenta:", err);
-    const errorImagen = /^(?:La imagen debe ser un archivo JPG, PNG o WebP|La imagen es demasiado grande|El archivo no es una imagen válida)$/.test(String(err?.message || ""));
-    res.redirect(`/configuracion?${aError(errorImagen ? err.message : "No se pudieron guardar los datos. Revisa la información e inténtalo de nuevo.")}#pane-cuenta`);
+    res.redirect(`/configuracion?${aError(err instanceof ErrorImagen ? err.message : "No se pudieron guardar los datos. Revisa la información e inténtalo de nuevo.")}#pane-cuenta`);
   }
 };
 

@@ -1,7 +1,7 @@
 import { Op } from "sequelize";
 import db from "../config/db.js";
 import { CarritoItem, Pedido, PedidoItem, Usuario, Comprador, DireccionEntrega, Lote, Especie, Tipo, Compra } from "../models/index.js";
-import { aMensaje, mensajeBD } from "../helpers/utiles.js";
+import { aMensaje, mensajeBD, ErrorDeUsuario } from "../helpers/utiles.js";
 import { redondea } from "../helpers/fechas.js";
 import { generarFacturaPDF } from "../helpers/facturaPdf.js";
 import { datosFactura } from "../helpers/factura.js";
@@ -77,13 +77,13 @@ export const crear = async (req, res) => {
     const pedido = await db.transaction(async (transaction) => {
       await liberarPedidosVencidos(new Date(), transaction);
       const carrito = await obtenerCarrito(usuario.id, transaction);
-      if (!carrito.length) throw Object.assign(new Error("Tu carrito está vacío"), { status: 400 });
+      if (!carrito.length) throw new ErrorDeUsuario("Tu carrito está vacío");
 
       const direcciones = await DireccionEntrega.findAll({ where: { id_usuario: usuario.id }, transaction, lock: transaction.LOCK?.UPDATE });
       let direccion = null;
       if (entrega === "domicilio") {
         direccion = direcciones.find((d) => String(d.id_dir) === String(req.body.id_dir));
-        if (!direccion) throw Object.assign(new Error("Selecciona una dirección de entrega tuya"), { status: 400 });
+        if (!direccion) throw new ErrorDeUsuario("Selecciona una dirección de entrega tuya");
       }
 
       const lotes = [];
@@ -94,9 +94,9 @@ export const crear = async (req, res) => {
           const texto = comprobacion?.motivo === "reservado" || comprobacion?.motivo === "reservado_propio"
             ? `El lote #${fila.id_lte} ya está reservado.`
             : `El lote #${fila.id_lte} ya no está disponible.`;
-          throw Object.assign(new Error(texto), { status: 409 });
+          throw new ErrorDeUsuario(texto, 409);
         }
-        if (!fila.lote) throw Object.assign(new Error(`El lote #${fila.id_lte} ya no existe.`), { status: 409 });
+        if (!fila.lote) throw new ErrorDeUsuario(`El lote #${fila.id_lte} ya no existe.`, 409);
         lotes.push(fila.lote);
       }
 
@@ -129,8 +129,8 @@ export const crear = async (req, res) => {
     });
     return res.redirect(`/pedido/${pedido.id_ped}/pago`);
   } catch (error) {
-    if (!error.status) console.error("No se pudo crear el pedido:", mensajeBD(error));
-    return res.redirect(`/pedido/nuevo?error=${encodeURIComponent(error.status ? error.message : "No se pudo crear el pedido. Revisa el carrito e inténtalo otra vez.")}&entrega=${encodeURIComponent(entrega)}`);
+    if (!(error instanceof ErrorDeUsuario)) console.error("No se pudo crear el pedido:", mensajeBD(error));
+    return res.redirect(`/pedido/nuevo?error=${encodeURIComponent(error instanceof ErrorDeUsuario ? error.message : "No se pudo crear el pedido. Revisa el carrito e inténtalo otra vez.")}&entrega=${encodeURIComponent(entrega)}`);
   }
 };
 
