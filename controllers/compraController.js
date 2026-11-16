@@ -1,7 +1,7 @@
 import { body } from "express-validator";
 import { Op, col } from "sequelize";
 import { Compra, Lote, Comprador, Especie, Tipo } from "../models/index.js";
-import { mensajesError, mensajeBD, aMensaje } from "../helpers/utiles.js";
+import { mensajesError, mensajeBD, aMensaje, aError } from "../helpers/utiles.js";
 import { redondea } from "../helpers/fechas.js";
 import { generarFacturaPDF } from "../helpers/facturaPdf.js";
 import { datosFactura } from "../helpers/factura.js";
@@ -271,7 +271,10 @@ const enviarFacturaPorCorreo = async (req, res) => {
       folio: compra.id_cmp,
     });
 
-    if (resultado.ok || resultado.simulado) {
+    if (resultado.simulado) {
+      return res.redirect(`/compras/${compra.id_cmp}/factura?${aError("El correo está en modo simulación; la factura no se envió.")}`);
+    }
+    if (resultado.ok) {
       return res.redirect(`/compras/${compra.id_cmp}/factura?${aMensaje(`Factura enviada exitosamente a ${compra.comprador.correo}`)}`);
     } else {
       return res.redirect(`/compras/${compra.id_cmp}/factura?error=${encodeURIComponent("Error al enviar correo: " + (resultado.error || "Desconocido"))}`);

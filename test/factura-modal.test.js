@@ -70,3 +70,10 @@ test("una compra inexistente redirige al listado", async () => {
   assert.equal(r.status, 302);
   assert.equal(r.loc, "/compras");
 });
+
+test("el modo simulador no anuncia como enviado un correo de factura", async () => {
+  const r = await c.post(`/compras/${compra.id_cmp}/enviar-correo`);
+  assert.equal(r.status, 302);
+  assert.match(decodeURIComponent(r.loc), /modo simulación; la factura no se envió/);
+  assert.doesNotMatch(decodeURIComponent(r.loc), /enviada exitosamente/);
+});
