@@ -1,49 +1,75 @@
 // Estadísticas del tablero de inicio.
-import { Op } from "sequelize";
-import { Compra, Lote, Comprador, Especie, Tipo, Pedido, Pregunta, Opinion } from "../models/index.js";
-import { hoy, rangoDelDia, redondea, formatoFecha, formatoHora, NOMBRES_MESES } from "./fechas.js";
-import { ESTADO_PEDIDO } from "../models/Pedido.js";
+import { Op } from 'sequelize';
+import { Compra, Lote, Comprador, Especie, Tipo, Pedido, Pregunta, Opinion } from '../models/index.js';
+import { hoy, rangoDelDia, redondea, formatoFecha, formatoHora, NOMBRES_MESES } from './fechas.js';
+import { ESTADO_PEDIDO } from '../models/Pedido.js';
 
 const DIA = 24 * 60 * 60 * 1000;
-const claveDia = (d) => new Intl.DateTimeFormat("en-CA", { timeZone: process.env.APP_TZ || "America/Mexico_City" }).format(new Date(d));
+const claveDia = (d) =>
+  new Intl.DateTimeFormat('en-CA', { timeZone: process.env.APP_TZ || 'America/Mexico_City' }).format(new Date(d));
 
 const sumar = (compras) => {
   const kilos = compras.reduce((s, c) => s + Number(c.lote.kilos), 0);
   const total = compras.reduce((s, c) => s + Number(c.precio_total), 0);
-  return { compras: compras.length, kilos: redondea(kilos), total: redondea(total), precioMedio: kilos ? redondea(total / kilos) : 0 };
+  return {
+    compras: compras.length,
+    kilos: redondea(kilos),
+    total: redondea(total),
+    precioMedio: kilos ? redondea(total / kilos) : 0,
+  };
 };
 
 /** Variación porcentual respecto a un valor anterior; null si no hay con qué comparar. */
 const variacion = (actual, anterior) => (anterior > 0 ? redondea(((actual - anterior) / anterior) * 100) : null);
 
 const top = (mapa, campo, n = 5) =>
-  [...mapa.entries()].map(([nombre, v]) => ({ nombre, ...v, [campo]: redondea(v[campo]) })).sort((a, b) => b[campo] - a[campo]).slice(0, n);
+  [...mapa.entries()]
+    .map(([nombre, v]) => ({ nombre, ...v, [campo]: redondea(v[campo]) }))
+    .sort((a, b) => b[campo] - a[campo])
+    .slice(0, n);
 
 export async function estadisticasInicio() {
   const fechaHoy = hoy();
   const { inicio: inicioHoy, fin: finHoy } = rangoDelDia(fechaHoy);
-  const [anio, mes] = fechaHoy.split("-").map(Number);
+  const [anio, mes] = fechaHoy.split('-').map(Number);
   const inicioMes = rangoDelDia(`${fechaHoy.slice(0, 8)}01`).inicio;
-  const mesAnterior = mes === 1 ? `${anio - 1}-12-01` : `${anio}-${String(mes - 1).padStart(2, "0")}-01`;
+  const mesAnterior = mes === 1 ? `${anio - 1}-12-01` : `${anio}-${String(mes - 1).padStart(2, '0')}-01`;
   const inicioMesAnterior = rangoDelDia(mesAnterior).inicio;
   const inicio30 = new Date(inicioHoy.getTime() - 29 * DIA);
   const desde = new Date(Math.min(inicioMesAnterior.getTime(), inicio30.getTime()));
 
-  const [compras, totalLotes, lotesVendidos, compradores, especies, pedidosAtender, preguntasSinResponder, opinionesNuevas, comprasTienda, comprasMostrador] = await Promise.all([
+  const [
+    compras,
+    totalLotes,
+    lotesVendidos,
+    compradores,
+    especies,
+    pedidosAtender,
+    preguntasSinResponder,
+    opinionesNuevas,
+    comprasTienda,
+    comprasMostrador,
+  ] = await Promise.all([
     Compra.findAll({
       where: { fecha: { [Op.gte]: desde, [Op.lt]: finHoy } },
-      order: [["fecha", "DESC"]],
+      order: [['fecha', 'DESC']],
       include: [
-        { model: Comprador, as: "comprador" },
-        { model: Lote, as: "lote", include: [{ model: Especie, as: "especies", include: [{ model: Tipo, as: "tipo" }] }] },
+        { model: Comprador, as: 'comprador' },
+        {
+          model: Lote,
+          as: 'lote',
+          include: [{ model: Especie, as: 'especies', include: [{ model: Tipo, as: 'tipo' }] }],
+        },
       ],
     }),
     Lote.count(),
     Compra.count(),
     Comprador.count(),
-    Especie.count({ distinct: true, col: "nombre" }),
-    Pedido.count({ where: { estado: { [Op.in]: [ESTADO_PEDIDO.PAGADO, ESTADO_PEDIDO.PREPARANDO, ESTADO_PEDIDO.ENVIADO] } } }),
-    Pregunta.count({ where: { estado: "pendiente" } }),
+    Especie.count({ distinct: true, col: 'nombre' }),
+    Pedido.count({
+      where: { estado: { [Op.in]: [ESTADO_PEDIDO.PAGADO, ESTADO_PEDIDO.PREPARANDO, ESTADO_PEDIDO.ENVIADO] } },
+    }),
+    Pregunta.count({ where: { estado: 'pendiente' } }),
     Opinion.count({ where: { fecha: { [Op.gte]: new Date(Date.now() - 7 * DIA) } } }),
     Compra.count({ where: { id_ped: { [Op.ne]: null } } }),
     Compra.count({ where: { id_ped: null } }),
@@ -76,7 +102,10 @@ export async function estadisticasInicio() {
       porEspecie.set(nombre, acc);
     }
     const salida = Number(c.lote.precio_kilo_salida);
-    if (salida > 0) { sobreprecio += (Number(c.precio_kilo_final) - salida) / salida; conSalida += 1; }
+    if (salida > 0) {
+      sobreprecio += (Number(c.precio_kilo_final) - salida) / salida;
+      conSalida += 1;
+    }
   }
   for (const c of comprasMes) {
     const nombre = `${c.comprador.nombre} ${c.comprador.apellido_paterno}`;
@@ -85,8 +114,8 @@ export async function estadisticasInicio() {
     porComprador.set(nombre, acc);
   }
 
-  const topEspecies = top(porEspecie, "kilos");
-  const topCompradores = top(porComprador, "total");
+  const topEspecies = top(porEspecie, 'kilos');
+  const topCompradores = top(porComprador, 'total');
   const disponibles = Math.max(0, totalLotes - lotesVendidos);
 
   return {
@@ -95,7 +124,12 @@ export async function estadisticasInicio() {
     hoy: { ...deHoy, variacionImporte: variacion(deHoy.total, deAyer.total) },
     mes: { ...delMes, variacionImporte: variacion(delMes.total, delMesAnterior.total), anterior: delMesAnterior.total },
     sobreprecioMedio: conSalida ? redondea((sobreprecio / conSalida) * 100) : null,
-    lotes: { total: totalLotes, vendidos: lotesVendidos, disponibles, porcentajeVendido: totalLotes ? Math.round((lotesVendidos / totalLotes) * 100) : 0 },
+    lotes: {
+      total: totalLotes,
+      vendidos: lotesVendidos,
+      disponibles,
+      porcentajeVendido: totalLotes ? Math.round((lotesVendidos / totalLotes) * 100) : 0,
+    },
     catalogo: { compradores, especies },
     pendientes: { pedidos: pedidosAtender, preguntas: preguntasSinResponder, opiniones: opinionesNuevas },
     ventas: { tienda: comprasTienda, mostrador: comprasMostrador, total: comprasTienda + comprasMostrador },
@@ -103,7 +137,7 @@ export async function estadisticasInicio() {
       id: c.id_cmp,
       fecha: formatoFecha(c.fecha),
       hora: formatoHora(c.fecha),
-      especies: c.lote.especies.map((e) => e.nombre).join(", ") || "—",
+      especies: c.lote.especies.map((e) => e.nombre).join(', ') || '—',
       comprador: `${c.comprador.nombre} ${c.comprador.apellido_paterno}`,
       codigo_cpr: c.comprador.codigo_cpr,
       kilos: Number(c.lote.kilos),

@@ -1,17 +1,17 @@
 // Tienda pública: portada, detalle de lote, ficha de especie y sugerencias.
 // Solo se consultan lotes sin compra y especies activas; ningún dato de
 // compradores (nombres, correos o montos) sale por estas rutas.
-import { Op, fn, col, literal, where as sqlWhere } from "sequelize";
-import db from "../config/db.js";
-import { Lote, Especie, EspecieCatalogo, Tipo, Compra } from "../models/index.js";
-import { leerListado, consultarListado, combinarWhere } from "../helpers/listado.js";
-import { filtroEntero, filtroNumero } from "../helpers/filtros.js";
-import { textoBusqueda } from "../helpers/busqueda.js";
-import { rangoDelDia, hoy, dinero } from "../helpers/fechas.js";
-import { crearLimite } from "../helpers/seguridad.js";
-import { prepararLote, imagenDeEspecie, precioMinimo } from "../helpers/tienda.js";
-import { reservasActivas } from "../helpers/pedidos.js";
-import { ponerOpinionesEnFicha, preguntasPublicas } from "./socialController.js";
+import { Op, fn, col, literal, where as sqlWhere } from 'sequelize';
+import db from '../config/db.js';
+import { Lote, Especie, EspecieCatalogo, Tipo, Compra } from '../models/index.js';
+import { leerListado, consultarListado, combinarWhere } from '../helpers/listado.js';
+import { filtroEntero, filtroNumero } from '../helpers/filtros.js';
+import { textoBusqueda } from '../helpers/busqueda.js';
+import { rangoDelDia, hoy, dinero } from '../helpers/fechas.js';
+import { crearLimite } from '../helpers/seguridad.js';
+import { prepararLote, imagenDeEspecie, precioMinimo } from '../helpers/tienda.js';
+import { reservasActivas } from '../helpers/pedidos.js';
+import { ponerOpinionesEnFicha, preguntasPublicas } from './socialController.js';
 
 // 30 sugerencias por minuto y por IP (se reinicia en las pruebas).
 export const limiteSugerencias = crearLimite({ max: 30, ventanaMs: 60 * 1000 });
@@ -19,30 +19,35 @@ export const limiteSugerencias = crearLimite({ max: 30, ventanaMs: 60 * 1000 });
 const INCLUDE_ESPECIES = [
   {
     model: Especie,
-    as: "especies",
+    as: 'especies',
     include: [
-      { model: Tipo, as: "tipo" },
-      { model: EspecieCatalogo, as: "catalogo", attributes: ["id_cat", "descripcion", "imagen"] },
+      { model: Tipo, as: 'tipo' },
+      { model: EspecieCatalogo, as: 'catalogo', attributes: ['id_cat', 'descripcion', 'imagen'] },
     ],
   },
 ];
 
 /** Lote sin compra registrada. */
 const sinCompra = () =>
-  sqlWhere(literal("NOT EXISTS (SELECT 1 FROM compra WHERE compra.id_cmp = `Lote`.`id_lte`)"), {
+  sqlWhere(literal('NOT EXISTS (SELECT 1 FROM compra WHERE compra.id_cmp = `Lote`.`id_lte`)'), {
     [Op.eq]: true,
   });
 
 /** Lote que tiene al menos una especie capturada. */
 const conEspecies = () =>
-  sqlWhere(literal("EXISTS (SELECT 1 FROM especie WHERE especie.id_lte = `Lote`.`id_lte`)"), {
+  sqlWhere(literal('EXISTS (SELECT 1 FROM especie WHERE especie.id_lte = `Lote`.`id_lte`)'), {
     [Op.eq]: true,
   });
 
 const noReservado = (ahora = new Date()) =>
-  sqlWhere(literal(`NOT EXISTS (SELECT 1 FROM pedido_item pi INNER JOIN pedido p ON p.id_ped = pi.id_ped WHERE pi.id_lte = \`Lote\`.\`id_lte\` AND p.estado = 'pendiente_pago' AND p.reservado_hasta > ${db.escape(ahora)})`), {
-    [Op.eq]: true,
-  });
+  sqlWhere(
+    literal(
+      `NOT EXISTS (SELECT 1 FROM pedido_item pi INNER JOIN pedido p ON p.id_ped = pi.id_ped WHERE pi.id_lte = \`Lote\`.\`id_lte\` AND p.estado = 'pendiente_pago' AND p.reservado_hasta > ${db.escape(ahora)})`,
+    ),
+    {
+      [Op.eq]: true,
+    },
+  );
 
 const disponible = () => combinarWhere(sinCompra(), conEspecies(), noReservado());
 
@@ -50,10 +55,10 @@ const disponible = () => combinarWhere(sinCompra(), conEspecies(), noReservado()
 export async function limitesDisponibles() {
   const fila = await Lote.findOne({
     attributes: [
-      [fn("MIN", col("precio_kilo_salida")), "precioMin"],
-      [fn("MAX", col("precio_kilo_salida")), "precioMax"],
-      [fn("MIN", col("kilos")), "kilosMin"],
-      [fn("MAX", col("kilos")), "kilosMax"],
+      [fn('MIN', col('precio_kilo_salida')), 'precioMin'],
+      [fn('MAX', col('precio_kilo_salida')), 'precioMax'],
+      [fn('MIN', col('kilos')), 'kilosMin'],
+      [fn('MAX', col('kilos')), 'kilosMax'],
     ],
     where: disponible(),
     raw: true,
@@ -79,12 +84,18 @@ function normalizarFiltrosTienda(l, limites) {
   const limitar = (valor, minimo, maximo) => Math.min(maximo, Math.max(minimo, Number(valor)));
   if (!limites.hayLotes) return;
 
-  let minimo = l.filtros.precioMin === undefined ? limites.precioMin : limitar(l.filtros.precioMin, limites.precioMin, limites.precioMax);
-  let maximo = l.filtros.precioMax === undefined ? limites.precioMax : limitar(l.filtros.precioMax, limites.precioMin, limites.precioMax);
+  let minimo =
+    l.filtros.precioMin === undefined
+      ? limites.precioMin
+      : limitar(l.filtros.precioMin, limites.precioMin, limites.precioMax);
+  let maximo =
+    l.filtros.precioMax === undefined
+      ? limites.precioMax
+      : limitar(l.filtros.precioMax, limites.precioMin, limites.precioMax);
   if (minimo > maximo) [minimo, maximo] = [maximo, minimo];
   const filtros = { precioMin: minimo, precioMax: maximo };
   for (const [clave, valor] of Object.entries(filtros)) {
-    const extremo = clave === "precioMin" ? limites.precioMin : limites.precioMax;
+    const extremo = clave === 'precioMin' ? limites.precioMin : limites.precioMax;
     if (valor === extremo) {
       delete l.filtros[clave];
       delete l.params[clave];
@@ -107,7 +118,7 @@ function normalizarFiltrosTienda(l, limites) {
 }
 
 /** Lotes disponibles con sus especies, ordenados y limitados. */
-async function lotesDisponibles(where = {}, order = [["fecha", "DESC"]], limit = 8, hoyInicio = null) {
+async function lotesDisponibles(where = {}, order = [['fecha', 'DESC']], limit = 8, hoyInicio = null) {
   const filas = await Lote.findAll({
     where: combinarWhere(disponible(), where),
     include: INCLUDE_ESPECIES,
@@ -121,7 +132,7 @@ async function lotesDisponibles(where = {}, order = [["fecha", "DESC"]], limit =
 
 /** Ids de lotes que tienen alguna especie con la condición indicada. */
 async function idsDeLotesConEspecie(where) {
-  const filas = await Especie.findAll({ attributes: ["id_lte"], where, raw: true });
+  const filas = await Especie.findAll({ attributes: ['id_lte'], where, raw: true });
   return [...new Set(filas.map((f) => f.id_lte))];
 }
 
@@ -129,7 +140,7 @@ async function idsDeLotesConEspecie(where) {
 async function condicionBusquedaPublica(q) {
   if (!q) return {};
   const ids = await idsDeLotesConEspecie(
-    sqlWhere(fn("INSTR", fn("LOWER", col("nombre")), q.toLowerCase()), { [Op.gt]: 0 }),
+    sqlWhere(fn('INSTR', fn('LOWER', col('nombre')), q.toLowerCase()), { [Op.gt]: 0 }),
   );
   const numero = Number(q);
   if (Number.isInteger(numero) && numero > 0) ids.push(numero);
@@ -162,10 +173,10 @@ async function whereDeFiltros(l) {
 }
 
 const ORDEN_PORTADA = {
-  nuevos: "fecha",
-  precio: "precio_kilo_salida",
-  total: literal("(kilos * precio_kilo_salida)"),
-  kilos: "kilos",
+  nuevos: 'fecha',
+  precio: 'precio_kilo_salida',
+  total: literal('(kilos * precio_kilo_salida)'),
+  kilos: 'kilos',
 };
 
 /** GET / — portada pública de la tienda. */
@@ -175,7 +186,7 @@ export const portada = async (req, res) => {
     porPagina: [24],
     tamDefecto: 24,
     orden: ORDEN_PORTADA,
-    ordenDefecto: { campo: "nuevos", dir: "desc" },
+    ordenDefecto: { campo: 'nuevos', dir: 'desc' },
     filtros: {
       tipo: filtroEntero,
       especie: filtroEntero,
@@ -191,7 +202,7 @@ export const portada = async (req, res) => {
   const where = await whereDeFiltros(l);
   await consultarListado(l, {
     modelo: Lote,
-    pk: "id_lte",
+    pk: 'id_lte',
     include: INCLUDE_ESPECIES,
     includeOrden: [],
     where,
@@ -202,22 +213,25 @@ export const portada = async (req, res) => {
   l.filas = l.filas.map((f) => prepararLote(f, { hoyInicio: inicioHoy, minPrecio: min }));
 
   const [recien, baratos, grandes, pequenos, tipos, catalogo, totalDisponibles, conteosTipo] = await Promise.all([
-    lotesDisponibles({ fecha: { [Op.gte]: inicioHoy } }, [["fecha", "DESC"]], 8, inicioHoy),
-    lotesDisponibles({}, [["precio_kilo_salida", "ASC"]], 8, inicioHoy),
-    lotesDisponibles({}, [["kilos", "DESC"]], 8, inicioHoy),
-    lotesDisponibles({}, [["kilos", "ASC"]], 8, inicioHoy),
-    Tipo.findAll({ order: [["id_tpo", "ASC"]] }),
+    lotesDisponibles({ fecha: { [Op.gte]: inicioHoy } }, [['fecha', 'DESC']], 8, inicioHoy),
+    lotesDisponibles({}, [['precio_kilo_salida', 'ASC']], 8, inicioHoy),
+    lotesDisponibles({}, [['kilos', 'DESC']], 8, inicioHoy),
+    lotesDisponibles({}, [['kilos', 'ASC']], 8, inicioHoy),
+    Tipo.findAll({ order: [['id_tpo', 'ASC']] }),
     EspecieCatalogo.findAll({
       where: { activo: true },
-      attributes: ["id_cat", "nombre"],
-      order: [["nombre", "ASC"]],
+      attributes: ['id_cat', 'nombre'],
+      order: [['nombre', 'ASC']],
     }),
     Lote.count({ where: disponible() }),
     Lote.findAll({
-      attributes: [[col("especies.id_tpo"), "id_tpo"], [fn("COUNT", fn("DISTINCT", col("Lote.id_lte"))), "total"]],
+      attributes: [
+        [col('especies.id_tpo'), 'id_tpo'],
+        [fn('COUNT', fn('DISTINCT', col('Lote.id_lte'))), 'total'],
+      ],
       where: disponible(),
-      include: [{ model: Especie, as: "especies", attributes: [], required: true }],
-      group: [col("especies.id_tpo")],
+      include: [{ model: Especie, as: 'especies', attributes: [], required: true }],
+      group: [col('especies.id_tpo')],
       raw: true,
     }),
   ]);
@@ -239,7 +253,7 @@ export const portada = async (req, res) => {
     })
     .slice(0, 4);
 
-  res.render("tienda/index", {
+  res.render('tienda/index', {
     l,
     categorias,
     catalogo,
@@ -264,25 +278,25 @@ export const detalleLote = async (req, res) => {
         include: [
           ...INCLUDE_ESPECIES,
           // Sin include de Comprador: la tienda nunca lee datos del comprador.
-          { model: Compra, as: "compra", attributes: ["id_cmp"] },
+          { model: Compra, as: 'compra', attributes: ['id_cmp'] },
         ],
       })
     : null;
 
   if (!lote) {
-    return res.status(404).render("error", {
+    return res.status(404).render('error', {
       codigo: 404,
-      mensaje: "Este lote no existe o ya no está disponible.",
-      accion: { texto: "Volver a la tienda", url: "/" },
+      mensaje: 'Este lote no existe o ya no está disponible.',
+      accion: { texto: 'Volver a la tienda', url: '/' },
     });
   }
 
   const reserva = (await reservasActivas()).get(Number(lote.id_lte));
   if (reserva && reserva.id_usuario !== req.usuario?.id) {
-    return res.status(404).render("error", {
+    return res.status(404).render('error', {
       codigo: 404,
-      mensaje: "Este lote está reservado temporalmente y no está disponible.",
-      accion: { texto: "Volver a la tienda", url: "/" },
+      mensaje: 'Este lote está reservado temporalmente y no está disponible.',
+      accion: { texto: 'Volver a la tienda', url: '/' },
     });
   }
 
@@ -294,13 +308,16 @@ export const detalleLote = async (req, res) => {
   let parecidos = [];
   if (plano.vendido) {
     const nombres = plano.especies.map((e) => e.nombre);
-    const ids = nombres.length
-      ? await idsDeLotesConEspecie({ nombre: { [Op.in]: nombres } })
-      : [];
-    parecidos = (await lotesDisponibles({ id_lte: { [Op.in]: ids.filter((x) => x !== plano.id_lte) } }, [["fecha", "DESC"]], 4, hoyInicio));
+    const ids = nombres.length ? await idsDeLotesConEspecie({ nombre: { [Op.in]: nombres } }) : [];
+    parecidos = await lotesDisponibles(
+      { id_lte: { [Op.in]: ids.filter((x) => x !== plano.id_lte) } },
+      [['fecha', 'DESC']],
+      4,
+      hoyInicio,
+    );
   }
 
-  res.render("tienda/lote", { lote: plano, parecidos, preguntas: await preguntasPublicas({ id_lte: plano.id_lte }) });
+  res.render('tienda/lote', { lote: plano, parecidos, preguntas: await preguntasPublicas({ id_lte: plano.id_lte }) });
 };
 
 /** GET /tienda/especie/:id — ficha pública de una especie del catálogo. */
@@ -308,46 +325,41 @@ export const fichaEspecie = async (req, res) => {
   const id = filtroEntero(req.params.id);
   const catalogo = id
     ? await EspecieCatalogo.findByPk(id, {
-        include: [{ model: Tipo, as: "tipo" }],
+        include: [{ model: Tipo, as: 'tipo' }],
       })
     : null;
   if (!catalogo) {
-    return res.status(404).render("error", {
+    return res.status(404).render('error', {
       codigo: 404,
-      mensaje: "No encontramos esa especie.",
-      accion: { texto: "Volver a la tienda", url: "/" },
+      mensaje: 'No encontramos esa especie.',
+      accion: { texto: 'Volver a la tienda', url: '/' },
     });
   }
 
   const nombre = catalogo.nombre;
   const tipo = catalogo.tipo;
-  const descripcion = catalogo.descripcion || "";
+  const descripcion = catalogo.descripcion || '';
   const imagen = catalogo.imagen || imagenDeEspecie({ nombre, tipo });
   const ids = await idsDeLotesConEspecie({ id_cat: catalogo.id_cat });
   const hoyInicio = rangoDelDia(hoy()).inicio;
-  const lotes = await lotesDisponibles(
-    { id_lte: { [Op.in]: ids } },
-    [["fecha", "DESC"]],
-    24,
-    hoyInicio,
-  );
+  const lotes = await lotesDisponibles({ id_lte: { [Op.in]: ids } }, [['fecha', 'DESC']], 24, hoyInicio);
 
   // Una especie retirada del catálogo solo conserva página pública mientras
   // tenga lotes activos disponibles para consultar.
   if (!catalogo.activo && lotes.length === 0) {
-    return res.status(404).render("error", {
+    return res.status(404).render('error', {
       codigo: 404,
-      mensaje: "No encontramos esa especie.",
-      accion: { texto: "Volver a la tienda", url: "/" },
+      mensaje: 'No encontramos esa especie.',
+      accion: { texto: 'Volver a la tienda', url: '/' },
     });
   }
 
-  const social = await ponerOpinionesEnFicha(catalogo.id_cat, req.usuario?.rol === "comprador" ? req.usuario.id : null);
-  res.render("tienda/especie", {
+  const social = await ponerOpinionesEnFicha(catalogo.id_cat, req.usuario?.rol === 'comprador' ? req.usuario.id : null);
+  res.render('tienda/especie', {
     especie: {
       id: catalogo.id_cat,
       nombre,
-      tipo: tipo?.nombre || "",
+      tipo: tipo?.nombre || '',
       descripcion,
       imagen,
     },
@@ -359,7 +371,7 @@ export const fichaEspecie = async (req, res) => {
 /** GET /tienda/sugerencias?q=… — sugerencias públicas del buscador. */
 export const sugerencias = async (req, res) => {
   if (limiteSugerencias.bloqueado(req.ip)) {
-    return res.status(429).json({ error: "Demasiadas sugerencias. Espera un momento." });
+    return res.status(429).json({ error: 'Demasiadas sugerencias. Espera un momento.' });
   }
   limiteSugerencias.fallo(req.ip);
 
@@ -370,7 +382,7 @@ export const sugerencias = async (req, res) => {
   const filas = await Lote.findAll({
     where,
     include: INCLUDE_ESPECIES,
-    order: [["fecha", "DESC"]],
+    order: [['fecha', 'DESC']],
     limit: 8,
   });
 
@@ -379,8 +391,8 @@ export const sugerencias = async (req, res) => {
       const lote = prepararLote(l);
       return {
         id: lote.id_lte,
-        titulo: `Lote #${lote.id_lte}${lote.nombresEspecies ? ` · ${lote.nombresEspecies}` : ""}`,
-        subtitulo: `${lote.tipos.join(", ") || "Lote"} · ${Number(lote.kilos).toFixed(2)} kg · ${dinero(lote.precio_kilo_salida)}/kg`,
+        titulo: `Lote #${lote.id_lte}${lote.nombresEspecies ? ` · ${lote.nombresEspecies}` : ''}`,
+        subtitulo: `${lote.tipos.join(', ') || 'Lote'} · ${Number(lote.kilos).toFixed(2)} kg · ${dinero(lote.precio_kilo_salida)}/kg`,
         url: `/tienda/lote/${lote.id_lte}`,
       };
     }),

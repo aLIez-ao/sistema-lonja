@@ -1,23 +1,23 @@
 // Reglas compartidas de lotes: un lote vendido no se modifica por ninguna vía,
 // y sus especies son una copia del catálogo al momento de capturarlas.
-import { Compra, Especie, EspecieCatalogo, Lote } from "../models/index.js";
+import { Compra, Especie, EspecieCatalogo, Lote } from '../models/index.js';
 
 export class LoteNoEncontradoError extends Error {
   constructor() {
-    super("No se encontró el lote");
+    super('No se encontró el lote');
     this.codigo = 404;
   }
 }
 
 export class LoteVendidoError extends Error {
   constructor() {
-    super("El lote ya fue vendido y no puede modificarse");
+    super('El lote ya fue vendido y no puede modificarse');
     this.codigo = 409;
   }
 }
 
 export class EspeciesInvalidasError extends Error {
-  constructor(mensaje = "Selecciona al menos una especie activa del catálogo") {
+  constructor(mensaje = 'Selecciona al menos una especie activa del catálogo') {
     super(mensaje);
     this.codigo = 400;
   }
@@ -26,7 +26,7 @@ export class EspeciesInvalidasError extends Error {
 /** Carga el lote y lanza LoteVendidoError si ya tiene compra. */
 export async function exigirLoteNoVendido(id, { transaction } = {}) {
   const lote = await Lote.findByPk(id, {
-    include: [{ model: Compra, as: "compra" }],
+    include: [{ model: Compra, as: 'compra' }],
     transaction,
   });
   if (!lote) throw new LoteNoEncontradoError();
@@ -38,7 +38,7 @@ export const estaVendido = async (id) => Boolean(await Compra.findOne({ where: {
 
 /** Normaliza el campo "especies" (array, valor único o lista separada por comas). */
 export function idsEspecies(valor) {
-  const lista = Array.isArray(valor) ? valor : String(valor ?? "").split(",");
+  const lista = Array.isArray(valor) ? valor : String(valor ?? '').split(',');
   return [...new Set(lista.map((v) => String(v).trim()).filter(Boolean))];
 }
 
@@ -52,10 +52,10 @@ export async function sincronizarEspecies(idLte, idsCat, transaction) {
 
   const catalogo = await EspecieCatalogo.findAll({
     where: { id_cat: idsCat },
-    include: [{ association: "tipo" }],
+    include: [{ association: 'tipo' }],
     transaction,
   });
-  if (catalogo.length !== idsCat.length) throw new EspeciesInvalidasError("Alguna especie ya no existe en el catálogo");
+  if (catalogo.length !== idsCat.length) throw new EspeciesInvalidasError('Alguna especie ya no existe en el catálogo');
   const inactivas = catalogo.filter((c) => !c.activo);
   if (inactivas.length) throw new EspeciesInvalidasError(`La especie "${inactivas[0].nombre}" está desactivada`);
 
@@ -87,9 +87,9 @@ export async function sincronizarEspecies(idLte, idsCat, transaction) {
 export function responderErrorLote(res, error, { volver } = {}) {
   const mensaje = error instanceof Error ? error.message : String(error);
   const codigo = error?.codigo || 400;
-  if (res.req?.accepts(["html", "json"]) === "json") {
+  if (res.req?.accepts(['html', 'json']) === 'json') {
     return res.status(codigo).json({ ok: false, error: mensaje });
   }
-  const destino = volver || "/lotes";
+  const destino = volver || '/lotes';
   return res.redirect(`${destino}?${new URLSearchParams({ error: mensaje })}`);
 }

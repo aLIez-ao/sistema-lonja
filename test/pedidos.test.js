@@ -1,11 +1,23 @@
 // Fase 4: carrito, reserva, entrega y pago simulado.
-import { test, before, after } from "node:test";
-import assert from "node:assert/strict";
-import { arrancar, cliente, modelos } from "./ayuda.js";
-import { fijarTransporteParaPruebas } from "../helpers/email.js";
-import { esperarColaTrabajos } from "../helpers/colaTrabajos.js";
+import { test, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { arrancar, cliente, modelos } from './ayuda.js';
+import { fijarTransporteParaPruebas } from '../helpers/email.js';
+import { esperarColaTrabajos } from '../helpers/colaTrabajos.js';
 
-const { Usuario, Comprador, Tipo, Lote, Especie, EspecieCatalogo, DireccionEntrega, CarritoItem, Pedido, PedidoItem, Compra } = modelos;
+const {
+  Usuario,
+  Comprador,
+  Tipo,
+  Lote,
+  Especie,
+  EspecieCatalogo,
+  DireccionEntrega,
+  CarritoItem,
+  Pedido,
+  PedidoItem,
+  Compra,
+} = modelos;
 let srv;
 const medios = [];
 
@@ -13,23 +25,43 @@ before(async () => {
   srv = await arrancar();
   fijarTransporteParaPruebas({
     async verify() {},
-    async sendMail(opciones) { medios.push(opciones); return { messageId: `pedido-prueba-${medios.length}` }; },
+    async sendMail(opciones) {
+      medios.push(opciones);
+      return { messageId: `pedido-prueba-${medios.length}` };
+    },
   });
 });
-after(async () => { fijarTransporteParaPruebas(null); await srv.cerrar(); });
+after(async () => {
+  fijarTransporteParaPruebas(null);
+  await srv.cerrar();
+});
 
 async function comprador(correo) {
-  const datos = correo.split("@")[0].replace(/[^a-z0-9]/gi, "").slice(0, 30);
-  const cpr = await Comprador.create({ nombre: "Ana", apellido_paterno: "Prueba", correo });
-  const us = await Usuario.create({ usuario: datos, nombre_completo: "Ana Prueba", correo, password: "Clave1234", rol: "comprador", codigo_cpr: cpr.codigo_cpr, email_verificado: true });
+  const datos = correo
+    .split('@')[0]
+    .replace(/[^a-z0-9]/gi, '')
+    .slice(0, 30);
+  const cpr = await Comprador.create({ nombre: 'Ana', apellido_paterno: 'Prueba', correo });
+  const us = await Usuario.create({
+    usuario: datos,
+    nombre_completo: 'Ana Prueba',
+    correo,
+    password: 'Clave1234',
+    rol: 'comprador',
+    codigo_cpr: cpr.codigo_cpr,
+    email_verificado: true,
+  });
   const web = cliente(srv.base);
-  assert.equal((await web.entrar(us.usuario, "Clave1234")).status, 302);
+  assert.equal((await web.entrar(us.usuario, 'Clave1234')).status, 302);
   return { cpr, us, web };
 }
 
-async function lote({ nombre = "Pargo", kilos = 10, precio = 100 } = {}) {
-  const tipo = await Tipo.findOne({ where: { nombre: "Pescado" } });
-  const [catalogo] = await EspecieCatalogo.findOrCreate({ where: { nombre }, defaults: { nombre, id_tpo: tipo.id_tpo, descripcion: "Especie de prueba", activo: true } });
+async function lote({ nombre = 'Pargo', kilos = 10, precio = 100 } = {}) {
+  const tipo = await Tipo.findOne({ where: { nombre: 'Pescado' } });
+  const [catalogo] = await EspecieCatalogo.findOrCreate({
+    where: { nombre },
+    defaults: { nombre, id_tpo: tipo.id_tpo, descripcion: 'Especie de prueba', activo: true },
+  });
   const l = await Lote.create({ kilos, numero_cajas: 2, precio_kilo_salida: precio });
   await Especie.create({ nombre, id_lte: l.id_lte, id_tpo: tipo.id_tpo, id_cat: catalogo.id_cat });
   return l;
@@ -39,251 +71,321 @@ async function agregar(web, id) {
   return web.postJSON(`/carrito/agregar/${id}`, {});
 }
 
-test("carrito persistente por comprador y reserva al crear pedido", async () => {
-  const a = await comprador("carrito.a@example.com");
-  const b = await comprador("carrito.b@example.com");
+test('carrito persistente por comprador y reserva al crear pedido', async () => {
+  const a = await comprador('carrito.a@example.com');
+  const b = await comprador('carrito.b@example.com');
   const l = await lote();
   const agregado = await agregar(a.web, l.id_lte);
   assert.equal(agregado.status, 200);
-  assert.deepEqual(JSON.parse(agregado.texto), { ok: true, mensaje: `Lote #${l.id_lte} agregado al carrito.`, cantidad: 1 });
-  assert.equal((await b.web.get("/carrito")).texto.includes("Pargo"), false, "el carrito de cada cuenta es privado");
+  assert.deepEqual(JSON.parse(agregado.texto), {
+    ok: true,
+    mensaje: `Lote #${l.id_lte} agregado al carrito.`,
+    cantidad: 1,
+  });
+  assert.equal((await b.web.get('/carrito')).texto.includes('Pargo'), false, 'el carrito de cada cuenta es privado');
 
-  const creado = await a.web.post("/pedido", { entrega: "recoger", id_dir: "9999", subtotal: "0.01", total: "0.01" });
+  const creado = await a.web.post('/pedido', { entrega: 'recoger', id_dir: '9999', subtotal: '0.01', total: '0.01' });
   assert.equal(creado.status, 302);
   assert.match(creado.loc, /^\/pedido\/\d+\/pago$/);
   const id = Number(/\/pedido\/(\d+)\/pago/.exec(creado.loc)[1]);
   const p = await Pedido.findByPk(id);
-  assert.equal(p.estado, "pendiente_pago");
-  assert.equal(Number(p.subtotal), 1000, "usa kilos y precio de la base, ignora el total del formulario");
+  assert.equal(p.estado, 'pendiente_pago');
+  assert.equal(Number(p.subtotal), 1000, 'usa kilos y precio de la base, ignora el total del formulario');
   assert.equal(Number(p.total), 1000);
   assert.ok(new Date(p.reservado_hasta) > new Date());
   assert.equal(await CarritoItem.count({ where: { id_usuario: a.us.id } }), 0);
   assert.equal((await b.web.postJSON(`/carrito/agregar/${l.id_lte}`, {})).status, 409);
-  assert.equal((await cliente(srv.base).get(`/tienda/lote/${l.id_lte}`)).status, 404, "el lote reservado no se publica a terceros");
-  assert.equal((await b.web.get(`/pedido/${id}/pago`)).status, 404, "otro comprador no puede ver el pago");
+  assert.equal(
+    (await cliente(srv.base).get(`/tienda/lote/${l.id_lte}`)).status,
+    404,
+    'el lote reservado no se publica a terceros',
+  );
+  assert.equal((await b.web.get(`/pedido/${id}/pago`)).status, 404, 'otro comprador no puede ver el pago');
 });
 
-test("checkout a domicilio copia la dirección y calcula envío en el servidor", async () => {
-  const a = await comprador("domicilio@example.com");
-  const l = await lote({ nombre: "Robalo", kilos: 5, precio: 200 });
+test('checkout a domicilio copia la dirección y calcula envío en el servidor', async () => {
+  const a = await comprador('domicilio@example.com');
+  const l = await lote({ nombre: 'Robalo', kilos: 5, precio: 200 });
   const d = await DireccionEntrega.create({
-    id_usuario: a.us.id, alias: "Casa", destinatario: "Ana Prueba", telefono: "2291234567",
-    calle: "Av. Mar", num_ext: "10", colonia: "Centro", cp: "91700", municipio: "Veracruz", estado: "Veracruz", principal: true,
+    id_usuario: a.us.id,
+    alias: 'Casa',
+    destinatario: 'Ana Prueba',
+    telefono: '2291234567',
+    calle: 'Av. Mar',
+    num_ext: '10',
+    colonia: 'Centro',
+    cp: '91700',
+    municipio: 'Veracruz',
+    estado: 'Veracruz',
+    principal: true,
   });
   await agregar(a.web, l.id_lte);
-  const respuesta = await a.web.post("/pedido", { entrega: "domicilio", id_dir: d.id_dir, costo_envio: 0, total: 1 });
+  const respuesta = await a.web.post('/pedido', { entrega: 'domicilio', id_dir: d.id_dir, costo_envio: 0, total: 1 });
   const id = Number(/\/pedido\/(\d+)\/pago/.exec(respuesta.loc)[1]);
   const p = await Pedido.findByPk(id);
-  assert.equal(p.entrega, "domicilio");
+  assert.equal(p.entrega, 'domicilio');
   assert.equal(p.id_dir, d.id_dir);
-  assert.equal(p.dir_destinatario, "Ana Prueba");
+  assert.equal(p.dir_destinatario, 'Ana Prueba');
   assert.match(p.dir_texto, /Av\. Mar 10, Centro/);
   assert.equal(Number(p.subtotal), 1000);
   assert.equal(Number(p.costo_envio), 150);
   assert.equal(Number(p.total), 1150);
-  await d.update({ calle: "Calle cambiada" });
-  assert.match((await Pedido.findByPk(id)).dir_texto, /Av\. Mar/, "el snapshot del pedido no cambia al editar la dirección");
+  await d.update({ calle: 'Calle cambiada' });
+  assert.match(
+    (await Pedido.findByPk(id)).dir_texto,
+    /Av\. Mar/,
+    'el snapshot del pedido no cambia al editar la dirección',
+  );
 });
 
-test("pago rechazado no vende; aprobado crea compras, factura y es idempotente", async () => {
+test('pago rechazado no vende; aprobado crea compras, factura y es idempotente', async () => {
   medios.length = 0;
-  const a = await comprador("pago@example.com");
-  const l = await lote({ nombre: "Cazón", kilos: 12.5, precio: 80 });
+  const a = await comprador('pago@example.com');
+  const l = await lote({ nombre: 'Cazón', kilos: 12.5, precio: 80 });
   await agregar(a.web, l.id_lte);
-  const checkout = await a.web.post("/pedido", { entrega: "recoger" });
+  const checkout = await a.web.post('/pedido', { entrega: 'recoger' });
   const id = Number(/\/pedido\/(\d+)\/pago/.exec(checkout.loc)[1]);
   const pagoUrl = `/pedido/${id}/pagar`;
 
   for (let intento = 0; intento < 4; intento += 1) {
-    const rechazado = await a.web.post(pagoUrl, { numero: "4000000000000002", mes: "12", anio: "2030", cvv: "123" });
+    const rechazado = await a.web.post(pagoUrl, { numero: '4000000000000002', mes: '12', anio: '2030', cvv: '123' });
     assert.equal(rechazado.status, 302);
     assert.match(decodeURIComponent(rechazado.loc), /Tarjeta rechazada/);
   }
   assert.equal(await Compra.count({ where: { id_cmp: l.id_lte } }), 0);
-  assert.equal((await Pedido.findByPk(id)).estado, "pendiente_pago");
+  assert.equal((await Pedido.findByPk(id)).estado, 'pendiente_pago');
 
-  const aprobado = await a.web.post(pagoUrl, { numero: "4242424242424242", mes: "12", anio: "2030", cvv: "123" });
+  const aprobado = await a.web.post(pagoUrl, { numero: '4242424242424242', mes: '12', anio: '2030', cvv: '123' });
   assert.equal(aprobado.status, 302);
   assert.match(aprobado.loc, new RegExp(`/cuenta/pedidos/${id}`));
   await esperarColaTrabajos();
   const p = await Pedido.findByPk(id);
-  assert.equal(p.estado, "pagado");
-  assert.equal(p.pago_ultimos4, "4242");
+  assert.equal(p.estado, 'pagado');
+  assert.equal(p.pago_ultimos4, '4242');
   assert.match(p.pago_ref, /^SIM-/);
   const compra = await Compra.findOne({ where: { id_cmp: l.id_lte } });
   assert.equal(compra.id_ped, id);
   assert.equal(Number(compra.precio_total), 1000);
   assert.equal(await Compra.count({ where: { id_ped: id } }), 1);
   assert.equal(Number((await PedidoItem.findOne({ where: { id_ped: id } })).precio_kilo), 80);
-  assert.equal(JSON.stringify(p.toJSON()).includes("4242424242424242"), false);
-  assert.equal(JSON.stringify(p.toJSON()).includes("123"), false);
+  assert.equal(JSON.stringify(p.toJSON()).includes('4242424242424242'), false);
+  assert.equal(JSON.stringify(p.toJSON()).includes('123'), false);
   assert.equal(medios.length, 1);
   assert.equal(medios[0].attachments.length, 1);
-  assert.match(medios[0].attachments[0].content.toString("ascii", 0, 5), /^%PDF-/);
+  assert.match(medios[0].attachments[0].content.toString('ascii', 0, 5), /^%PDF-/);
 
-  await a.web.post(pagoUrl, { numero: "4242424242424242", mes: "12", anio: "2030", cvv: "123" });
-  assert.equal(await Compra.count({ where: { id_ped: id } }), 1, "un segundo POST no repite el pago");
+  await a.web.post(pagoUrl, { numero: '4242424242424242', mes: '12', anio: '2030', cvv: '123' });
+  assert.equal(await Compra.count({ where: { id_ped: id } }), 1, 'un segundo POST no repite el pago');
   assert.equal(medios.length, 1);
   assert.equal((await a.web.get(`/cuenta/pedidos/${id}`)).status, 200);
   assert.equal((await a.web.get(`/cuenta/pedidos/${id}/factura/${l.id_lte}`)).status, 200);
-  assert.equal((await a.web.get(`/cuenta/pedidos/${id}/factura/${l.id_lte}.pdf`)).headers.get("content-type"), "application/pdf");
+  assert.equal(
+    (await a.web.get(`/cuenta/pedidos/${id}/factura/${l.id_lte}.pdf`)).headers.get('content-type'),
+    'application/pdf',
+  );
 
-  const b = await comprador("ajeno@example.com");
+  const b = await comprador('ajeno@example.com');
   assert.equal((await b.web.get(`/cuenta/pedidos/${id}`)).status, 404);
   assert.equal((await b.web.get(`/cuenta/pedidos/${id}/factura/${l.id_lte}.pdf`)).status, 404);
 });
 
-test("SPEI se simula y registra la compra real con el total calculado por servidor", async () => {
+test('SPEI se simula y registra la compra real con el total calculado por servidor', async () => {
   medios.length = 0;
-  const a = await comprador("spei@example.com");
-  const l = await lote({ nombre: "SargoSPEI", kilos: 3, precio: 125 });
+  const a = await comprador('spei@example.com');
+  const l = await lote({ nombre: 'SargoSPEI', kilos: 3, precio: 125 });
   await agregar(a.web, l.id_lte);
-  const checkout = await a.web.post("/pedido", { entrega: "recoger" });
+  const checkout = await a.web.post('/pedido', { entrega: 'recoger' });
   const id = Number(/\/pedido\/(\d+)\/pago/.exec(checkout.loc)[1]);
   const pantalla = await a.web.get(`/pedido/${id}/pago`);
   assert.match(pantalla.texto, /000000000000000000/);
   assert.match(pantalla.texto, /PAGO SIMULADO/);
-  await a.web.post(`/pedido/${id}/pagar`, { metodo: "transferencia" });
+  await a.web.post(`/pedido/${id}/pagar`, { metodo: 'transferencia' });
   await esperarColaTrabajos();
   const pedido = await Pedido.findByPk(id);
-  assert.equal(pedido.estado, "pagado"); assert.equal(pedido.pago_metodo, "Simulado SPEI");
-  assert.match(pedido.pago_ref, /^SPEI-/); assert.equal(pedido.pago_ultimos4, null);
+  assert.equal(pedido.estado, 'pagado');
+  assert.equal(pedido.pago_metodo, 'Simulado SPEI');
+  assert.match(pedido.pago_ref, /^SPEI-/);
+  assert.equal(pedido.pago_ultimos4, null);
   assert.equal(Number((await Compra.findOne({ where: { id_cmp: l.id_lte } })).precio_total), 375);
-  assert.equal(medios.length, 1); assert.equal(medios[0].attachments.length, 1);
+  assert.equal(medios.length, 1);
+  assert.equal(medios[0].attachments.length, 1);
 });
 
-test("efectivo conserva reserva hasta cobro del personal y solo aplica a recoger", async () => {
+test('efectivo conserva reserva hasta cobro del personal y solo aplica a recoger', async () => {
   medios.length = 0;
-  const a = await comprador("efectivo@example.com");
-  const l = await lote({ nombre: "LisaEfectivo", kilos: 2, precio: 75 });
+  const a = await comprador('efectivo@example.com');
+  const l = await lote({ nombre: 'LisaEfectivo', kilos: 2, precio: 75 });
   await agregar(a.web, l.id_lte);
-  const checkout = await a.web.post("/pedido", { entrega: "recoger" });
+  const checkout = await a.web.post('/pedido', { entrega: 'recoger' });
   const id = Number(/\/pedido\/(\d+)\/pago/.exec(checkout.loc)[1]);
-  await a.web.post(`/pedido/${id}/pagar`, { metodo: "efectivo" });
+  await a.web.post(`/pedido/${id}/pagar`, { metodo: 'efectivo' });
   let pedido = await Pedido.findByPk(id);
-  assert.equal(pedido.estado, "pendiente_pago"); assert.equal(pedido.pago_metodo, "Efectivo en lonja");
+  assert.equal(pedido.estado, 'pendiente_pago');
+  assert.equal(pedido.pago_metodo, 'Efectivo en lonja');
   assert.ok(new Date(pedido.reservado_hasta).getTime() > Date.now() + 100 * 60_000);
   assert.equal(await Compra.count({ where: { id_cmp: l.id_lte } }), 0);
   assert.match((await a.web.get(`/cuenta/pedidos/${id}`)).texto, /págalo en la lonja/);
-  const admin = cliente(srv.base); await admin.entrar("admin", "AdminPrueba123");
+  const admin = cliente(srv.base);
+  await admin.entrar('admin', 'AdminPrueba123');
   assert.match((await admin.get(`/pedidos/${id}`)).texto, /Confirmar cobro/);
   await admin.post(`/pedidos/${id}/confirmar-cobro`, {});
   await esperarColaTrabajos();
   pedido = await Pedido.findByPk(id);
-  assert.equal(pedido.estado, "pagado"); assert.match(pedido.pago_ref, /^LONJA-/);
+  assert.equal(pedido.estado, 'pagado');
+  assert.match(pedido.pago_ref, /^LONJA-/);
   assert.equal(await Compra.count({ where: { id_ped: id } }), 1);
   assert.equal(medios.length, 1);
   await admin.post(`/pedidos/${id}/confirmar-cobro`, {});
   assert.equal(await Compra.count({ where: { id_ped: id } }), 1);
 
-  const domicilio = await comprador("efectivo.domicilio@example.com");
-  const l2 = await lote({ nombre: "LisaDomicilio", kilos: 1, precio: 80 });
-  const direccion = await DireccionEntrega.create({ id_usuario: domicilio.us.id, alias: "Casa", destinatario: "Ana", telefono: "2291234567", calle: "Mar", num_ext: "1", colonia: "Centro", cp: "91700", municipio: "Veracruz", estado: "Veracruz", principal: true });
+  const domicilio = await comprador('efectivo.domicilio@example.com');
+  const l2 = await lote({ nombre: 'LisaDomicilio', kilos: 1, precio: 80 });
+  const direccion = await DireccionEntrega.create({
+    id_usuario: domicilio.us.id,
+    alias: 'Casa',
+    destinatario: 'Ana',
+    telefono: '2291234567',
+    calle: 'Mar',
+    num_ext: '1',
+    colonia: 'Centro',
+    cp: '91700',
+    municipio: 'Veracruz',
+    estado: 'Veracruz',
+    principal: true,
+  });
   await agregar(domicilio.web, l2.id_lte);
-  const checkout2 = await domicilio.web.post("/pedido", { entrega: "domicilio", id_dir: String(direccion.id_dir) });
+  const checkout2 = await domicilio.web.post('/pedido', { entrega: 'domicilio', id_dir: String(direccion.id_dir) });
   const id2 = Number(/\/pedido\/(\d+)\/pago/.exec(checkout2.loc)[1]);
-  assert.equal((await domicilio.web.post(`/pedido/${id2}/pagar`, { metodo: "efectivo" })).status, 400);
-  assert.equal((await domicilio.web.post(`/pedido/${id2}/pagar`, { metodo: "bitcoin" })).status, 400);
+  assert.equal((await domicilio.web.post(`/pedido/${id2}/pagar`, { metodo: 'efectivo' })).status, 400);
+  assert.equal((await domicilio.web.post(`/pedido/${id2}/pagar`, { metodo: 'bitcoin' })).status, 400);
 });
 
-test("cinco rechazos cancelan el pedido y liberan la reserva", async () => {
-  const a = await comprador("cinco.rechazos@example.com"), b = await comprador("reserva.liberada@example.com");
-  const l = await lote({ nombre: "Raya", kilos: 6, precio: 75 });
-  await agregar(a.web, l.id_lte); await agregar(b.web, l.id_lte);
-  const checkout = await a.web.post("/pedido", { entrega: "recoger" });
+test('cinco rechazos cancelan el pedido y liberan la reserva', async () => {
+  const a = await comprador('cinco.rechazos@example.com'),
+    b = await comprador('reserva.liberada@example.com');
+  const l = await lote({ nombre: 'Raya', kilos: 6, precio: 75 });
+  await agregar(a.web, l.id_lte);
+  await agregar(b.web, l.id_lte);
+  const checkout = await a.web.post('/pedido', { entrega: 'recoger' });
   const id = Number(/\/pedido\/(\d+)\/pago/.exec(checkout.loc)?.[1]);
   assert.ok(id);
   let ultimo;
-  for (let i = 0; i < 5; i += 1) ultimo = await a.web.post(`/pedido/${id}/pagar`, { numero: "4000000000000002", mes: "12", anio: "2030", cvv: "123" });
-  assert.equal((await Pedido.findByPk(id)).estado, "cancelado");
+  for (let i = 0; i < 5; i += 1)
+    ultimo = await a.web.post(`/pedido/${id}/pagar`, {
+      numero: '4000000000000002',
+      mes: '12',
+      anio: '2030',
+      cvv: '123',
+    });
+  assert.equal((await Pedido.findByPk(id)).estado, 'cancelado');
   assert.match(decodeURIComponent(ultimo.loc), /cinco intentos de pago rechazados/);
   assert.equal(await Compra.count({ where: { id_cmp: l.id_lte } }), 0);
   assert.equal((await agregar(b.web, l.id_lte)).status, 200);
   assert.equal((await a.web.get(`/cuenta/pedidos/${id}?error=mensaje`)).status, 200);
 });
 
-test("dos compradores no se cobran el mismo lote: vencimiento, nueva reserva y pago único", async () => {
-  const a = await comprador("carrera.a@example.com"), b = await comprador("carrera.b@example.com");
-  const l = await lote({ nombre: "Sábalo", kilos: 9, precio: 60 });
-  await agregar(a.web, l.id_lte); await agregar(b.web, l.id_lte);
-  const checkoutA = await a.web.post("/pedido", { entrega: "recoger" });
+test('dos compradores no se cobran el mismo lote: vencimiento, nueva reserva y pago único', async () => {
+  const a = await comprador('carrera.a@example.com'),
+    b = await comprador('carrera.b@example.com');
+  const l = await lote({ nombre: 'Sábalo', kilos: 9, precio: 60 });
+  await agregar(a.web, l.id_lte);
+  await agregar(b.web, l.id_lte);
+  const checkoutA = await a.web.post('/pedido', { entrega: 'recoger' });
   const idA = Number(/\/pedido\/(\d+)\/pago/.exec(checkoutA.loc)[1]);
-  const rechazadoB = await b.web.post("/pedido", { entrega: "recoger" });
+  const rechazadoB = await b.web.post('/pedido', { entrega: 'recoger' });
   assert.match(decodeURIComponent(rechazadoB.loc), /reservado/);
   assert.equal(await Pedido.count({ where: { id_usuario: b.us.id } }), 0);
 
   await Pedido.update({ reservado_hasta: new Date(Date.now() - 1000) }, { where: { id_ped: idA } });
-  const checkoutB = await b.web.post("/pedido", { entrega: "recoger" });
+  const checkoutB = await b.web.post('/pedido', { entrega: 'recoger' });
   const idB = Number(/\/pedido\/(\d+)\/pago/.exec(checkoutB.loc)[1]);
-  assert.equal((await Pedido.findByPk(idA)).estado, "expirado");
-  await b.web.post(`/pedido/${idB}/pagar`, { numero: "4242424242424242", mes: "12", anio: "2030", cvv: "123" });
-  const pagoTardioA = await a.web.post(`/pedido/${idA}/pagar`, { numero: "4242424242424242", mes: "12", anio: "2030", cvv: "123" });
+  assert.equal((await Pedido.findByPk(idA)).estado, 'expirado');
+  await b.web.post(`/pedido/${idB}/pagar`, { numero: '4242424242424242', mes: '12', anio: '2030', cvv: '123' });
+  const pagoTardioA = await a.web.post(`/pedido/${idA}/pagar`, {
+    numero: '4242424242424242',
+    mes: '12',
+    anio: '2030',
+    cvv: '123',
+  });
   assert.match(decodeURIComponent(pagoTardioA.loc), /reserva venció/);
   assert.equal(await Compra.count({ where: { id_cmp: l.id_lte } }), 1);
   assert.equal((await Compra.findOne({ where: { id_cmp: l.id_lte } })).id_ped, idB);
 });
 
-test("dos cobros simultáneos del mismo pedido crean una sola compra", async () => {
-  const a = await comprador("mismo.pedido@example.com");
-  const l = await lote({ nombre: "Petaca", kilos: 7, precio: 55 });
+test('dos cobros simultáneos del mismo pedido crean una sola compra', async () => {
+  const a = await comprador('mismo.pedido@example.com');
+  const l = await lote({ nombre: 'Petaca', kilos: 7, precio: 55 });
   await agregar(a.web, l.id_lte);
-  const checkout = await a.web.post("/pedido", { entrega: "recoger" });
+  const checkout = await a.web.post('/pedido', { entrega: 'recoger' });
   const id = Number(/\/pedido\/(\d+)\/pago/.exec(checkout.loc)[1]);
   await Promise.all([
-    a.web.post(`/pedido/${id}/pagar`, { numero: "4242424242424242", mes: "12", anio: "2030", cvv: "123" }),
-    a.web.post(`/pedido/${id}/pagar`, { numero: "4242424242424242", mes: "12", anio: "2030", cvv: "123" }),
+    a.web.post(`/pedido/${id}/pagar`, { numero: '4242424242424242', mes: '12', anio: '2030', cvv: '123' }),
+    a.web.post(`/pedido/${id}/pagar`, { numero: '4242424242424242', mes: '12', anio: '2030', cvv: '123' }),
   ]);
-  assert.equal((await Pedido.findByPk(id)).estado, "pagado");
+  assert.equal((await Pedido.findByPk(id)).estado, 'pagado');
   assert.equal(await Compra.count({ where: { id_ped: id } }), 1);
 });
 
-test("cancelar y expirar pedidos libera los lotes; correo sin verificar no inicia checkout", async () => {
-  const a = await comprador("liberar@example.com");
-  const l = await lote({ nombre: "Sierra", kilos: 4, precio: 50 });
+test('cancelar y expirar pedidos libera los lotes; correo sin verificar no inicia checkout', async () => {
+  const a = await comprador('liberar@example.com');
+  const l = await lote({ nombre: 'Sierra', kilos: 4, precio: 50 });
   await agregar(a.web, l.id_lte);
-  const checkout = await a.web.post("/pedido", { entrega: "recoger" });
+  const checkout = await a.web.post('/pedido', { entrega: 'recoger' });
   const id = Number(/\/pedido\/(\d+)\/pago/.exec(checkout.loc)[1]);
   await a.web.post(`/pedido/${id}/cancelar`, {});
-  assert.equal((await Pedido.findByPk(id)).estado, "cancelado");
-  const b = await comprador("liberar.b@example.com");
+  assert.equal((await Pedido.findByPk(id)).estado, 'cancelado');
+  const b = await comprador('liberar.b@example.com');
   assert.equal((await agregar(b.web, l.id_lte)).status, 200);
 
-  const l2 = await lote({ nombre: "AtunReserva", kilos: 4, precio: 50 });
+  const l2 = await lote({ nombre: 'AtunReserva', kilos: 4, precio: 50 });
   await agregar(b.web, l2.id_lte);
-  const checkout2 = await b.web.post("/pedido", { entrega: "recoger" });
+  const checkout2 = await b.web.post('/pedido', { entrega: 'recoger' });
   const id2 = Number(/\/pedido\/(\d+)\/pago/.exec(checkout2.loc)[1]);
   await Pedido.update({ reservado_hasta: new Date(Date.now() - 1000) }, { where: { id_ped: id2 } });
   const publico = cliente(srv.base);
   const detalleLiberado = await publico.get(`/tienda/lote/${l2.id_lte}`);
   assert.equal(detalleLiberado.status, 200);
-  assert.match(detalleLiberado.texto, /AtunReserva/, "el lote vuelve a su ficha pública tras expirar");
+  assert.match(detalleLiberado.texto, /AtunReserva/, 'el lote vuelve a su ficha pública tras expirar');
   const home = await publico.get(`/?q=AtunReserva`);
-  assert.match(home.texto, /AtunReserva/, "el lote reaparece en la tienda pública tras expirar");
-  const tercero = await comprador("liberar.c@example.com");
+  assert.match(home.texto, /AtunReserva/, 'el lote reaparece en la tienda pública tras expirar');
+  const tercero = await comprador('liberar.c@example.com');
   assert.equal((await tercero.web.postJSON(`/carrito/agregar/${l2.id_lte}`, {})).status, 200);
-  const vencido = await b.web.post(`/pedido/${id2}/pagar`, { numero: "4242424242424242", mes: "12", anio: "2030", cvv: "123" });
+  const vencido = await b.web.post(`/pedido/${id2}/pagar`, {
+    numero: '4242424242424242',
+    mes: '12',
+    anio: '2030',
+    cvv: '123',
+  });
   assert.match(decodeURIComponent(vencido.loc), /reserva venció/);
-  assert.equal((await Pedido.findByPk(id2)).estado, "expirado");
+  assert.equal((await Pedido.findByPk(id2)).estado, 'expirado');
 
-  const sinVerificar = await Usuario.create({ usuario: "sinverificar", nombre_completo: "Pendiente", correo: "sinverificar@example.com", password: "Clave1234", rol: "comprador", email_verificado: false });
-  const sc = cliente(srv.base); await sc.entrar(sinVerificar.usuario, "Clave1234");
-  const no = await sc.get("/pedido/nuevo");
+  const sinVerificar = await Usuario.create({
+    usuario: 'sinverificar',
+    nombre_completo: 'Pendiente',
+    correo: 'sinverificar@example.com',
+    password: 'Clave1234',
+    rol: 'comprador',
+    email_verificado: false,
+  });
+  const sc = cliente(srv.base);
+  await sc.entrar(sinVerificar.usuario, 'Clave1234');
+  const no = await sc.get('/pedido/nuevo');
   assert.equal(no.status, 302);
   assert.match(no.loc, /^\/cuenta\?/);
 });
 
-test("la pantalla de entrega y resumen (/pedido/nuevo) carga con el carrito lleno, vacío y a domicilio", async () => {
-  const a = await comprador("pantalla.nuevo@example.com");
-  const vacio = await a.web.get("/pedido/nuevo");
+test('la pantalla de entrega y resumen (/pedido/nuevo) carga con el carrito lleno, vacío y a domicilio', async () => {
+  const a = await comprador('pantalla.nuevo@example.com');
+  const vacio = await a.web.get('/pedido/nuevo');
   assert.equal(vacio.status, 200);
   assert.match(vacio.texto, /Tu carrito está vacío/);
 
-  const l = await lote({ nombre: "Mojarra", kilos: 8, precio: 70 });
+  const l = await lote({ nombre: 'Mojarra', kilos: 8, precio: 70 });
   await agregar(a.web, l.id_lte);
-  const recoger = await a.web.get("/pedido/nuevo");
-  assert.equal(recoger.status, 200, "no debe fallar con un error interno");
+  const recoger = await a.web.get('/pedido/nuevo');
+  assert.equal(recoger.status, 200, 'no debe fallar con un error interno');
   assert.match(recoger.texto, /Reservar y continuar al pago/);
   assert.match(recoger.texto, /se reservan 15 minutos/);
-  assert.equal((await a.web.get("/pedido/nuevo?entrega=domicilio")).status, 200);
-  assert.equal((await a.web.get("/carrito")).status, 200);
+  assert.equal((await a.web.get('/pedido/nuevo?entrega=domicilio')).status, 200);
+  assert.equal((await a.web.get('/carrito')).status, 200);
 });

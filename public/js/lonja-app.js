@@ -25,7 +25,9 @@ function aplicarPreferencia(clave, valor) {
   const recargar = clave === 'moneda' || clave === 'idioma'; // el servidor vuelve a formatear/traducir
   postJSON('/configuracion/guardar-rapido', { clave, valor })
     .catch(() => {})
-    .finally(() => { if (recargar) location.reload(); });
+    .finally(() => {
+      if (recargar) location.reload();
+    });
 }
 
 // --------------------------------------------------------------------------
@@ -37,7 +39,9 @@ function inicializarBannerCookies() {
 
   const enviar = (datos) =>
     postJSON('/configuracion/cookies', datos)
-      .then((r) => { if (r.ok) banner.remove(); })
+      .then((r) => {
+        if (r.ok) banner.remove();
+      })
       .catch(() => {});
 
   banner.querySelectorAll('[data-cookies-nivel]').forEach((btn) => {
@@ -57,7 +61,9 @@ function inicializarBannerCookies() {
 function inicializarPestanasPorHash() {
   const abrir = () => {
     if (!location.hash || !window.bootstrap) return;
-    const disparador = document.querySelector(`[data-bs-toggle="list"][href="${CSS.escape ? '#' + CSS.escape(location.hash.slice(1)) : location.hash}"]`);
+    const disparador = document.querySelector(
+      `[data-bs-toggle="list"][href="${CSS.escape ? '#' + CSS.escape(location.hash.slice(1)) : location.hash}"]`,
+    );
     if (disparador) bootstrap.Tab.getOrCreateInstance(disparador).show();
   };
   abrir();
@@ -131,7 +137,9 @@ function inicializarCalculadoraCompra() {
     if (precioFinal > 0 && kilos > 0) {
       const total = kilos * precioFinal;
       if (spanTotalCalculado) {
-        spanTotalCalculado.textContent = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(total);
+        spanTotalCalculado.textContent = new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN' }).format(
+          total,
+        );
       }
 
       if (spanDiferencia) {
@@ -220,21 +228,27 @@ function inicializarTablasOrdenables() {
         filas.sort((a, b) => {
           const va = valores.get(a);
           const vb = valores.get(b);
-          const num = (v) => { const n = comoNumero(v); return Number.isNaN(n) ? -Number.MAX_VALUE : n; };
-          const r = numerica
-            ? num(va) - num(vb)
-            : va.localeCompare(vb, 'es', { numeric: true, sensitivity: 'base' });
+          const num = (v) => {
+            const n = comoNumero(v);
+            return Number.isNaN(n) ? -Number.MAX_VALUE : n;
+          };
+          const r = numerica ? num(va) - num(vb) : va.localeCompare(vb, 'es', { numeric: true, sensitivity: 'base' });
           return asc ? r : -r;
         });
 
-        cabeceras.forEach((otro) => { if (otro.hasAttribute('aria-sort')) otro.setAttribute('aria-sort', 'none'); });
+        cabeceras.forEach((otro) => {
+          if (otro.hasAttribute('aria-sort')) otro.setAttribute('aria-sort', 'none');
+        });
         th.setAttribute('aria-sort', asc ? 'ascending' : 'descending');
         filas.forEach((f) => tbody.appendChild(f));
       };
 
       th.addEventListener('click', ordenar);
       th.addEventListener('keydown', (ev) => {
-        if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); ordenar(); }
+        if (ev.key === 'Enter' || ev.key === ' ') {
+          ev.preventDefault();
+          ordenar();
+        }
       });
     });
   });
@@ -251,7 +265,11 @@ function ajustarHojas() {
   });
 }
 window.addEventListener('resize', ajustarHojas);
-window.addEventListener('beforeprint', () => document.querySelectorAll('.hoja-carta').forEach((h) => { h.style.zoom = ''; }));
+window.addEventListener('beforeprint', () =>
+  document.querySelectorAll('.hoja-carta').forEach((h) => {
+    h.style.zoom = '';
+  }),
+);
 window.addEventListener('afterprint', ajustarHojas);
 
 // Compartir declarativo: <button data-compartir data-titulo="..." data-texto="...">
@@ -297,7 +315,9 @@ function inicializarCamposFoto() {
         const lado = Math.min(img.naturalWidth, img.naturalHeight);
         const lienzo = document.createElement('canvas');
         lienzo.width = lienzo.height = 256;
-        lienzo.getContext('2d').drawImage(img, (img.naturalWidth - lado) / 2, (img.naturalHeight - lado) / 2, lado, lado, 0, 0, 256, 256);
+        lienzo
+          .getContext('2d')
+          .drawImage(img, (img.naturalWidth - lado) / 2, (img.naturalHeight - lado) / 2, lado, lado, 0, 0, 256, 256);
         destino.value = lienzo.toDataURL('image/jpeg', 0.85);
         URL.revokeObjectURL(img.src);
         const previa = document.createElement('img');
@@ -308,7 +328,9 @@ function inicializarCamposFoto() {
         const quitar = campo.querySelector('[name="foto_quitar"]');
         if (quitar) quitar.checked = false;
       };
-      img.onerror = () => { archivo.value = ''; };
+      img.onerror = () => {
+        archivo.value = '';
+      };
       img.src = URL.createObjectURL(f);
     });
   });
@@ -354,7 +376,13 @@ function inicializarPasswords() {
   const alternar = () => {
     const manual = document.querySelector('[data-acceso]:checked')?.value === 'manual';
     bloque.classList.toggle('d-none', !manual);
-    bloque.querySelectorAll('input').forEach((i) => { i.required = manual; if (!manual) { i.value = ''; i.setCustomValidity(''); } });
+    bloque.querySelectorAll('input').forEach((i) => {
+      i.required = manual;
+      if (!manual) {
+        i.value = '';
+        i.setCustomValidity('');
+      }
+    });
   };
   if (bloque && opciones.length) {
     opciones.forEach((o) => o.addEventListener('change', alternar));
@@ -363,17 +391,21 @@ function inicializarPasswords() {
 }
 
 // Validación con estilos de Bootstrap: <form novalidate data-validar>
-document.addEventListener('submit', (ev) => {
-  const form = ev.target;
-  if (!form.matches || !form.matches('form[data-validar]')) return;
-  if (!form.checkValidity()) {
-    ev.preventDefault();
-    ev.stopPropagation();
-    const primero = form.querySelector(':invalid');
-    if (primero) primero.focus();
-  }
-  form.classList.add('was-validated');
-}, true);
+document.addEventListener(
+  'submit',
+  (ev) => {
+    const form = ev.target;
+    if (!form.matches || !form.matches('form[data-validar]')) return;
+    if (!form.checkValidity()) {
+      ev.preventDefault();
+      ev.stopPropagation();
+      const primero = form.querySelector(':invalid');
+      if (primero) primero.focus();
+    }
+    form.classList.add('was-validated');
+  },
+  true,
+);
 
 // ==========================================================================
 // BUSCADOR CON SUGERENCIAS (.barra-listado [data-buscador])

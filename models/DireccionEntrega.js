@@ -1,10 +1,10 @@
-import { DataTypes } from "sequelize";
-import db from "../config/db.js";
+import { DataTypes } from 'sequelize';
+import db from '../config/db.js';
 
 // Direcciones de entrega del comprador. El pedido guarda además una copia de la
 // dirección usada para que editarla después no cambie pedidos anteriores.
 const DireccionEntrega = db.define(
-  "DireccionEntrega",
+  'DireccionEntrega',
   {
     id_dir: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     alias: { type: DataTypes.STRING(30), allowNull: false },
@@ -21,9 +21,9 @@ const DireccionEntrega = db.define(
     principal: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
   },
   {
-    tableName: "direccion_entrega",
+    tableName: 'direccion_entrega',
     timestamps: false,
-    indexes: [{ fields: ["id_usuario"], name: "ix_direccion_usuario" }],
+    indexes: [{ fields: ['id_usuario'], name: 'ix_direccion_usuario' }],
   },
 );
 

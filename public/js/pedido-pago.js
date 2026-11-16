@@ -14,7 +14,9 @@ const actualizarMetodo = () => {
   const metodo = document.querySelector('[data-metodo-pago]:checked')?.value || 'tarjeta';
   document.querySelectorAll('[data-panel-pago]').forEach((panel) => {
     panel.hidden = panel.dataset.panelPago !== metodo;
-    panel.querySelectorAll('input').forEach((input) => { input.required = metodo === 'tarjeta'; });
+    panel.querySelectorAll('input').forEach((input) => {
+      input.required = metodo === 'tarjeta';
+    });
   });
   const boton = document.querySelector('[data-boton-pago]');
   if (boton) boton.textContent = boton.dataset[`texto${metodo[0].toUpperCase()}${metodo.slice(1)}`];

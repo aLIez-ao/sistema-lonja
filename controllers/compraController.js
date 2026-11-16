@@ -1,47 +1,50 @@
-import { body } from "express-validator";
-import { Op, col } from "sequelize";
-import db from "../config/db.js";
-import { Compra, Lote, Comprador, Especie, Tipo } from "../models/index.js";
-import { mensajesError, mensajeBD, aMensaje, aError } from "../helpers/utiles.js";
-import { redondea } from "../helpers/fechas.js";
-import { generarFacturaPDF } from "../helpers/facturaPdf.js";
-import { datosFactura } from "../helpers/factura.js";
-import { enviarEmailComprobanteCompra } from "../helpers/email.js";
-import { leerListado, consultarListado, combinarWhere } from "../helpers/listado.js";
-import { condicionBusqueda } from "../helpers/busqueda.js";
-import { condicionFiltros, filtroEntero, filtroFecha, filtroNumero } from "../helpers/filtros.js";
-import { loteDisponible, reservasActivas } from "../helpers/pedidos.js";
-import { encolarTrabajo } from "../helpers/colaTrabajos.js";
+import { body } from 'express-validator';
+import { Op, col } from 'sequelize';
+import db from '../config/db.js';
+import { Compra, Lote, Comprador, Especie, Tipo } from '../models/index.js';
+import { mensajesError, mensajeBD, aMensaje, aError } from '../helpers/utiles.js';
+import { redondea } from '../helpers/fechas.js';
+import { generarFacturaPDF } from '../helpers/facturaPdf.js';
+import { datosFactura } from '../helpers/factura.js';
+import { enviarEmailComprobanteCompra } from '../helpers/email.js';
+import { leerListado, consultarListado, combinarWhere } from '../helpers/listado.js';
+import { condicionBusqueda } from '../helpers/busqueda.js';
+import { condicionFiltros, filtroEntero, filtroFecha, filtroNumero } from '../helpers/filtros.js';
+import { loteDisponible, reservasActivas } from '../helpers/pedidos.js';
+import { encolarTrabajo } from '../helpers/colaTrabajos.js';
 
 const reglas = [
-  body("precio_kilo_final").isFloat({ gt: 0, max: 99999999 }).withMessage("El precio final por kilo debe ser un número mayor a 0"),
-  body("codigo_cpr").isInt({ min: 1 }).withMessage("Selecciona un comprador"),
+  body('precio_kilo_final')
+    .isFloat({ gt: 0, max: 99999999 })
+    .withMessage('El precio final por kilo debe ser un número mayor a 0'),
+  body('codigo_cpr').isInt({ min: 1 }).withMessage('Selecciona un comprador'),
 ];
-const reglasAlta = [body("id_cmp").isInt({ min: 1 }).withMessage("Selecciona un lote"), ...reglas];
+const reglasAlta = [body('id_cmp').isInt({ min: 1 }).withMessage('Selecciona un lote'), ...reglas];
 
 const esDeTienda = (compra) => compra?.id_ped !== null && compra?.id_ped !== undefined;
 
-const errorTienda = (res) => res.status(409).render("error", {
-  codigo: 409,
-  mensaje: "Esta compra se generó desde un pedido en línea y no puede editarse ni eliminarse desde la caja.",
-});
+const errorTienda = (res) =>
+  res.status(409).render('error', {
+    codigo: 409,
+    mensaje: 'Esta compra se generó desde un pedido en línea y no puede editarse ni eliminarse desde la caja.',
+  });
 
 const incluye = [
-  { model: Comprador, as: "comprador" },
-  { model: Lote, as: "lote", include: [{ model: Especie, as: "especies", include: [{ model: Tipo, as: "tipo" }] }] },
+  { model: Comprador, as: 'comprador' },
+  { model: Lote, as: 'lote', include: [{ model: Especie, as: 'especies', include: [{ model: Tipo, as: 'tipo' }] }] },
 ];
 
 /** Lotes que aún no tienen compra (+ el lote indicado, útil al editar). */
 const lotesDisponibles = async (incluirId) => {
   const where = incluirId
-    ? { [Op.or]: [{ "$compra.id_cmp$": null }, { id_lte: incluirId }] }
-    : { "$compra.id_cmp$": null };
+    ? { [Op.or]: [{ '$compra.id_cmp$': null }, { id_lte: incluirId }] }
+    : { '$compra.id_cmp$': null };
   return Lote.findAll({
     where,
-    order: [["id_lte", "DESC"]],
+    order: [['id_lte', 'DESC']],
     include: [
-      { model: Compra, as: "compra", required: false, attributes: [] },
-      { model: Especie, as: "especies", include: [{ model: Tipo, as: "tipo" }] },
+      { model: Compra, as: 'compra', required: false, attributes: [] },
+      { model: Especie, as: 'especies', include: [{ model: Tipo, as: 'tipo' }] },
     ],
   });
 };
@@ -49,10 +52,21 @@ const lotesDisponibles = async (incluirId) => {
 const catalogos = async (incluirId) => {
   const [lotes, compradores, reservas] = await Promise.all([
     lotesDisponibles(incluirId),
-    Comprador.findAll({ order: [["apellido_paterno", "ASC"], ["nombre", "ASC"]] }),
+    Comprador.findAll({
+      order: [
+        ['apellido_paterno', 'ASC'],
+        ['nombre', 'ASC'],
+      ],
+    }),
     reservasActivas(),
   ]);
-  return { lotes: lotes.map((lote) => ({ ...lote.get({ plain: true }), reservaActiva: reservas.get(Number(lote.id_lte)) || null })), compradores };
+  return {
+    lotes: lotes.map((lote) => ({
+      ...lote.get({ plain: true }),
+      reservaActiva: reservas.get(Number(lote.id_lte)) || null,
+    })),
+    compradores,
+  };
 };
 
 const POR_PAGINA = [10, 25, 50, 100];
@@ -68,12 +82,12 @@ const FILTROS = {
 
 // Clave pública del orden → expresión Sequelize
 const ORDEN = {
-  fecha: "fecha",
-  lote: "id_cmp",
-  comprador: col("comprador.apellido_paterno"),
-  kilos: col("lote.kilos"),
-  precio: "precio_kilo_final",
-  total: "precio_total",
+  fecha: 'fecha',
+  lote: 'id_cmp',
+  comprador: col('comprador.apellido_paterno'),
+  kilos: col('lote.kilos'),
+  precio: 'precio_kilo_final',
+  total: 'precio_total',
 };
 
 const lista = async (req, res) => {
@@ -81,44 +95,49 @@ const lista = async (req, res) => {
     porPagina: POR_PAGINA,
     tamDefecto: 25,
     orden: ORDEN,
-    ordenDefecto: { campo: "fecha", dir: "desc" },
+    ordenDefecto: { campo: 'fecha', dir: 'desc' },
     filtros: FILTROS,
   });
   const [compradores, tipos] = await Promise.all([
-    Comprador.findAll({ order: [["apellido_paterno", "ASC"], ["nombre", "ASC"]] }),
-    Tipo.findAll({ order: [["nombre", "ASC"]] }),
+    Comprador.findAll({
+      order: [
+        ['apellido_paterno', 'ASC'],
+        ['nombre', 'ASC'],
+      ],
+    }),
+    Tipo.findAll({ order: [['nombre', 'ASC']] }),
   ]);
   await consultarListado(l, {
     modelo: Compra,
-    pk: "id_cmp",
+    pk: 'id_cmp',
     include: incluye,
-    includeOrden: [{ model: Comprador, as: "comprador" }, { model: Lote, as: "lote" }],
-    where: combinarWhere(
-      await condicionBusqueda("compras", l.q),
-      await condicionFiltros("compras", l.filtros),
-    ),
+    includeOrden: [
+      { model: Comprador, as: 'comprador' },
+      { model: Lote, as: 'lote' },
+    ],
+    where: combinarWhere(await condicionBusqueda('compras', l.q), await condicionFiltros('compras', l.filtros)),
     orden: ORDEN,
   });
-  res.render("compras/index", {
+  res.render('compras/index', {
     l,
     compras: l.filas,
     filtros: [
-      { clave: "desde", etiqueta: "Desde", tipo: "fecha" },
-      { clave: "hasta", etiqueta: "Hasta", tipo: "fecha" },
+      { clave: 'desde', etiqueta: 'Desde', tipo: 'fecha' },
+      { clave: 'hasta', etiqueta: 'Hasta', tipo: 'fecha' },
       {
-        clave: "comprador",
-        etiqueta: "Comprador",
-        tipo: "select",
+        clave: 'comprador',
+        etiqueta: 'Comprador',
+        tipo: 'select',
         opciones: compradores.map((c) => ({ valor: c.codigo_cpr, texto: `${c.nombre} ${c.apellido_paterno}` })),
       },
       {
-        clave: "tipo",
-        etiqueta: "Tipo de especie",
-        tipo: "select",
+        clave: 'tipo',
+        etiqueta: 'Tipo de especie',
+        tipo: 'select',
         opciones: tipos.map((tp) => ({ valor: tp.id_tpo, texto: tp.nombre })),
       },
-      { clave: "totalMin", etiqueta: "Total mínimo", tipo: "numero" },
-      { clave: "totalMax", etiqueta: "Total máximo", tipo: "numero" },
+      { clave: 'totalMin', etiqueta: 'Total mínimo', tipo: 'numero' },
+      { clave: 'totalMax', etiqueta: 'Total máximo', tipo: 'numero' },
     ],
     mensaje: req.query.mensaje,
     error: req.query.error,
@@ -127,7 +146,13 @@ const lista = async (req, res) => {
 
 const verCrear = async (req, res) => {
   const compra = req.query.lote ? { id_cmp: req.query.lote } : null;
-  res.render("compras/formulario", { compra, editando: false, action: "/compras", errores: [], ...(await catalogos()) });
+  res.render('compras/formulario', {
+    compra,
+    editando: false,
+    action: '/compras',
+    errores: [],
+    ...(await catalogos()),
+  });
 };
 
 const registrar = async (req, res) => {
@@ -136,88 +161,127 @@ const registrar = async (req, res) => {
     try {
       const resultado = await db.transaction(async (transaction) => {
         const disponibilidad = await loteDisponible(req.body.id_cmp, { transaction });
-        if (disponibilidad.motivo) return { error: {
-          no_existe: "El lote no existe",
-          vendido: "Ese lote ya fue comprado",
-          reservado: "Ese lote está reservado por un pedido en línea y no se puede vender en mostrador",
-          reservado_propio: "Ese lote está reservado por un pedido en línea y no se puede vender en mostrador",
-        }[disponibilidad.motivo] || "El lote no está disponible" };
+        if (disponibilidad.motivo)
+          return {
+            error:
+              {
+                no_existe: 'El lote no existe',
+                vendido: 'Ese lote ya fue comprado',
+                reservado: 'Ese lote está reservado por un pedido en línea y no se puede vender en mostrador',
+                reservado_propio: 'Ese lote está reservado por un pedido en línea y no se puede vender en mostrador',
+              }[disponibilidad.motivo] || 'El lote no está disponible',
+          };
         const lote = await Lote.findByPk(disponibilidad.lote.id_lte, {
           transaction,
-          include: [{ model: Especie, as: "especies", include: [{ model: Tipo, as: "tipo" }] }],
+          include: [{ model: Especie, as: 'especies', include: [{ model: Tipo, as: 'tipo' }] }],
         });
         const comprador = await Comprador.findByPk(req.body.codigo_cpr, { transaction });
-        if (!comprador) return { error: "El comprador no existe" };
+        if (!comprador) return { error: 'El comprador no existe' };
         const precio = Number(req.body.precio_kilo_final);
         const total = redondea(Number(lote.kilos) * precio);
-        const nuevaCompra = await Compra.create({
-          id_cmp: lote.id_lte,
-          codigo_cpr: req.body.codigo_cpr,
-          precio_kilo_final: precio,
-          precio_total: total,
-        }, { transaction });
+        const nuevaCompra = await Compra.create(
+          {
+            id_cmp: lote.id_lte,
+            codigo_cpr: req.body.codigo_cpr,
+            precio_kilo_final: precio,
+            precio_total: total,
+          },
+          { transaction },
+        );
         return { nuevaCompra, lote, comprador };
       });
       if (resultado.error) errs.push(resultado.error);
       else {
         const { nuevaCompra, lote, comprador } = resultado;
 
-          // Si el comprador tiene correo, enviar comprobante / factura opcional o automáticamente
-          if (comprador.correo) {
-            const encolado = encolarTrabajo(`factura de compra ${nuevaCompra.id_cmp}`, async () => {
-              nuevaCompra.lote = lote;
-              nuevaCompra.comprador = comprador;
-              const pdfBuffer = await generarFacturaPDF(nuevaCompra);
-              await enviarEmailComprobanteCompra({
-                compra: nuevaCompra,
-                comprador,
-                pdfBuffer,
-                folio: nuevaCompra.id_cmp,
-              });
+        // Si el comprador tiene correo, enviar comprobante / factura opcional o automáticamente
+        if (comprador.correo) {
+          const encolado = encolarTrabajo(`factura de compra ${nuevaCompra.id_cmp}`, async () => {
+            nuevaCompra.lote = lote;
+            nuevaCompra.comprador = comprador;
+            const pdfBuffer = await generarFacturaPDF(nuevaCompra);
+            await enviarEmailComprobanteCompra({
+              compra: nuevaCompra,
+              comprador,
+              pdfBuffer,
+              folio: nuevaCompra.id_cmp,
             });
-            if (!encolado) console.warn("No se encoló la factura: la cola de trabajos está llena.");
-          }
+          });
+          if (!encolado) console.warn('No se encoló la factura: la cola de trabajos está llena.');
+        }
 
-          return res.redirect(`/compras/${nuevaCompra.id_cmp}/factura?${aMensaje("Compra registrada y factura generada con éxito")}`);
+        return res.redirect(
+          `/compras/${nuevaCompra.id_cmp}/factura?${aMensaje('Compra registrada y factura generada con éxito')}`,
+        );
       }
-    } catch (e) { errs.push(mensajeBD(e)); }
+    } catch (e) {
+      errs.push(mensajeBD(e));
+    }
   }
-  res.status(400).render("compras/formulario", { compra: req.body, editando: false, action: "/compras", errores: errs, ...(await catalogos()) });
+  res
+    .status(400)
+    .render('compras/formulario', {
+      compra: req.body,
+      editando: false,
+      action: '/compras',
+      errores: errs,
+      ...(await catalogos()),
+    });
 };
 
 const editar = async (req, res) => {
-  const compra = await Compra.findOne({ where: { id_cmp: req.params.id }, include: [{ model: Lote, as: "lote" }] });
-  if (!compra) return res.redirect("/compras");
+  const compra = await Compra.findOne({ where: { id_cmp: req.params.id }, include: [{ model: Lote, as: 'lote' }] });
+  if (!compra) return res.redirect('/compras');
   if (esDeTienda(compra)) return errorTienda(res);
-  res.render("compras/formulario", { compra, editando: true, action: `/compras/${compra.id_cmp}?_method=PUT`, errores: [], ...(await catalogos(compra.id_cmp)) });
+  res.render('compras/formulario', {
+    compra,
+    editando: true,
+    action: `/compras/${compra.id_cmp}?_method=PUT`,
+    errores: [],
+    ...(await catalogos(compra.id_cmp)),
+  });
 };
 
 const actualizar = async (req, res) => {
-  const compra = await Compra.findOne({ where: { id_cmp: req.params.id }, include: [{ model: Lote, as: "lote" }] });
-  if (!compra) return res.redirect("/compras");
+  const compra = await Compra.findOne({ where: { id_cmp: req.params.id }, include: [{ model: Lote, as: 'lote' }] });
+  if (!compra) return res.redirect('/compras');
   if (esDeTienda(compra)) return errorTienda(res);
   const errs = mensajesError(req);
   if (!errs.length) {
     try {
-      if (!(await Comprador.findByPk(req.body.codigo_cpr))) errs.push("El comprador no existe");
+      if (!(await Comprador.findByPk(req.body.codigo_cpr))) errs.push('El comprador no existe');
       else {
         const precio = Number(req.body.precio_kilo_final);
         await Compra.update(
-          { codigo_cpr: req.body.codigo_cpr, precio_kilo_final: precio, precio_total: redondea(Number(compra.lote.kilos) * precio) },
+          {
+            codigo_cpr: req.body.codigo_cpr,
+            precio_kilo_final: precio,
+            precio_total: redondea(Number(compra.lote.kilos) * precio),
+          },
           { where: { id_cmp: compra.id_cmp } },
         );
-        return res.redirect(`/compras?${aMensaje("Compra actualizada")}`);
+        return res.redirect(`/compras?${aMensaje('Compra actualizada')}`);
       }
-    } catch (e) { errs.push(mensajeBD(e)); }
+    } catch (e) {
+      errs.push(mensajeBD(e));
+    }
   }
-  res.status(400).render("compras/formulario", { compra: { ...req.body, id_cmp: compra.id_cmp }, editando: true, action: `/compras/${compra.id_cmp}?_method=PUT`, errores: errs, ...(await catalogos(compra.id_cmp)) });
+  res
+    .status(400)
+    .render('compras/formulario', {
+      compra: { ...req.body, id_cmp: compra.id_cmp },
+      editando: true,
+      action: `/compras/${compra.id_cmp}?_method=PUT`,
+      errores: errs,
+      ...(await catalogos(compra.id_cmp)),
+    });
 };
 
 const eliminar = async (req, res) => {
   const compra = await Compra.findOne({ where: { id_cmp: req.params.id } });
   if (compra && esDeTienda(compra)) return errorTienda(res);
   await Compra.destroy({ where: { id_cmp: req.params.id } });
-  res.redirect(`/compras?${aMensaje("Compra eliminada")}`);
+  res.redirect(`/compras?${aMensaje('Compra eliminada')}`);
 };
 
 /**
@@ -229,7 +293,7 @@ const verFactura = async (req, res) => {
     include: incluye,
   });
 
-  if (!compra) return res.redirect("/compras");
+  if (!compra) return res.redirect('/compras');
 
   const datos = {
     compra,
@@ -239,9 +303,9 @@ const verFactura = async (req, res) => {
   };
 
   // ?parcial=1 devuelve solo la hoja y sus acciones, para insertarla en el modal.
-  if (req.query.parcial === "1") return res.render("compras/factura-parcial", datos);
+  if (req.query.parcial === '1') return res.render('compras/factura-parcial', datos);
 
-  res.render("compras/factura", datos);
+  res.render('compras/factura', datos);
 };
 
 /**
@@ -253,19 +317,19 @@ const descargarFacturaPdf = async (req, res) => {
     include: incluye,
   });
 
-  if (!compra) return res.status(404).send("Compra no encontrada");
+  if (!compra) return res.status(404).send('Compra no encontrada');
 
   try {
     const pdfBuffer = await generarFacturaPDF(compra);
     res.set({
-      "Content-Type": "application/pdf",
-      "Content-Disposition": `${req.query.ver ? "inline" : "attachment"}; filename="Factura-Lonja-FAC-${String(compra.id_cmp).padStart(6, "0")}.pdf"`,
-      "Content-Length": pdfBuffer.length,
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `${req.query.ver ? 'inline' : 'attachment'}; filename="Factura-Lonja-FAC-${String(compra.id_cmp).padStart(6, '0')}.pdf"`,
+      'Content-Length': pdfBuffer.length,
     });
     res.send(pdfBuffer);
   } catch (err) {
-    console.error("Error al generar PDF de factura:", err);
-    res.status(500).send("Error interno al generar factura PDF");
+    console.error('Error al generar PDF de factura:', err);
+    res.status(500).send('Error interno al generar factura PDF');
   }
 };
 
@@ -278,10 +342,12 @@ const enviarFacturaPorCorreo = async (req, res) => {
     include: incluye,
   });
 
-  if (!compra) return res.redirect("/compras");
+  if (!compra) return res.redirect('/compras');
 
   if (!compra.comprador?.correo) {
-    return res.redirect(`/compras/${compra.id_cmp}/factura?error=${encodeURIComponent("El comprador no tiene un correo registrado en el sistema")}`);
+    return res.redirect(
+      `/compras/${compra.id_cmp}/factura?error=${encodeURIComponent('El comprador no tiene un correo registrado en el sistema')}`,
+    );
   }
 
   try {
@@ -294,15 +360,23 @@ const enviarFacturaPorCorreo = async (req, res) => {
     });
 
     if (resultado.simulado) {
-      return res.redirect(`/compras/${compra.id_cmp}/factura?${aError("El correo está en modo simulación; la factura no se envió.")}`);
+      return res.redirect(
+        `/compras/${compra.id_cmp}/factura?${aError('El correo está en modo simulación; la factura no se envió.')}`,
+      );
     }
     if (resultado.ok) {
-      return res.redirect(`/compras/${compra.id_cmp}/factura?${aMensaje(`Factura enviada exitosamente a ${compra.comprador.correo}`)}`);
+      return res.redirect(
+        `/compras/${compra.id_cmp}/factura?${aMensaje(`Factura enviada exitosamente a ${compra.comprador.correo}`)}`,
+      );
     } else {
-      return res.redirect(`/compras/${compra.id_cmp}/factura?error=${encodeURIComponent("Error al enviar correo: " + (resultado.error || "Desconocido"))}`);
+      return res.redirect(
+        `/compras/${compra.id_cmp}/factura?error=${encodeURIComponent('Error al enviar correo: ' + (resultado.error || 'Desconocido'))}`,
+      );
     }
   } catch (err) {
-    return res.redirect(`/compras/${compra.id_cmp}/factura?error=${encodeURIComponent("Error al procesar envío de correo")}`);
+    return res.redirect(
+      `/compras/${compra.id_cmp}/factura?error=${encodeURIComponent('Error al procesar envío de correo')}`,
+    );
   }
 };
 

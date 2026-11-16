@@ -1,14 +1,14 @@
-import { DataTypes } from "sequelize";
-import bcrypt from "bcryptjs";
-import db from "../config/db.js";
-import { correoValido } from "../helpers/validacion.js";
+import { DataTypes } from 'sequelize';
+import bcrypt from 'bcryptjs';
+import db from '../config/db.js';
+import { correoValido } from '../helpers/validacion.js';
 
 // Roles: admin (todo, incluye usuarios y borrados) | capturista (captura y consulta)
 // | comprador (tienda en línea; solo se crea desde el registro público).
-export const ROLES = ["admin", "capturista", "comprador"];
+export const ROLES = ['admin', 'capturista', 'comprador'];
 
 const Usuario = db.define(
-  "Usuario",
+  'Usuario',
   {
     id: { type: DataTypes.INTEGER, autoIncrement: true, primaryKey: true },
     usuario: { type: DataTypes.STRING(40), allowNull: false, unique: true },
@@ -18,10 +18,10 @@ const Usuario = db.define(
       allowNull: true,
       unique: true,
       validate: {
-        len: { args: [0, 80], msg: "El correo admite máximo 80 caracteres" },
+        len: { args: [0, 80], msg: 'El correo admite máximo 80 caracteres' },
         isEmailOrEmpty(val) {
           if (val && !correoValido(val)) {
-            throw new Error("Formato de correo no válido");
+            throw new Error('Formato de correo no válido');
           }
         },
       },
@@ -47,33 +47,33 @@ const Usuario = db.define(
       allowNull: true,
       validate: {
         rfcValido(val) {
-          if (val && !/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/i.test(val)) throw new Error("El RFC no tiene un formato válido");
+          if (val && !/^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/i.test(val)) throw new Error('El RFC no tiene un formato válido');
         },
       },
     },
     razon_social: { type: DataTypes.STRING(100), allowNull: true },
     password: { type: DataTypes.STRING(100), allowNull: false },
-    rol: { type: DataTypes.STRING(20), allowNull: false, defaultValue: "capturista", validate: { isIn: [ROLES] } },
+    rol: { type: DataTypes.STRING(20), allowNull: false, defaultValue: 'capturista', validate: { isIn: [ROLES] } },
     activo: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: true },
   },
   {
-    tableName: "usuario",
+    tableName: 'usuario',
     timestamps: false,
     hooks: {
       // Solo se vuelve a cifrar si la contraseña cambió
       beforeSave: async (u) => {
-        if (u.changed("password")) {
+        if (u.changed('password')) {
           u.password = await bcrypt.hash(u.password, 10);
           if (!u.isNewRecord) u.sesion_version = (u.sesion_version || 0) + 1;
         }
-        if (typeof u.correo === "string") {
+        if (typeof u.correo === 'string') {
           u.correo = u.correo.trim().toLowerCase();
-          if (u.correo === "") u.correo = null; // el índice único no admite varias cadenas vacías
+          if (u.correo === '') u.correo = null; // el índice único no admite varias cadenas vacías
         }
       },
     },
-    scopes: { sinClave: { attributes: { exclude: ["password", "token_recuperacion", "token_verificacion"] } } },
-  }
+    scopes: { sinClave: { attributes: { exclude: ['password', 'token_recuperacion', 'token_verificacion'] } } },
+  },
 );
 
 Usuario.prototype.verificarClave = function (clave) {

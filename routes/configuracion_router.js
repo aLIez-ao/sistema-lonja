@@ -1,4 +1,4 @@
-import express from "express";
+import express from 'express';
 import {
   verConfiguracion,
   guardarPreferencias,
@@ -9,21 +9,21 @@ import {
   cambiarPasswordCuenta,
   enviarAvisoClientes,
   probarCorreo,
-} from "../controllers/configuracionController.js";
+} from '../controllers/configuracionController.js';
 
-import { permitir } from "../middleware/protegerRutas.js";
+import { permitir } from '../middleware/protegerRutas.js';
 
 const router = express.Router();
 
-router.get("/", verConfiguracion);
-router.post("/guardar", guardarPreferencias);
-router.post("/guardar-rapido", guardarRapido);
-router.post("/cookies", guardarCookies);
-router.post("/actualizar-cuenta", actualizarCuenta);
-router.post("/solicitar-verificacion", solicitarVerificacionEmail);
-router.post("/cambiar-password", cambiarPasswordCuenta);
+router.get('/', verConfiguracion);
+router.post('/guardar', guardarPreferencias);
+router.post('/guardar-rapido', guardarRapido);
+router.post('/cookies', guardarCookies);
+router.post('/actualizar-cuenta', actualizarCuenta);
+router.post('/solicitar-verificacion', solicitarVerificacionEmail);
+router.post('/cambiar-password', cambiarPasswordCuenta);
 // El correo masivo a compradores es solo para administradores
-router.post("/enviar-aviso-clientes", permitir("admin"), enviarAvisoClientes);
-router.post("/correo/prueba", permitir("admin"), probarCorreo);
+router.post('/enviar-aviso-clientes', permitir('admin'), enviarAvisoClientes);
+router.post('/correo/prueba', permitir('admin'), probarCorreo);
 
 export default router;

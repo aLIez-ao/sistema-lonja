@@ -1,9 +1,9 @@
-import { DataTypes } from "sequelize";
-import db from "../config/db.js";
-import { correoValido } from "../helpers/validacion.js";
+import { DataTypes } from 'sequelize';
+import db from '../config/db.js';
+import { correoValido } from '../helpers/validacion.js';
 
 const Comprador = db.define(
-  "Comprador",
+  'Comprador',
   {
     codigo_cpr: { type: DataTypes.SMALLINT, autoIncrement: true, primaryKey: true },
     nombre: { type: DataTypes.STRING(40), allowNull: false },
@@ -16,12 +16,12 @@ const Comprador = db.define(
       unique: true, // "U" en el diagrama
       validate: {
         correoValido(valor) {
-          if (!correoValido(valor)) throw new Error("Formato de correo no válido");
+          if (!correoValido(valor)) throw new Error('Formato de correo no válido');
         },
       },
     },
   },
-  { tableName: "comprador", timestamps: false },
+  { tableName: 'comprador', timestamps: false },
 );
 
 export default Comprador;

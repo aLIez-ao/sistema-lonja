@@ -13,7 +13,12 @@
     if (formato === 'dinero') {
       const m = moneda || { codigo: 'MXN', tasa: 1, locale: 'es-MX' };
       const completo = new Intl.NumberFormat(m.locale, { style: 'currency', currency: m.codigo });
-      const corto = new Intl.NumberFormat(m.locale, { style: 'currency', currency: m.codigo, notation: 'compact', maximumFractionDigits: 1 });
+      const corto = new Intl.NumberFormat(m.locale, {
+        style: 'currency',
+        currency: m.codigo,
+        notation: 'compact',
+        maximumFractionDigits: 1,
+      });
       return { valor: (v) => completo.format(v * m.tasa), eje: (v) => corto.format(v * m.tasa) };
     }
     const n = new Intl.NumberFormat('es-MX', { maximumFractionDigits: 2 });
@@ -55,25 +60,27 @@
       type: esLinea ? 'line' : 'bar',
       data: {
         labels: etiquetas,
-        datasets: [{
-          label: canvas.dataset.titulo || '',
-          data: serie,
-          backgroundColor: esLinea ? color + '22' : color,
-          borderColor: color,
-          borderWidth: esLinea ? 2 : 0,
-          borderRadius: esLinea ? 0 : 4,
-          borderSkipped: 'start',
-          maxBarThickness: horizontal ? 22 : 38,
-          categoryPercentage: 0.82,
-          barPercentage: 0.9,
-          fill: esLinea,
-          tension: 0.25,
-          pointRadius: esLinea ? (serie.length > 45 ? 0 : 3) : 0,
-          pointHoverRadius: 5,
-          pointBackgroundColor: color,
-          pointBorderColor: superficie,
-          pointBorderWidth: 2,
-        }],
+        datasets: [
+          {
+            label: canvas.dataset.titulo || '',
+            data: serie,
+            backgroundColor: esLinea ? color + '22' : color,
+            borderColor: color,
+            borderWidth: esLinea ? 2 : 0,
+            borderRadius: esLinea ? 0 : 4,
+            borderSkipped: 'start',
+            maxBarThickness: horizontal ? 22 : 38,
+            categoryPercentage: 0.82,
+            barPercentage: 0.9,
+            fill: esLinea,
+            tension: 0.25,
+            pointRadius: esLinea ? (serie.length > 45 ? 0 : 3) : 0,
+            pointHoverRadius: 5,
+            pointBackgroundColor: color,
+            pointBorderColor: superficie,
+            pointBorderWidth: 2,
+          },
+        ],
       },
       options: {
         indexAxis: horizontal ? 'y' : 'x',

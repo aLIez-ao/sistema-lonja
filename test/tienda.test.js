@@ -1,9 +1,9 @@
 // Fase 3: tienda pública en "/", detalle de lote, ficha de especie y
 // sugerencias. Solo deben aparecer lotes disponibles y datos públicos.
-import { test, before, after } from "node:test";
-import assert from "node:assert/strict";
-import { arrancar, cliente, modelos } from "./ayuda.js";
-import { limiteSugerencias, limitesDisponibles } from "../controllers/tiendaController.js";
+import { test, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { arrancar, cliente, modelos } from './ayuda.js';
+import { limiteSugerencias, limitesDisponibles } from '../controllers/tiendaController.js';
 
 const { Tipo, Lote, Especie, EspecieCatalogo, Comprador, Compra, Usuario, Pedido, PedidoItem } = modelos;
 
@@ -21,26 +21,26 @@ const nuevo = () => cliente(base());
 const seccionCatalogo = (html) => {
   const inicio = html.indexOf('<div class="tienda-grid">');
   const fin = html.indexOf('class="tienda-toasts"');
-  return inicio >= 0 && fin > inicio ? html.slice(inicio, fin) : "";
+  return inicio >= 0 && fin > inicio ? html.slice(inicio, fin) : '';
 };
 
 before(async () => {
   srv = await arrancar();
 
   [pescado, marisco] = await Promise.all([
-    Tipo.findOne({ where: { nombre: "Pescado" } }),
-    Tipo.findOne({ where: { nombre: "Marisco" } }),
+    Tipo.findOne({ where: { nombre: 'Pescado' } }),
+    Tipo.findOne({ where: { nombre: 'Marisco' } }),
   ]);
 
   const catHuachinango = await EspecieCatalogo.create({
-    nombre: "Huachinango Test",
-    descripcion: "Pescado de roca del Golfo de México, fresco del día.",
+    nombre: 'Huachinango Test',
+    descripcion: 'Pescado de roca del Golfo de México, fresco del día.',
     id_tpo: pescado.id_tpo,
     activo: true,
   });
   const catCamaron = await EspecieCatalogo.create({
-    nombre: "Camarón Test",
-    descripcion: "Camarón de estero, ideal para cóctel.",
+    nombre: 'Camarón Test',
+    descripcion: 'Camarón de estero, ideal para cóctel.',
     id_tpo: marisco.id_tpo,
     activo: true,
   });
@@ -79,14 +79,14 @@ before(async () => {
     fecha: new Date(),
   });
   await Especie.create({
-    nombre: "Especie Secreta Test",
+    nombre: 'Especie Secreta Test',
     id_lte: loteVendido.id_lte,
     id_tpo: pescado.id_tpo,
   });
   const comprador = await Comprador.create({
-    nombre: "Secreto",
-    apellido_paterno: "Apellido",
-    correo: "secreto@example.com",
+    nombre: 'Secreto',
+    apellido_paterno: 'Apellido',
+    correo: 'secreto@example.com',
   });
   await Compra.create({
     id_cmp: loteVendido.id_lte,
@@ -99,10 +99,10 @@ before(async () => {
 
 after(() => srv.cerrar());
 
-test("la portada es pública y muestra solo lotes disponibles", async () => {
+test('la portada es pública y muestra solo lotes disponibles', async () => {
   limiteSugerencias.reiniciar();
   const c = nuevo();
-  const r = await c.get("/");
+  const r = await c.get('/');
   assert.equal(r.status, 200);
   assert.match(r.texto, /data-protegida="0"/);
   assert.match(r.texto, /Lotes disponibles/);
@@ -121,33 +121,33 @@ test("la portada es pública y muestra solo lotes disponibles", async () => {
   assert.doesNotMatch(r.texto, /9,000|9000/);
 });
 
-test("el acceso está en /acceso y ya no en la portada", async () => {
+test('el acceso está en /acceso y ya no en la portada', async () => {
   const c = nuevo();
-  const r = await c.get("/acceso");
+  const r = await c.get('/acceso');
   assert.equal(r.status, 200);
   assert.match(r.texto, /placeholder="Tu contraseña"/);
   assert.match(r.texto, /action="\/credenciales"/);
 });
 
-test("las rutas protegidas redirigen a /acceso con la ruta original", async () => {
+test('las rutas protegidas redirigen a /acceso con la ruta original', async () => {
   const c = nuevo();
-  const r = await c.get("/lotes?orden=kilos");
+  const r = await c.get('/lotes?orden=kilos');
   assert.equal(r.status, 302);
-  assert.equal(r.loc, `/acceso?volver=${encodeURIComponent("/lotes?orden=kilos")}`);
+  assert.equal(r.loc, `/acceso?volver=${encodeURIComponent('/lotes?orden=kilos')}`);
 
-  const post = await c.post("/compradores", {});
+  const post = await c.post('/compradores', {});
   assert.equal(post.status, 302);
-  assert.equal(post.loc, "/acceso", "un POST no arrastra la ruta original");
+  assert.equal(post.loc, '/acceso', 'un POST no arrastra la ruta original');
 });
 
-test("filtros: precio, kilos, tipo y especie", async () => {
+test('filtros: precio, kilos, tipo y especie', async () => {
   const c = nuevo();
 
-  const baratos = seccionCatalogo((await c.get("/?precioMax=100")).texto);
+  const baratos = seccionCatalogo((await c.get('/?precioMax=100')).texto);
   assert.match(baratos, /Huachinango Test/);
   assert.doesNotMatch(baratos, /Camarón Test/);
 
-  const grandes = seccionCatalogo((await c.get("/?kilosMin=50")).texto);
+  const grandes = seccionCatalogo((await c.get('/?kilosMin=50')).texto);
   assert.match(grandes, /Huachinango Test/);
   assert.doesNotMatch(grandes, /Camarón Test/);
 
@@ -155,38 +155,71 @@ test("filtros: precio, kilos, tipo y especie", async () => {
   assert.match(mariscos, /Camarón Test/);
   assert.doesNotMatch(mariscos, /Huachinango Test/);
 
-  const catHuachinango = await EspecieCatalogo.findOne({ where: { nombre: "Huachinango Test" } });
+  const catHuachinango = await EspecieCatalogo.findOne({ where: { nombre: 'Huachinango Test' } });
   const especie = seccionCatalogo((await c.get(`/?especie=${catHuachinango.id_cat}`)).texto);
   assert.match(especie, /Huachinango Test/);
   assert.doesNotMatch(especie, /Camarón Test/);
 });
 
-test("sliders usan límites disponibles y normalizan valores fuera de rango o invertidos", async () => {
+test('sliders usan límites disponibles y normalizan valores fuera de rango o invertidos', async () => {
   const limites = await limitesDisponibles();
-  assert.deepEqual(limites, { hayLotes: true, precioMin: 50, precioMax: 200, kilosMin: 20, kilosMax: 100, pasoPrecio: 1 });
+  assert.deepEqual(limites, {
+    hayLotes: true,
+    precioMin: 50,
+    precioMax: 200,
+    kilosMin: 20,
+    kilosMax: 100,
+    pasoPrecio: 1,
+  });
 
   const c = nuevo();
-  const portada = await c.get("/");
+  const portada = await c.get('/');
   assert.match(portada.texto, /type="range" name="precioMin" min="50" max="200"/);
   assert.match(portada.texto, /type="range" name="precioMax" min="50" max="200"/);
   assert.match(portada.texto, /type="range" name="kilosMin" min="20" max="100"/);
 
-  const invertidos = await c.get("/?precioMin=100&precioMax=60");
+  const invertidos = await c.get('/?precioMin=100&precioMax=60');
   assert.match(invertidos.texto, /name="precioMin" min="50" max="200" step="1" value="60"/);
   assert.match(invertidos.texto, /name="precioMax" min="50" max="200" step="1" value="100"/);
 
-  const recortado = await c.get("/?precioMax=9999&kilosMin=9999");
+  const recortado = await c.get('/?precioMax=9999&kilosMin=9999');
   assert.match(recortado.texto, /name="precioMax" min="50" max="200" step="1" value="200"/);
   assert.match(recortado.texto, /name="kilosMin" min="20" max="100" step="1" value="100"/);
 });
 
-test("los límites no incluyen lotes reservados aunque sus valores sean extremos", async () => {
-  const clienteMostrador = await Comprador.create({ nombre: "Rosa", apellido_paterno: "Prueba", correo: "limites-reserva@example.test" });
-  const usuario = await Usuario.create({ usuario: "limites-reserva", nombre_completo: "Rosa Prueba", correo: clienteMostrador.correo, password: "Clave1234", rol: "comprador", codigo_cpr: clienteMostrador.codigo_cpr, email_verificado: true });
+test('los límites no incluyen lotes reservados aunque sus valores sean extremos', async () => {
+  const clienteMostrador = await Comprador.create({
+    nombre: 'Rosa',
+    apellido_paterno: 'Prueba',
+    correo: 'limites-reserva@example.test',
+  });
+  const usuario = await Usuario.create({
+    usuario: 'limites-reserva',
+    nombre_completo: 'Rosa Prueba',
+    correo: clienteMostrador.correo,
+    password: 'Clave1234',
+    rol: 'comprador',
+    codigo_cpr: clienteMostrador.codigo_cpr,
+    email_verificado: true,
+  });
   const loteReservado = await Lote.create({ kilos: 9999, numero_cajas: 9, precio_kilo_salida: 1, fecha: new Date() });
-  await Especie.create({ nombre: "Lote reservado extremo", id_lte: loteReservado.id_lte, id_tpo: pescado.id_tpo });
-  const pedido = await Pedido.create({ id_usuario: usuario.id, codigo_cpr: clienteMostrador.codigo_cpr, estado: "pendiente_pago", entrega: "recoger", subtotal: 9999, total: 9999, reservado_hasta: new Date(Date.now() + 60 * 60 * 1000) });
-  await PedidoItem.create({ id_ped: pedido.id_ped, id_lte: loteReservado.id_lte, kilos: 9999, precio_kilo: 1, subtotal: 9999 });
+  await Especie.create({ nombre: 'Lote reservado extremo', id_lte: loteReservado.id_lte, id_tpo: pescado.id_tpo });
+  const pedido = await Pedido.create({
+    id_usuario: usuario.id,
+    codigo_cpr: clienteMostrador.codigo_cpr,
+    estado: 'pendiente_pago',
+    entrega: 'recoger',
+    subtotal: 9999,
+    total: 9999,
+    reservado_hasta: new Date(Date.now() + 60 * 60 * 1000),
+  });
+  await PedidoItem.create({
+    id_ped: pedido.id_ped,
+    id_lte: loteReservado.id_lte,
+    kilos: 9999,
+    precio_kilo: 1,
+    subtotal: 9999,
+  });
 
   const limites = await limitesDisponibles();
   assert.equal(limites.precioMin, 50);
@@ -195,18 +228,18 @@ test("los límites no incluyen lotes reservados aunque sus valores sean extremos
   assert.equal(limites.kilosMax, 100);
 });
 
-test("orden por precio ascendente y descendente dentro de la cuadrícula", async () => {
+test('orden por precio ascendente y descendente dentro de la cuadrícula', async () => {
   const c = nuevo();
-  const asc = seccionCatalogo((await c.get("/?orden=precio&dir=asc")).texto);
-  assert.ok(asc.indexOf("Huachinango Test") < asc.indexOf("Camarón Test"));
+  const asc = seccionCatalogo((await c.get('/?orden=precio&dir=asc')).texto);
+  assert.ok(asc.indexOf('Huachinango Test') < asc.indexOf('Camarón Test'));
 
-  const desc = seccionCatalogo((await c.get("/?orden=precio&dir=desc")).texto);
-  assert.ok(desc.indexOf("Camarón Test") < desc.indexOf("Huachinango Test"));
+  const desc = seccionCatalogo((await c.get('/?orden=precio&dir=desc')).texto);
+  assert.ok(desc.indexOf('Camarón Test') < desc.indexOf('Huachinango Test'));
 });
 
-test("búsqueda pública por especie y por número de lote", async () => {
+test('búsqueda pública por especie y por número de lote', async () => {
   const c = nuevo();
-  const porEspecie = await c.get("/?q=Huachinango");
+  const porEspecie = await c.get('/?q=Huachinango');
   assert.equal(porEspecie.status, 200);
   const seccion = seccionCatalogo(porEspecie.texto);
   assert.match(seccion, /Huachinango Test/);
@@ -217,7 +250,7 @@ test("búsqueda pública por especie y por número de lote", async () => {
   assert.doesNotMatch(porNumero, /Huachinango Test/);
 });
 
-test("detalle de un lote disponible y de uno vendido", async () => {
+test('detalle de un lote disponible y de uno vendido', async () => {
   const c = nuevo();
 
   const disponible = await c.get(`/tienda/lote/${loteBarato.id_lte}`);
@@ -233,13 +266,13 @@ test("detalle de un lote disponible y de uno vendido", async () => {
   assert.doesNotMatch(vendido.texto, /Secreto Apellido/);
   assert.doesNotMatch(vendido.texto, /secreto@example\.com/);
 
-  const inexistente = await c.get("/tienda/lote/99999");
+  const inexistente = await c.get('/tienda/lote/99999');
   assert.equal(inexistente.status, 404);
 });
 
-test("ficha de especie con descripción y lotes disponibles", async () => {
+test('ficha de especie con descripción y lotes disponibles', async () => {
   const c = nuevo();
-  const catalogo = await EspecieCatalogo.findOne({ where: { nombre: "Huachinango Test" } });
+  const catalogo = await EspecieCatalogo.findOne({ where: { nombre: 'Huachinango Test' } });
   const r = await c.get(`/tienda/especie/${catalogo.id_cat}`);
   assert.equal(r.status, 200);
   assert.match(r.texto, /Huachinango Test/);
@@ -247,15 +280,15 @@ test("ficha de especie con descripción y lotes disponibles", async () => {
   assert.match(r.texto, /Lotes disponibles/);
   assert.match(r.texto, /Sin opiniones todavía/);
 
-  const noExiste = await c.get("/tienda/especie/99999");
+  const noExiste = await c.get('/tienda/especie/99999');
   assert.equal(noExiste.status, 404);
 });
 
-test("sugerencias públicas: solo lotes disponibles y máximo 30 por minuto", async () => {
+test('sugerencias públicas: solo lotes disponibles y máximo 30 por minuto', async () => {
   limiteSugerencias.reiniciar();
   const c = nuevo();
 
-  const r = await c.get("/tienda/sugerencias?q=Huachinango");
+  const r = await c.get('/tienda/sugerencias?q=Huachinango');
   assert.equal(r.status, 200);
   const datos = JSON.parse(r.texto);
   assert.equal(datos.length, 1);
@@ -263,52 +296,62 @@ test("sugerencias públicas: solo lotes disponibles y máximo 30 por minuto", as
   assert.match(datos[0].titulo, /Huachinango Test/);
   assert.equal(datos[0].url, `/tienda/lote/${loteBarato.id_lte}`);
 
-  const secreto = JSON.parse((await c.get("/tienda/sugerencias?q=Secreta")).texto);
-  assert.deepEqual(secreto, [], "un lote vendido no se sugiere");
+  const secreto = JSON.parse((await c.get('/tienda/sugerencias?q=Secreta')).texto);
+  assert.deepEqual(secreto, [], 'un lote vendido no se sugiere');
 
-  const corto = JSON.parse((await c.get("/tienda/sugerencias?q=H")).texto);
-  assert.deepEqual(corto, [], "menos de 2 caracteres no busca");
+  const corto = JSON.parse((await c.get('/tienda/sugerencias?q=H')).texto);
+  assert.deepEqual(corto, [], 'menos de 2 caracteres no busca');
 
   let ultimo = null;
-  for (let i = 0; i < 27; i += 1) ultimo = await c.get("/tienda/sugerencias?q=Huachinango");
-  assert.equal(ultimo.status, 200, "la petición 30 todavía se atiende");
-  const bloqueado = await c.get("/tienda/sugerencias?q=Huachinango");
+  for (let i = 0; i < 27; i += 1) ultimo = await c.get('/tienda/sugerencias?q=Huachinango');
+  assert.equal(ultimo.status, 200, 'la petición 30 todavía se atiende');
+  const bloqueado = await c.get('/tienda/sugerencias?q=Huachinango');
   assert.equal(bloqueado.status, 429);
 });
 
-test("un comprador con sesión puede ver la tienda sin dejar de ser privado su panel", async () => {
+test('un comprador con sesión puede ver la tienda sin dejar de ser privado su panel', async () => {
   const c = nuevo();
-  const alta = await c.post("/registro", {
-    nombre: "Compra",
-    apellido_paterno: "Tienda",
-    correo: "compra.tienda@example.com",
-    password: "Clave1234",
-    password_confirmar: "Clave1234",
-    aviso_privacidad: "on",
+  const alta = await c.post('/registro', {
+    nombre: 'Compra',
+    apellido_paterno: 'Tienda',
+    correo: 'compra.tienda@example.com',
+    password: 'Clave1234',
+    password_confirmar: 'Clave1234',
+    aviso_privacidad: 'on',
   });
   assert.equal(alta.status, 200);
   const enlace = /\/verificar-email\/[0-9a-f]{24,}/.exec(alta.texto)?.[0];
   assert.ok(enlace);
   assert.equal((await c.get(enlace)).status, 302);
 
-  const us = await modelos.Usuario.findOne({ where: { correo: "compra.tienda@example.com" } });
-  assert.equal((await c.entrar(us.usuario, "Clave1234")).status, 302);
+  const us = await modelos.Usuario.findOne({ where: { correo: 'compra.tienda@example.com' } });
+  assert.equal((await c.entrar(us.usuario, 'Clave1234')).status, 302);
 
-  const portada = await c.get("/");
+  const portada = await c.get('/');
   assert.equal(portada.status, 200);
   assert.match(portada.texto, /Huachinango Test/);
   assert.match(portada.texto, /Mi cuenta/);
 
-  const panel = await c.get("/dashboard");
-  assert.equal(panel.status, 403, "el comprador no entra al tablero del personal");
+  const panel = await c.get('/dashboard');
+  assert.equal(panel.status, 403, 'el comprador no entra al tablero del personal');
 });
 
-test("sin lotes disponibles los sliders muestran el aviso y quedan deshabilitados", async () => {
-  const comprador = await Comprador.create({ nombre: "Venta", apellido_paterno: "Final", correo: "ultima-venta@example.test" });
+test('sin lotes disponibles los sliders muestran el aviso y quedan deshabilitados', async () => {
+  const comprador = await Comprador.create({
+    nombre: 'Venta',
+    apellido_paterno: 'Final',
+    correo: 'ultima-venta@example.test',
+  });
   for (const lote of [loteBarato, loteCaro]) {
-    await Compra.create({ id_cmp: lote.id_lte, codigo_cpr: comprador.codigo_cpr, precio_kilo_final: 75, precio_total: Number(lote.kilos) * 75, fecha: new Date() });
+    await Compra.create({
+      id_cmp: lote.id_lte,
+      codigo_cpr: comprador.codigo_cpr,
+      precio_kilo_final: 75,
+      precio_total: Number(lote.kilos) * 75,
+      fecha: new Date(),
+    });
   }
-  const portada = await nuevo().get("/");
+  const portada = await nuevo().get('/');
   assert.match(portada.texto, /No hay lotes disponibles para filtrar/);
   assert.match(portada.texto, /type="range" disabled aria-label="Precio por kilo"/);
   assert.match(portada.texto, /id="filtroKilos" type="range" disabled aria-label="Filtrar por kilos mínimos"/);

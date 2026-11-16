@@ -1,12 +1,15 @@
 // Foto de perfil: el navegador la recorta a 256x256 y la envía como data URL en un campo oculto,
 // así no hace falta multipart ni dependencias nuevas. Aquí se valida y se guarda en disco.
-import path from "path";
-import { fileURLToPath } from "url";
-import { borrarImagen, guardarImagenDataURL } from "./imagenes.js";
+import path from 'path';
+import { fileURLToPath } from 'url';
+import { borrarImagen, guardarImagenDataURL } from './imagenes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-export const DIR_AVATARES = path.join(process.env.UPLOADS_DIR || path.join(__dirname, "..", "public", "uploads"), "avatares");
-const URL_BASE = "/uploads/avatares/";
+export const DIR_AVATARES = path.join(
+  process.env.UPLOADS_DIR || path.join(__dirname, '..', 'public', 'uploads'),
+  'avatares',
+);
+const URL_BASE = '/uploads/avatares/';
 const MAX_BYTES = 300 * 1024;
 
 const opciones = { dir: DIR_AVATARES, urlBase: URL_BASE, maxBytes: MAX_BYTES };

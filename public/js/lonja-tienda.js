@@ -53,7 +53,10 @@ import { indiceSiguiente, extremosDeFila } from './tienda-utils.js';
     const anterior = qs('[data-heroe-prev]', heroe);
     const siguiente = qs('[data-heroe-next]', heroe);
     const reducirMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)');
-    let actual = Math.max(0, slides.findIndex((slide) => slide.classList.contains('activo')));
+    let actual = Math.max(
+      0,
+      slides.findIndex((slide) => slide.classList.contains('activo')),
+    );
     let pausa = false;
     let temporizador;
     let inicioToque = null;
@@ -72,31 +75,65 @@ import { indiceSiguiente, extremosDeFila } from './tienda-utils.js';
     const programar = () => {
       clearTimeout(temporizador);
       if (reducirMovimiento.matches || pausa || document.hidden) return;
-      temporizador = setTimeout(() => { pintar(actual + 1); programar(); }, 6000);
+      temporizador = setTimeout(() => {
+        pintar(actual + 1);
+        programar();
+      }, 6000);
     };
-    const ir = (indice) => { pintar(indice); programar(); };
+    const ir = (indice) => {
+      pintar(indice);
+      programar();
+    };
     const avanzar = (direccion) => ir(actual + direccion);
 
     anterior?.addEventListener('click', () => avanzar(-1));
     siguiente?.addEventListener('click', () => avanzar(1));
     puntos.forEach((punto) => punto.addEventListener('click', () => ir(Number(punto.dataset.heroePunto))));
     region?.addEventListener('keydown', (ev) => {
-      if (ev.key === 'ArrowLeft') { ev.preventDefault(); avanzar(-1); }
-      if (ev.key === 'ArrowRight') { ev.preventDefault(); avanzar(1); }
+      if (ev.key === 'ArrowLeft') {
+        ev.preventDefault();
+        avanzar(-1);
+      }
+      if (ev.key === 'ArrowRight') {
+        ev.preventDefault();
+        avanzar(1);
+      }
     });
-    heroe.addEventListener('mouseenter', () => { pausa = true; clearTimeout(temporizador); });
-    heroe.addEventListener('mouseleave', () => { pausa = false; programar(); });
-    heroe.addEventListener('focusin', () => { pausa = true; clearTimeout(temporizador); });
+    heroe.addEventListener('mouseenter', () => {
+      pausa = true;
+      clearTimeout(temporizador);
+    });
+    heroe.addEventListener('mouseleave', () => {
+      pausa = false;
+      programar();
+    });
+    heroe.addEventListener('focusin', () => {
+      pausa = true;
+      clearTimeout(temporizador);
+    });
     heroe.addEventListener('focusout', (ev) => {
-      if (!heroe.contains(ev.relatedTarget)) { pausa = false; programar(); }
+      if (!heroe.contains(ev.relatedTarget)) {
+        pausa = false;
+        programar();
+      }
     });
-    heroe.addEventListener('touchstart', (ev) => { inicioToque = ev.changedTouches[0]?.clientX ?? null; }, { passive: true });
-    heroe.addEventListener('touchend', (ev) => {
-      if (inicioToque === null) return;
-      const delta = (ev.changedTouches[0]?.clientX ?? inicioToque) - inicioToque;
-      if (Math.abs(delta) >= 40) avanzar(delta < 0 ? 1 : -1);
-      inicioToque = null;
-    }, { passive: true });
+    heroe.addEventListener(
+      'touchstart',
+      (ev) => {
+        inicioToque = ev.changedTouches[0]?.clientX ?? null;
+      },
+      { passive: true },
+    );
+    heroe.addEventListener(
+      'touchend',
+      (ev) => {
+        if (inicioToque === null) return;
+        const delta = (ev.changedTouches[0]?.clientX ?? inicioToque) - inicioToque;
+        if (Math.abs(delta) >= 40) avanzar(delta < 0 ? 1 : -1);
+        inicioToque = null;
+      },
+      { passive: true },
+    );
     document.addEventListener('visibilitychange', programar);
     reducirMovimiento.addEventListener?.('change', programar);
     programar();
@@ -119,7 +156,10 @@ import { indiceSiguiente, extremosDeFila } from './tienda-utils.js';
         tarjetas.forEach((tarjeta, i) => {
           const x = tarjeta.offsetLeft - tarjetas[0].offsetLeft;
           const diferencia = Math.abs(x - pista.scrollLeft);
-          if (diferencia < distancia) { distancia = diferencia; mejor = i; }
+          if (diferencia < distancia) {
+            distancia = diferencia;
+            mejor = i;
+          }
         });
         return mejor;
       };
@@ -227,7 +267,9 @@ import { indiceSiguiente, extremosDeFila } from './tienda-utils.js';
           });
           const datos = await respuesta.json();
           if (typeof datos.cantidad === 'number') {
-            qsa('[data-carrito-count]').forEach((n) => { n.textContent = datos.cantidad; });
+            qsa('[data-carrito-count]').forEach((n) => {
+              n.textContent = datos.cantidad;
+            });
           }
           aviso(datos.mensaje || 'No se pudo actualizar el carrito.');
         } catch {
@@ -250,7 +292,10 @@ import { indiceSiguiente, extremosDeFila } from './tienda-utils.js';
             body: '{}',
           });
           const datos = await respuesta.json();
-          if (typeof datos.cantidad === 'number') qsa('[data-carrito-count]').forEach((n) => { n.textContent = datos.cantidad; });
+          if (typeof datos.cantidad === 'number')
+            qsa('[data-carrito-count]').forEach((n) => {
+              n.textContent = datos.cantidad;
+            });
           window.location.reload();
         } catch {
           form.submit();
@@ -258,66 +303,103 @@ import { indiceSiguiente, extremosDeFila } from './tienda-utils.js';
       });
     });
 
-    qsa('[data-favorito-form]').forEach((form) => form.addEventListener('submit', async (ev) => {
-      ev.preventDefault();
-      const boton = qs('[data-favorito]', form);
-      if (!boton) return;
-      boton.disabled = true;
-      try {
-        const respuesta = await fetch('/cuenta/favoritos/alternar', {
-          method: 'POST', headers: { accept: 'application/json', 'content-type': 'application/json' },
-          body: JSON.stringify({ tipo: boton.dataset.tipo, id_ref: boton.dataset.idRef }),
-        });
-        const datos = await respuesta.json();
-        if (!respuesta.ok || !datos.ok) throw new Error(datos.mensaje || 'No se pudo actualizar Favoritos.');
-        boton.classList.toggle('activo', datos.favorito);
-        boton.setAttribute('aria-pressed', String(datos.favorito));
-        const label = datos.favorito ? 'Quitar de Favoritos' : 'Guardar en Favoritos';
-        boton.setAttribute('aria-label', label); boton.title = label;
-        qsa('[data-favoritos-count]').forEach((n) => { n.textContent = datos.total; });
-        aviso(datos.favorito ? 'Guardado en Favoritos.' : 'Quitado de Favoritos.');
-      } catch (error) { aviso(error.message); }
-      finally { boton.disabled = false; }
-    }));
+    qsa('[data-favorito-form]').forEach((form) =>
+      form.addEventListener('submit', async (ev) => {
+        ev.preventDefault();
+        const boton = qs('[data-favorito]', form);
+        if (!boton) return;
+        boton.disabled = true;
+        try {
+          const respuesta = await fetch('/cuenta/favoritos/alternar', {
+            method: 'POST',
+            headers: { accept: 'application/json', 'content-type': 'application/json' },
+            body: JSON.stringify({ tipo: boton.dataset.tipo, id_ref: boton.dataset.idRef }),
+          });
+          const datos = await respuesta.json();
+          if (!respuesta.ok || !datos.ok) throw new Error(datos.mensaje || 'No se pudo actualizar Favoritos.');
+          boton.classList.toggle('activo', datos.favorito);
+          boton.setAttribute('aria-pressed', String(datos.favorito));
+          const label = datos.favorito ? 'Quitar de Favoritos' : 'Guardar en Favoritos';
+          boton.setAttribute('aria-label', label);
+          boton.title = label;
+          qsa('[data-favoritos-count]').forEach((n) => {
+            n.textContent = datos.total;
+          });
+          aviso(datos.favorito ? 'Guardado en Favoritos.' : 'Quitado de Favoritos.');
+        } catch (error) {
+          aviso(error.message);
+        } finally {
+          boton.disabled = false;
+        }
+      }),
+    );
 
-    qsa('[data-elegir-lista]').forEach((boton) => boton.addEventListener('click', async () => {
-      try {
-        const respuesta = await fetch('/cuenta/listas.json', { headers: { accept: 'application/json' } });
-        if (!respuesta.ok) throw new Error('No se pudieron cargar tus listas.');
-        const { listas } = await respuesta.json();
-        let dialogo = qs('[data-dialogo-listas]');
-        if (!dialogo) {
-          dialogo = document.createElement('dialog'); dialogo.dataset.dialogoListas = '';
-          dialogo.className = 'p-4 rounded-3 border shadow'; document.body.appendChild(dialogo);
-        }
-        const tipo = boton.dataset.tipo; const id = boton.dataset.idRef;
-        dialogo.innerHTML = `<form method="dialog"><h2 class="h5">Guardar en una lista</h2><div data-opciones-listas></div><label class="form-label mt-3" for="nueva-lista-fav">Nueva lista</label><input class="form-control" id="nueva-lista-fav" maxlength="40"><div class="d-flex gap-2 justify-content-end mt-3"><button class="btn btn-outline-secondary">Cerrar</button><button type="button" class="btn btn-primary" data-guardar-listas>Guardar</button></div></form>`;
-        const opciones = qs('[data-opciones-listas]', dialogo);
-        for (const lista of listas) {
-          const marcado = lista.items.some((i) => i.tipo === tipo && String(i.id_ref) === id);
-          const label = document.createElement('label'); label.className = 'form-check d-block';
-          label.innerHTML = `<input class="form-check-input" type="checkbox" value="${lista.id}" ${marcado ? 'checked' : ''}> <span class="form-check-label"></span>`;
-          qs('.form-check-label', label).textContent = lista.nombre; opciones.appendChild(label);
-        }
-        qs('[data-guardar-listas]', dialogo).onclick = async () => {
-          const nombre = qs('#nueva-lista-fav', dialogo).value.trim();
-          let actuales = listas;
-          if (nombre) {
-            const creada = await fetch('/cuenta/listas', { method: 'POST', headers: { accept: 'application/json', 'content-type': 'application/json' }, body: JSON.stringify({ nombre }) });
-            if (!creada.ok) { aviso('No se pudo crear la lista.'); return; }
-            const recarga = await fetch('/cuenta/listas.json', { headers: { accept: 'application/json' } }); actuales = (await recarga.json()).listas;
+    qsa('[data-elegir-lista]').forEach((boton) =>
+      boton.addEventListener('click', async () => {
+        try {
+          const respuesta = await fetch('/cuenta/listas.json', { headers: { accept: 'application/json' } });
+          if (!respuesta.ok) throw new Error('No se pudieron cargar tus listas.');
+          const { listas } = await respuesta.json();
+          let dialogo = qs('[data-dialogo-listas]');
+          if (!dialogo) {
+            dialogo = document.createElement('dialog');
+            dialogo.dataset.dialogoListas = '';
+            dialogo.className = 'p-4 rounded-3 border shadow';
+            document.body.appendChild(dialogo);
           }
-          for (const lista of actuales) {
-            const check = qs(`input[value="${lista.id}"]`, opciones);
-            const estaba = lista.items.some((i) => i.tipo === tipo && String(i.id_ref) === id);
-            if ((check?.checked || lista.nombre === nombre) && !estaba) await fetch(`/cuenta/listas/${lista.id}/items`, { method: 'POST', headers: { accept: 'application/json', 'content-type': 'application/json' }, body: JSON.stringify({ tipo, id_ref: id }) });
-            if (check && !check.checked && estaba) await fetch(`/cuenta/listas/${lista.id}/items`, { method: 'DELETE', headers: { accept: 'application/json', 'content-type': 'application/json' }, body: JSON.stringify({ tipo, id_ref: id }) });
+          const tipo = boton.dataset.tipo;
+          const id = boton.dataset.idRef;
+          dialogo.innerHTML = `<form method="dialog"><h2 class="h5">Guardar en una lista</h2><div data-opciones-listas></div><label class="form-label mt-3" for="nueva-lista-fav">Nueva lista</label><input class="form-control" id="nueva-lista-fav" maxlength="40"><div class="d-flex gap-2 justify-content-end mt-3"><button class="btn btn-outline-secondary">Cerrar</button><button type="button" class="btn btn-primary" data-guardar-listas>Guardar</button></div></form>`;
+          const opciones = qs('[data-opciones-listas]', dialogo);
+          for (const lista of listas) {
+            const marcado = lista.items.some((i) => i.tipo === tipo && String(i.id_ref) === id);
+            const label = document.createElement('label');
+            label.className = 'form-check d-block';
+            label.innerHTML = `<input class="form-check-input" type="checkbox" value="${lista.id}" ${marcado ? 'checked' : ''}> <span class="form-check-label"></span>`;
+            qs('.form-check-label', label).textContent = lista.nombre;
+            opciones.appendChild(label);
           }
-          dialogo.close(); aviso('Listas actualizadas.');
-        };
-        dialogo.showModal();
-      } catch (error) { aviso(error.message); }
-    }));
+          qs('[data-guardar-listas]', dialogo).onclick = async () => {
+            const nombre = qs('#nueva-lista-fav', dialogo).value.trim();
+            let actuales = listas;
+            if (nombre) {
+              const creada = await fetch('/cuenta/listas', {
+                method: 'POST',
+                headers: { accept: 'application/json', 'content-type': 'application/json' },
+                body: JSON.stringify({ nombre }),
+              });
+              if (!creada.ok) {
+                aviso('No se pudo crear la lista.');
+                return;
+              }
+              const recarga = await fetch('/cuenta/listas.json', { headers: { accept: 'application/json' } });
+              actuales = (await recarga.json()).listas;
+            }
+            for (const lista of actuales) {
+              const check = qs(`input[value="${lista.id}"]`, opciones);
+              const estaba = lista.items.some((i) => i.tipo === tipo && String(i.id_ref) === id);
+              if ((check?.checked || lista.nombre === nombre) && !estaba)
+                await fetch(`/cuenta/listas/${lista.id}/items`, {
+                  method: 'POST',
+                  headers: { accept: 'application/json', 'content-type': 'application/json' },
+                  body: JSON.stringify({ tipo, id_ref: id }),
+                });
+              if (check && !check.checked && estaba)
+                await fetch(`/cuenta/listas/${lista.id}/items`, {
+                  method: 'DELETE',
+                  headers: { accept: 'application/json', 'content-type': 'application/json' },
+                  body: JSON.stringify({ tipo, id_ref: id }),
+                });
+            }
+            dialogo.close();
+            aviso('Listas actualizadas.');
+          };
+          dialogo.showModal();
+        } catch (error) {
+          aviso(error.message);
+        }
+      }),
+    );
 
     const orden = qs('[data-orden-tienda]');
     if (orden) {

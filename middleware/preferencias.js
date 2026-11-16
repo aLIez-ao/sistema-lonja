@@ -1,17 +1,17 @@
-import { formatearMoneda, infoMoneda, t } from "../helpers/i18n.js";
-import { CATEGORIAS, COOKIE_CONSENT, COOKIE_DE_PREF, leerConsentimiento } from "../helpers/cookies.js";
+import { formatearMoneda, infoMoneda, t } from '../helpers/i18n.js';
+import { CATEGORIAS, COOKIE_CONSENT, COOKIE_DE_PREF, leerConsentimiento } from '../helpers/cookies.js';
 
 export const VALORES_PREF = {
-  tema: ["ocean", "dark"],
-  idioma: ["es", "en"],
-  moneda: ["MXN", "USD", "EUR"],
-  tamanoFuente: ["sm", "md", "lg"],
-  tipoFuente: ["sans", "roboto", "segoe", "serif"],
+  tema: ['ocean', 'dark'],
+  idioma: ['es', 'en'],
+  moneda: ['MXN', 'USD', 'EUR'],
+  tamanoFuente: ['sm', 'md', 'lg'],
+  tipoFuente: ['sans', 'roboto', 'segoe', 'serif'],
 };
 
 // El tema "light" (Google Clean) se retiró: las preferencias antiguas se
 // convierten a "ocean" (el único tema claro) al leerlas o guardarlas.
-const normalizar = (clave, valor) => (clave === "tema" && valor === "light" ? "ocean" : valor);
+const normalizar = (clave, valor) => (clave === 'tema' && valor === 'light' ? 'ocean' : valor);
 
 /** Devuelve el valor (ya normalizado) si es válido para esa preferencia; si no, undefined. */
 export const prefValida = (clave, valor) => {
@@ -31,7 +31,11 @@ export function middlewarePreferencias(req, res, next) {
 
   let deCuenta = {};
   if (req.usuario?.preferencias) {
-    try { deCuenta = JSON.parse(req.usuario.preferencias) || {}; } catch { /* preferencias corruptas: se ignoran */ }
+    try {
+      deCuenta = JSON.parse(req.usuario.preferencias) || {};
+    } catch {
+      /* preferencias corruptas: se ignoran */
+    }
   }
 
   const pref = {};
@@ -52,7 +56,7 @@ export function middlewarePreferencias(req, res, next) {
   res.locals.dinero = (monto) => formatearMoneda(monto, pref.moneda);
   res.locals.monedaInfo = infoMoneda(pref.moneda);
   // JSON seguro para incrustar en <script type="application/json">
-  res.locals.jsonSeguro = (dato) => JSON.stringify(dato).replace(/</g, "\\u003c");
+  res.locals.jsonSeguro = (dato) => JSON.stringify(dato).replace(/</g, '\\u003c');
   req.pref = pref;
 
   next();

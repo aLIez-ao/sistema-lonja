@@ -1,35 +1,64 @@
-import { test, before, after } from "node:test";
-import assert from "node:assert/strict";
-import { Op } from "sequelize";
-import { arrancar, db, modelos } from "./ayuda.js";
-import { cargarDemo } from "../scripts/demo.js";
+import { test, before, after } from 'node:test';
+import assert from 'node:assert/strict';
+import { Op } from 'sequelize';
+import { arrancar, db, modelos } from './ayuda.js';
+import { cargarDemo } from '../scripts/demo.js';
 
 let srv;
-before(async () => { srv = await arrancar(); });
+before(async () => {
+  srv = await arrancar();
+});
 after(async () => srv.cerrar());
 
-test("carga demo idempotente, con pedidos coherentes y opiniones verificadas", async () => {
+test('carga demo idempotente, con pedidos coherentes y opiniones verificadas', async () => {
   await cargarDemo(db);
-  const contar = async () => Promise.all([modelos.Comprador.count(), modelos.Lote.count(), modelos.Compra.count(), modelos.Pedido.count(), modelos.Pregunta.count(), modelos.Opinion.count(), modelos.EspecieCatalogo.count()]);
+  const contar = async () =>
+    Promise.all([
+      modelos.Comprador.count(),
+      modelos.Lote.count(),
+      modelos.Compra.count(),
+      modelos.Pedido.count(),
+      modelos.Pregunta.count(),
+      modelos.Opinion.count(),
+      modelos.EspecieCatalogo.count(),
+    ]);
   const primero = await contar();
   await cargarDemo(db);
   assert.deepEqual(await contar(), primero);
   await cargarDemo(db, { limpio: true });
-  assert.deepEqual(await contar(), primero, "el modo limpio reemplaza solo los elementos marcados como demo");
+  assert.deepEqual(await contar(), primero, 'el modo limpio reemplaza solo los elementos marcados como demo');
   const vendidos = await modelos.Compra.count();
-  const reservados = await modelos.PedidoItem.findAll({ include: [{ model: modelos.Pedido, as: "pedido", where: { estado: "pendiente_pago", reservado_hasta: { [Op.gt]: new Date() } }, attributes: [] }], attributes: ["id_lte"] });
-  assert.ok(primero[1] - vendidos - new Set(reservados.map((r) => r.id_lte)).size >= 40, "la tienda mantiene al menos 40 lotes disponibles");
-  const pagados = await modelos.Pedido.findAll({ where: { estado: ["pagado", "preparando", "enviado", "entregado"] }, include: [{ model: modelos.Compra, as: "compras" }] });
+  const reservados = await modelos.PedidoItem.findAll({
+    include: [
+      {
+        model: modelos.Pedido,
+        as: 'pedido',
+        where: { estado: 'pendiente_pago', reservado_hasta: { [Op.gt]: new Date() } },
+        attributes: [],
+      },
+    ],
+    attributes: ['id_lte'],
+  });
+  assert.ok(
+    primero[1] - vendidos - new Set(reservados.map((r) => r.id_lte)).size >= 40,
+    'la tienda mantiene al menos 40 lotes disponibles',
+  );
+  const pagados = await modelos.Pedido.findAll({
+    where: { estado: ['pagado', 'preparando', 'enviado', 'entregado'] },
+    include: [{ model: modelos.Compra, as: 'compras' }],
+  });
   assert.ok(pagados.length >= 4);
   for (const pedido of pagados) {
     assert.ok(pedido.compras.length);
     const totalCompras = pedido.compras.reduce((suma, compra) => suma + Number(compra.precio_total), 0);
     assert.equal(Math.round((totalCompras + Number(pedido.costo_envio)) * 100) / 100, Number(pedido.total));
   }
-  const opiniones = await modelos.Opinion.findAll({ include: [{ model: modelos.Usuario, as: "autor" }] });
+  const opiniones = await modelos.Opinion.findAll({ include: [{ model: modelos.Usuario, as: 'autor' }] });
   assert.ok(opiniones.length);
   for (const opinion of opiniones) {
-    const compra = await modelos.Compra.findOne({ where: { codigo_cpr: opinion.autor.codigo_cpr, id_ped: { [Op.ne]: null } } });
+    const compra = await modelos.Compra.findOne({
+      where: { codigo_cpr: opinion.autor.codigo_cpr, id_ped: { [Op.ne]: null } },
+    });
     assert.ok(compra, `opinion ${opinion.id_op} debe tener una compra vinculada`);
   }
 });

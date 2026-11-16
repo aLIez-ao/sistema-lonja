@@ -4,9 +4,9 @@
 // búsqueda) y devuelve el modelo de vista. `consultarListado` ejecuta la
 // consulta en dos pasos para que el orden y el conteo funcionen aunque haya
 // relaciones 1—N (Lote → Especie, Comprador → Compra, Tipo → Especie).
-import { Op } from "sequelize";
+import { Op } from 'sequelize';
 
-const DIRECCIONES = ["asc", "desc"];
+const DIRECCIONES = ['asc', 'desc'];
 
 /** Añade parámetros de una query evitando coerciones de arreglos u objetos anidados. */
 export function anexarParametrosQuery(params, query, excluir = () => false) {
@@ -14,7 +14,7 @@ export function anexarParametrosQuery(params, query, excluir = () => false) {
     if (excluir(clave)) continue;
     const valores = Array.isArray(valor) ? valor : [valor];
     for (const elemento of valores) {
-      if (["string", "number", "boolean"].includes(typeof elemento) && String(elemento) !== "") {
+      if (['string', 'number', 'boolean'].includes(typeof elemento) && String(elemento) !== '') {
         params.append(clave, String(elemento));
       }
     }
@@ -47,19 +47,24 @@ const aEntero = (valor) => {
  * @param {{campo: string, dir: "asc"|"desc"}} [opciones.ordenDefecto]
  * @param {Object<string, Function>} [opciones.filtros] clave → validador (Fase 4)
  */
-export function leerListado(req, {
-  porPagina = [10, 25, 50, 100],
-  tamDefecto = 25,
-  orden = {},
-  ordenDefecto = { campo: Object.keys(orden)[0], dir: "desc" },
-  filtros = {},
-} = {}) {
-  const q = String(req.query.q ?? "").trim().slice(0, 60);
+export function leerListado(
+  req,
+  {
+    porPagina = [10, 25, 50, 100],
+    tamDefecto = 25,
+    orden = {},
+    ordenDefecto = { campo: Object.keys(orden)[0], dir: 'desc' },
+    filtros = {},
+  } = {},
+) {
+  const q = String(req.query.q ?? '')
+    .trim()
+    .slice(0, 60);
   const tam = porPagina.includes(Number(req.query.tam)) ? Number(req.query.tam) : tamDefecto;
   const campo = Object.prototype.hasOwnProperty.call(orden, req.query.orden)
     ? String(req.query.orden)
     : ordenDefecto.campo;
-  const dirPedida = String(req.query.dir ?? "").toLowerCase();
+  const dirPedida = String(req.query.dir ?? '').toLowerCase();
   const dir = DIRECCIONES.includes(dirPedida) ? dirPedida : ordenDefecto.dir;
   const pagina = Math.max(1, aEntero(req.query.pagina) || 1);
 
@@ -67,10 +72,10 @@ export function leerListado(req, {
   const filtrosActivos = {};
   for (const [clave, validar] of Object.entries(filtros)) {
     const valor = validar(req.query[clave]);
-    if (valor !== undefined && valor !== null && valor !== "") filtrosActivos[clave] = valor;
+    if (valor !== undefined && valor !== null && valor !== '') filtrosActivos[clave] = valor;
   }
 
-  const ruta = (req.baseUrl + req.path).replace(/\/+$/, "") || "/";
+  const ruta = (req.baseUrl + req.path).replace(/\/+$/, '') || '/';
 
   const l = {
     ruta,
@@ -93,13 +98,13 @@ export function leerListado(req, {
 
   /** URL actual cambiando algunos parámetros (conserva búsqueda, filtros, orden y tamaño). */
   l.urlCon = (cambios = {}) => {
-    const reiniciaPagina = Object.keys(cambios).some((k) => k !== "pagina");
+    const reiniciaPagina = Object.keys(cambios).some((k) => k !== 'pagina');
     const params = { ...l.params, ...cambios };
-    if (reiniciaPagina && !("pagina" in cambios)) params.pagina = 1;
+    if (reiniciaPagina && !('pagina' in cambios)) params.pagina = 1;
     const busqueda = new URLSearchParams();
     for (const [k, v] of Object.entries(params)) {
-      if (v === null || v === undefined || v === "" || (Array.isArray(v) && !v.length)) continue;
-      busqueda.set(k, Array.isArray(v) ? v.join(",") : String(v));
+      if (v === null || v === undefined || v === '' || (Array.isArray(v) && !v.length)) continue;
+      busqueda.set(k, Array.isArray(v) ? v.join(',') : String(v));
     }
     const s = busqueda.toString();
     return s ? `${ruta}?${s}` : ruta;
@@ -115,16 +120,15 @@ export function leerListado(req, {
  * ordenar). Paso 2: los registros completos con todos los include, reordenados
  * en JS según el orden de los ids.
  */
-export async function consultarListado(l, {
-  modelo,
-  pk,
-  include = [],
-  includeOrden = include,
-  where = {},
-  orden = {},
-}) {
+export async function consultarListado(
+  l,
+  { modelo, pk, include = [], includeOrden = include, where = {}, orden = {} },
+) {
   const expresion = orden[l.campo] ?? orden[l.ordenDefecto.campo];
-  const order = [[expresion, l.dir], [pk, "DESC"]];
+  const order = [
+    [expresion, l.dir],
+    [pk, 'DESC'],
+  ];
 
   const total = await modelo.count({ where, include: includeOrden, distinct: true, col: pk });
   const paginas = Math.max(1, Math.ceil(total / l.tam));
@@ -136,15 +140,17 @@ export async function consultarListado(l, {
 
   let filas = [];
   if (total) {
-    const ids = (await modelo.findAll({
-      attributes: [pk],
-      where,
-      include: includeOrden,
-      order,
-      limit: l.tam,
-      offset: (l.pagina - 1) * l.tam,
-      raw: true,
-    })).map((fila) => fila[pk]);
+    const ids = (
+      await modelo.findAll({
+        attributes: [pk],
+        where,
+        include: includeOrden,
+        order,
+        limit: l.tam,
+        offset: (l.pagina - 1) * l.tam,
+        raw: true,
+      })
+    ).map((fila) => fila[pk]);
 
     if (ids.length) {
       const registros = await modelo.findAll({ where: { [pk]: { [Op.in]: ids } }, include });

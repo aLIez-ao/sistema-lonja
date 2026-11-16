@@ -145,18 +145,22 @@
       if (input.dataset.rapidos) {
         const chips = document.createElement('div');
         chips.className = 'valores-rapidos';
-        input.dataset.rapidos.split(',').map((v) => v.trim()).filter(Boolean).forEach((valor) => {
-          const chip = document.createElement('button');
-          chip.type = 'button';
-          chip.className = 'chip-valor';
-          chip.textContent = valor;
-          chip.addEventListener('click', () => {
-            input.value = valor;
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-            input.dispatchEvent(new Event('change', { bubbles: true }));
+        input.dataset.rapidos
+          .split(',')
+          .map((v) => v.trim())
+          .filter(Boolean)
+          .forEach((valor) => {
+            const chip = document.createElement('button');
+            chip.type = 'button';
+            chip.className = 'chip-valor';
+            chip.textContent = valor;
+            chip.addEventListener('click', () => {
+              input.value = valor;
+              input.dispatchEvent(new Event('input', { bubbles: true }));
+              input.dispatchEvent(new Event('change', { bubbles: true }));
+            });
+            chips.append(chip);
           });
-          chips.append(chip);
-        });
         mas.insertAdjacentElement('afterend', chips);
       }
 
@@ -290,7 +294,10 @@
         }
       };
 
-      buscador.addEventListener('focus', () => { lista.classList.add('abierto'); pintar(buscador.value); });
+      buscador.addEventListener('focus', () => {
+        lista.classList.add('abierto');
+        pintar(buscador.value);
+      });
       buscador.addEventListener('input', () => pintar(buscador.value));
       select.addEventListener('change', () => pintar(buscador.value));
       document.addEventListener('click', (ev) => {
@@ -485,7 +492,11 @@
     window.print();
   });
 
-  document.addEventListener('error', (ev) => {
-    if (ev.target.matches('img[data-ocultar-si-falla]')) ev.target.style.display = 'none';
-  }, true);
+  document.addEventListener(
+    'error',
+    (ev) => {
+      if (ev.target.matches('img[data-ocultar-si-falla]')) ev.target.style.display = 'none';
+    },
+    true,
+  );
 })();

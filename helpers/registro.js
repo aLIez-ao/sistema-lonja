@@ -12,7 +12,7 @@ const emitir = (nivel, evento, contexto = {}) => {
 
 /** Registro estructurado con contexto breve y sin volcar objetos de aplicación completos. */
 export const registro = Object.freeze({
-  info: (evento, contexto) => emitir("info", evento, contexto),
-  warn: (evento, contexto) => emitir("warn", evento, contexto),
-  error: (evento, contexto) => emitir("error", evento, contexto),
+  info: (evento, contexto) => emitir('info', evento, contexto),
+  warn: (evento, contexto) => emitir('warn', evento, contexto),
+  error: (evento, contexto) => emitir('error', evento, contexto),
 });

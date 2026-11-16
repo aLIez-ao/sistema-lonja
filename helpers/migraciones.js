@@ -1,6 +1,6 @@
-import db from "../config/db.js";
-import { DataTypes, col, fn, where as sqlWhere } from "sequelize";
-import { Especie, EspecieCatalogo } from "../models/index.js";
+import db from '../config/db.js';
+import { DataTypes, col, fn, where as sqlWhere } from 'sequelize';
+import { Especie, EspecieCatalogo } from '../models/index.js';
 
 // Columnas agregadas a "usuario" después de la primera versión. Con BD_SYNC=safe, sync() no
 // altera tablas existentes, así que aquí se crean las que falten.
@@ -44,7 +44,7 @@ export async function asegurarAncho(tabla, nombre, longitud) {
     console.log(`Columna '${nombre}' agregada a la tabla ${tabla}`);
     return true;
   }
-  const tipo = String(col.type || "");
+  const tipo = String(col.type || '');
   const m = /\((\d+)\)/.exec(tipo);
   const actual = m ? Number(m[1]) : 255;
   if (actual >= longitud) return false;
@@ -66,7 +66,7 @@ export async function asegurarColumnasUsuario() {
 
 /** Busca un catálogo por nombre sin distinguir mayúsculas. */
 const catalogoPorNombre = (nombre) =>
-  EspecieCatalogo.findOne({ where: sqlWhere(fn("LOWER", col("nombre")), String(nombre).trim().toLowerCase()) });
+  EspecieCatalogo.findOne({ where: sqlWhere(fn('LOWER', col('nombre')), String(nombre).trim().toLowerCase()) });
 
 /**
  * Rellena `especie.id_cat` a partir de las especies ya capturadas.
@@ -79,7 +79,9 @@ export async function rellenarCatalogoEspecies() {
   // Agrupa por nombre normalizado y elige la capitalización y el tipo más frecuentes.
   const grupos = new Map();
   for (const e of pendientes) {
-    const clave = String(e.nombre || "").trim().toLowerCase();
+    const clave = String(e.nombre || '')
+      .trim()
+      .toLowerCase();
     if (!clave) continue;
     const g = grupos.get(clave) || { nombres: new Map(), tipos: new Map(), imagenes: [], filas: [] };
     g.nombres.set(e.nombre, (g.nombres.get(e.nombre) || 0) + 1);
@@ -114,29 +116,29 @@ export async function rellenarCatalogoEspecies() {
 /** Crea/ajusta columnas de tablas existentes. Idempotente: puede ejecutarse en cada arranque. */
 export async function asegurarEsquema() {
   for (const [nombre, definicion] of Object.entries(COLUMNAS_USUARIO)) {
-    await asegurarColumna("usuario", nombre, definicion);
+    await asegurarColumna('usuario', nombre, definicion);
   }
 
   // Catálogo de especies (Fase 1)
-  await asegurarColumna("especie", "id_cat", {
+  await asegurarColumna('especie', 'id_cat', {
     type: DataTypes.INTEGER,
     allowNull: true,
-    references: { model: "catalogo_especie", key: "id_cat" },
-    onDelete: "SET NULL",
-    onUpdate: "CASCADE",
+    references: { model: 'catalogo_especie', key: 'id_cat' },
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE',
   });
-  await asegurarAncho("especie", "nombre", 40);
-  await asegurarAncho("comprador", "nombre", 40);
-  await asegurarAncho("comprador", "apellido_paterno", 40);
-  await asegurarAncho("comprador", "apellido_materno", 40);
+  await asegurarAncho('especie', 'nombre', 40);
+  await asegurarAncho('comprador', 'nombre', 40);
+  await asegurarAncho('comprador', 'apellido_paterno', 40);
+  await asegurarAncho('comprador', 'apellido_materno', 40);
 
   // La tabla pedido se crea desde el modelo; esta FK permite conservar compras antiguas.
-  await asegurarColumna("compra", "id_ped", {
+  await asegurarColumna('compra', 'id_ped', {
     type: DataTypes.INTEGER,
     allowNull: true,
-    references: { model: "pedido", key: "id_ped" },
-    onDelete: "SET NULL",
-    onUpdate: "CASCADE",
+    references: { model: 'pedido', key: 'id_ped' },
+    onDelete: 'SET NULL',
+    onUpdate: 'CASCADE',
   });
 
   await rellenarCatalogoEspecies();
