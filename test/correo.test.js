@@ -176,7 +176,12 @@ test("APP_URL se usa en los enlaces si está definida", async () => {
   process.env.APP_URL = "https://lonja.example";
   const t = transporteFalso();
   fijarTransporteParaPruebas(t);
-  await admin.post("/configuracion/solicitar-verificacion");
+  const cookie = [...admin.cookies].map(([k, v]) => `${k}=${v}`).join("; ");
+  await fetch(`${srv.base}/configuracion/solicitar-verificacion`, {
+    method: "POST",
+    redirect: "manual",
+    headers: { cookie, origin: "https://lonja.example" },
+  });
   assert.match(t.enviados[0].text, /https:\/\/lonja\.example\/verificar-email\//);
   delete process.env.APP_URL;
 });
