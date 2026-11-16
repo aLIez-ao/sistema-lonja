@@ -26,7 +26,10 @@ test("administración de pedidos filtra, avanza estado y notifica enviado/entreg
   assert.equal((await Pedido.findByPk(pedido.id_ped)).estado, "pagado");
   await admin.post(`/pedidos/${pedido.id_ped}/estado`, { estado: "preparando" });
   await admin.post(`/pedidos/${pedido.id_ped}/estado`, { estado: "enviado" });
-  await admin.post(`/pedidos/${pedido.id_ped}/estado`, { estado: "entregado" });
+  fijarTransporteParaPruebas({ async sendMail() { throw new Error("transporte no disponible"); } });
+  const entrega = await admin.post(`/pedidos/${pedido.id_ped}/estado`, { estado: "entregado" });
+  assert.equal(entrega.status, 302);
+  assert.match(decodeURIComponent(entrega.loc), /Estado actualizado\./);
   assert.equal((await Pedido.findByPk(pedido.id_ped)).estado, "entregado");
   assert.equal(correos.length, 2);
   const inicio = await admin.get("/dashboard");

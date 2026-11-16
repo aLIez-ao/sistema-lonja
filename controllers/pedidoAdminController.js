@@ -3,7 +3,7 @@ import db from "../config/db.js";
 import { Pedido, Usuario, Comprador, PedidoItem, Lote, Especie, Compra } from "../models/index.js";
 import { enviarEmailPedido } from "../helpers/email.js";
 import { cobrar } from "../helpers/pasarela.js";
-import { aError } from "../helpers/utiles.js";
+import { aError, aMensaje } from "../helpers/utiles.js";
 
 const ESTADOS = ["pendiente_pago", "pagado", "preparando", "enviado", "entregado", "cancelado", "expirado"];
 const avanzan = { pagado: "preparando", preparando: "enviado", enviado: "entregado" };
@@ -56,9 +56,10 @@ export async function cambiarEstado(req, res) {
   await pedido.update({ estado: siguiente });
   if (["enviado", "entregado"].includes(siguiente) && pedido.usuario?.correo) {
     const parrafos = siguiente === "enviado" ? ["Tu pedido está en camino."] : ["Tu pedido fue marcado como entregado."];
-    await enviarEmailPedido({ usuario: pedido.usuario, correo: pedido.usuario.correo, pedido, items: pedido.items, asunto: "Actualización de pedido", titulo: siguiente === "enviado" ? "Pedido enviado" : "Pedido entregado", parrafos });
+    try { await enviarEmailPedido({ usuario: pedido.usuario, correo: pedido.usuario.correo, pedido, items: pedido.items, asunto: "Actualización de pedido", titulo: siguiente === "enviado" ? "Pedido enviado" : "Pedido entregado", parrafos }); }
+    catch (error) { console.warn("El estado del pedido cambió pero no se pudo enviar el correo:", error.message); }
   }
-  res.redirect(`/pedidos/${pedido.id_ped}?mensaje=actualizado`);
+  res.redirect(`/pedidos/${pedido.id_ped}?${aMensaje("Estado actualizado.")}`);
 }
 
 export async function confirmarCobro(req, res) {
