@@ -201,7 +201,7 @@ export const portada = async (req, res) => {
   const min = precioMinimo(l.filas.map((f) => ({ precio_kilo_salida: f.precio_kilo_salida })));
   l.filas = l.filas.map((f) => prepararLote(f, { hoyInicio: inicioHoy, minPrecio: min }));
 
-  const [recien, baratos, grandes, pequenos, tipos, catalogo, totalDisponibles] = await Promise.all([
+  const [recien, baratos, grandes, pequenos, tipos, catalogo, totalDisponibles, conteosTipo] = await Promise.all([
     lotesDisponibles({ fecha: { [Op.gte]: inicioHoy } }, [["fecha", "DESC"]], 8, inicioHoy),
     lotesDisponibles({}, [["precio_kilo_salida", "ASC"]], 8, inicioHoy),
     lotesDisponibles({}, [["kilos", "DESC"]], 8, inicioHoy),
@@ -213,27 +213,20 @@ export const portada = async (req, res) => {
       order: [["nombre", "ASC"]],
     }),
     Lote.count({ where: disponible() }),
+    Lote.findAll({
+      attributes: [[col("especies.id_tpo"), "id_tpo"], [fn("COUNT", fn("DISTINCT", col("Lote.id_lte"))), "total"]],
+      where: disponible(),
+      include: [{ model: Especie, as: "especies", attributes: [], required: true }],
+      group: [col("especies.id_tpo")],
+      raw: true,
+    }),
   ]);
 
   // Contador por categoría (lotes distintos, no especies).
-  const idsDisponibles = await Lote.findAll({
-    attributes: ["id_lte"],
-    where: disponible(),
-    raw: true,
-  });
-  const pares = await Especie.findAll({
-    attributes: ["id_lte", "id_tpo"],
-    where: { id_lte: { [Op.in]: idsDisponibles.map((d) => d.id_lte) } },
-    raw: true,
-  });
-  const porTipo = new Map();
-  for (const par of pares) {
-    if (!porTipo.has(par.id_tpo)) porTipo.set(par.id_tpo, new Set());
-    porTipo.get(par.id_tpo).add(par.id_lte);
-  }
+  const porTipo = new Map(conteosTipo.map((fila) => [fila.id_tpo, Number(fila.total)]));
   const categorias = tipos.map((tp) => ({
     ...tp.get({ plain: true }),
-    total: porTipo.get(tp.id_tpo)?.size || 0,
+    total: porTipo.get(tp.id_tpo) || 0,
   }));
 
   // Héroe: hasta 4 destacados de hoy; si faltan, los de mejor precio.
