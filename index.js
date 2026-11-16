@@ -10,6 +10,27 @@ import { validarSecretosInicio } from "./helpers/validacionSecretos.js";
 
 dotenv.config({ path: ".env" });
 const port = process.env.PORT || 2800;
+let servidor;
+let barridoReservas;
+
+const apagar = (senal) => {
+  if (!servidor) return;
+  clearInterval(barridoReservas);
+  servidor.close(async (error) => {
+    if (error) {
+      console.error(`Error al cerrar el servidor tras ${senal}:`, error);
+      process.exitCode = 1;
+    }
+    try { await db.close(); }
+    catch (errorDb) {
+      console.error("Error al cerrar la conexión a la base de datos:", errorDb);
+      process.exitCode = 1;
+    }
+  });
+};
+
+process.once("SIGINT", () => apagar("SIGINT"));
+process.once("SIGTERM", () => apagar("SIGTERM"));
 
 (async () => {
   try {
@@ -34,12 +55,12 @@ const port = process.env.PORT || 2800;
     else if (correo.error) console.warn(`\x1b[31mGmail rechazó las credenciales: ${correo.error}\x1b[0m`);
     else console.warn("\x1b[33mCorreo NO configurado (modo simulador). Define GMAIL_USER y GMAIL_PASS en .env\x1b[0m");
 
-    const barridoReservas = setInterval(() => {
+    barridoReservas = setInterval(() => {
       liberarPedidosVencidos().catch((error) => console.warn("No se pudieron limpiar reservas vencidas:", error.message));
     }, 60_000);
     barridoReservas.unref();
 
-    app.listen(port, () => {
+    servidor = app.listen(port, () => {
       console.log(`Servidor corriendo en \x1b[36mhttp://localhost:${port}\x1b[0m`);
     });
   } catch (err) {
