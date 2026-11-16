@@ -1,5 +1,6 @@
 import { body } from "express-validator";
 import { Op, col } from "sequelize";
+import db from "../config/db.js";
 import { Compra, Lote, Comprador, Especie, Tipo } from "../models/index.js";
 import { mensajesError, mensajeBD, aMensaje, aError } from "../helpers/utiles.js";
 import { redondea } from "../helpers/fechas.js";
@@ -9,6 +10,7 @@ import { enviarEmailComprobanteCompra } from "../helpers/email.js";
 import { leerListado, consultarListado, combinarWhere } from "../helpers/listado.js";
 import { condicionBusqueda } from "../helpers/busqueda.js";
 import { condicionFiltros, filtroEntero, filtroFecha, filtroNumero } from "../helpers/filtros.js";
+import { loteDisponible, reservasActivas } from "../helpers/pedidos.js";
 
 const reglas = [
   body("precio_kilo_final").isFloat({ gt: 0, max: 99999999 }).withMessage("El precio final por kilo debe ser un número mayor a 0"),
@@ -35,10 +37,14 @@ const lotesDisponibles = async (incluirId) => {
   return Lote.findAll({ where, order: [["id_lte", "DESC"]], include: [{ model: Especie, as: "especies", include: [{ model: Tipo, as: "tipo" }] }] });
 };
 
-const catalogos = async (incluirId) => ({
-  lotes: await lotesDisponibles(incluirId),
-  compradores: await Comprador.findAll({ order: [["apellido_paterno", "ASC"], ["nombre", "ASC"]] }),
-});
+const catalogos = async (incluirId) => {
+  const [lotes, compradores, reservas] = await Promise.all([
+    lotesDisponibles(incluirId),
+    Comprador.findAll({ order: [["apellido_paterno", "ASC"], ["nombre", "ASC"]] }),
+    reservasActivas(),
+  ]);
+  return { lotes: lotes.map((lote) => ({ ...lote.get({ plain: true }), reservaActiva: reservas.get(Number(lote.id_lte)) || null })), compradores };
+};
 
 const POR_PAGINA = [10, 25, 50, 100];
 
@@ -119,24 +125,33 @@ const registrar = async (req, res) => {
   const errs = mensajesError(req);
   if (!errs.length) {
     try {
-      const lote = await Lote.findByPk(req.body.id_cmp, {
-        include: [{ model: Especie, as: "especies", include: [{ model: Tipo, as: "tipo" }] }],
+      const resultado = await db.transaction(async (transaction) => {
+        const disponibilidad = await loteDisponible(req.body.id_cmp, { transaction });
+        if (disponibilidad.motivo) return { error: {
+          no_existe: "El lote no existe",
+          vendido: "Ese lote ya fue comprado",
+          reservado: "Ese lote está reservado por un pedido en línea y no se puede vender en mostrador",
+          reservado_propio: "Ese lote está reservado por un pedido en línea y no se puede vender en mostrador",
+        }[disponibilidad.motivo] || "El lote no está disponible" };
+        const lote = await Lote.findByPk(disponibilidad.lote.id_lte, {
+          transaction,
+          include: [{ model: Especie, as: "especies", include: [{ model: Tipo, as: "tipo" }] }],
+        });
+        const comprador = await Comprador.findByPk(req.body.codigo_cpr, { transaction });
+        if (!comprador) return { error: "El comprador no existe" };
+        const precio = Number(req.body.precio_kilo_final);
+        const total = redondea(Number(lote.kilos) * precio);
+        const nuevaCompra = await Compra.create({
+          id_cmp: lote.id_lte,
+          codigo_cpr: req.body.codigo_cpr,
+          precio_kilo_final: precio,
+          precio_total: total,
+        }, { transaction });
+        return { nuevaCompra, lote, comprador };
       });
-      if (!lote) errs.push("El lote no existe");
-      else if (await Compra.findOne({ where: { id_cmp: lote.id_lte } })) errs.push("Ese lote ya fue comprado");
+      if (resultado.error) errs.push(resultado.error);
       else {
-        const comprador = await Comprador.findByPk(req.body.codigo_cpr);
-        if (!comprador) errs.push("El comprador no existe");
-        else {
-          const precio = Number(req.body.precio_kilo_final);
-          const total = redondea(Number(lote.kilos) * precio);
-
-          const nuevaCompra = await Compra.create({
-            id_cmp: lote.id_lte,
-            codigo_cpr: req.body.codigo_cpr,
-            precio_kilo_final: precio,
-            precio_total: total,
-          });
+        const { nuevaCompra, lote, comprador } = resultado;
 
           // Si el comprador tiene correo, enviar comprobante / factura opcional o automáticamente
           if (comprador.correo) {
@@ -156,7 +171,6 @@ const registrar = async (req, res) => {
           }
 
           return res.redirect(`/compras/${nuevaCompra.id_cmp}/factura?${aMensaje("Compra registrada y factura generada con éxito")}`);
-        }
       }
     } catch (e) { errs.push(mensajeBD(e)); }
   }

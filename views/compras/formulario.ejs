@@ -21,12 +21,13 @@
             <% } else { %>
               <div class="lista-seleccion" role="radiogroup" aria-label="Lote adjudicado">
                 <% lotes.forEach(l => { const marcado = compra && String(compra.id_cmp) === String(l.id_lte); %>
-                  <label class="opcion-seleccion <%= marcado ? 'tarjeta-seleccionada' : '' %>" data-tarjeta aria-pressed="<%= marcado ? 'true' : 'false' %>">
-                    <input type="radio" name="id_cmp" id="id_cmp_<%= l.id_lte %>" value="<%= l.id_lte %>" data-kilos="<%= l.kilos %>" data-salida="<%= l.precio_kilo_salida %>" <%= marcado ? 'checked' : '' %> required>
+                  <label class="opcion-seleccion <%= marcado ? 'tarjeta-seleccionada' : '' %> <%= l.reservaActiva ? 'opacity-75' : '' %>" data-tarjeta aria-pressed="<%= marcado ? 'true' : 'false' %>">
+                    <input type="radio" name="id_cmp" id="id_cmp_<%= l.id_lte %>" value="<%= l.id_lte %>" data-kilos="<%= l.kilos %>" data-salida="<%= l.precio_kilo_salida %>" <%= marcado ? 'checked' : '' %> <%= l.reservaActiva ? 'disabled' : 'required' %>>
                     <span class="flex-grow-1">
                       <span class="fw-bold">Lote #<%= l.id_lte %></span>
                       <span class="d-block small text-muted"><%= l.especies.map(e => e.nombre).join(', ') || 'Sin especies' %></span>
                       <span class="d-block small text-muted"><%= Number(l.kilos).toFixed(2) %> kg · <%= l.numero_cajas %> cajas · salida <%= dinero(l.precio_kilo_salida) %>/kg</span>
+                      <% if (l.reservaActiva) { %><span class="d-block small text-warning-emphasis">Reservado por un pedido en línea hasta <%= new Date(l.reservaActiva.reservado_hasta).toLocaleString('es-MX') %></span><% } %>
                     </span>
                   </label>
                 <% }) %>
