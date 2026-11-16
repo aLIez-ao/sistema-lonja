@@ -14,7 +14,7 @@
       <% } %>
     <% }) %>
     <label for="tam-<%= etiqueta %>" class="small text-muted mb-0">Filas por página</label>
-    <select id="tam-<%= etiqueta %>" name="tam" class="form-select form-select-sm w-auto" onchange="this.form.submit()">
+    <select id="tam-<%= etiqueta %>" name="tam" class="form-select form-select-sm w-auto" data-submit-form>
       <% l.porPagina.forEach((n) => { %>
         <option value="<%= n %>" <%= n === l.tam ? 'selected' : '' %>><%= n %></option>
       <% }) %>

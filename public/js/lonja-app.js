@@ -653,3 +653,8 @@ document.addEventListener('click', (ev) => {
   const btn = ev.target.closest('[data-pref]');
   if (btn) aplicarPreferencia(btn.dataset.pref, btn.dataset.valor);
 });
+
+document.addEventListener('change', (ev) => {
+  const control = ev.target.closest('[data-preferencia]');
+  if (control) aplicarPreferencia(control.dataset.preferencia, control.value);
+});

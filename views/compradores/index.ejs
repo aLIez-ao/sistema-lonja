@@ -48,7 +48,7 @@
               <%- icono('pencil', 14) %>
             </a>
             <% if (usuario.rol === 'admin') { %>
-            <form action="/compradores/<%= c.codigo_cpr %>?_method=DELETE" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este comprador?')">
+            <form action="/compradores/<%= c.codigo_cpr %>?_method=DELETE" method="POST" class="d-inline" data-confirmar="¿Eliminar este comprador?">
               <button class="btn btn-sm btn-outline-danger" type="submit" title="Eliminar comprador" aria-label="Eliminar comprador">
                 <%- icono('trash', 14) %>
               </button>

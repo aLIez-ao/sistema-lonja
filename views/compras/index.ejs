@@ -69,7 +69,7 @@
               </a>
 
               <% if (usuario.rol === 'admin') { %>
-                <form action="/compras/<%= c.id_cmp %>?_method=DELETE" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar esta compra? El lote volverá a quedar disponible.')">
+                <form action="/compras/<%= c.id_cmp %>?_method=DELETE" method="POST" class="d-inline" data-confirmar="¿Eliminar esta compra? El lote volverá a quedar disponible.">
                   <button class="btn btn-sm btn-outline-danger" type="submit" title="Eliminar compra" aria-label="Eliminar compra">
                     <%- icono('trash', 14) %>
                   </button>

@@ -46,7 +46,7 @@
                 <button class="btn btn-sm btn-outline-primary" type="submit"><%- icono('check-circle', 14, 'me-1') %>Hacer principal</button>
               </form>
             <% } %>
-            <form action="/cuenta/direcciones/<%= d.id_dir %>?_method=DELETE" method="POST" class="m-0" onsubmit="return confirm('¿Eliminar la dirección «<%= d.alias %>»?')">
+            <form action="/cuenta/direcciones/<%= d.id_dir %>?_method=DELETE" method="POST" class="m-0" data-confirmar="¿Eliminar la dirección «<%= d.alias %>»?">
               <button class="btn btn-sm btn-outline-danger" type="submit"><%- icono('trash', 14, 'me-1') %>Eliminar</button>
             </form>
           </div>

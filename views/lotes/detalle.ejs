@@ -28,7 +28,7 @@
       </a>
     <% } %>
     <% if (usuario.rol === 'admin' && !lote.compra) { %>
-      <form action="/lotes/<%= lote.id_lte %>?_method=DELETE" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este lote y sus especies?')">
+      <form action="/lotes/<%= lote.id_lte %>?_method=DELETE" method="POST" class="d-inline" data-confirmar="¿Eliminar este lote y sus especies?">
         <button class="btn btn-outline-danger" type="submit"><%- icono('trash', 16, 'me-1') %>Eliminar</button>
       </form>
     <% } %>

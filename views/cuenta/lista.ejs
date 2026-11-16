@@ -4,7 +4,7 @@
   <div class="d-flex gap-2 flex-wrap mb-4">
     <form action="/cuenta/listas/<%= lista.id_lista %>?_method=PUT" method="post" class="d-flex gap-2"><label class="visually-hidden" for="renombrar">Cambiar nombre</label><input id="renombrar" name="nombre" maxlength="40" class="form-control" value="<%= lista.nombre %>" required><button class="btn btn-outline-secondary">Renombrar</button></form>
     <form action="/cuenta/listas/<%= lista.id_lista %>/carrito" method="post"><button class="btn btn-primary">Agregar disponibles al carrito</button></form>
-    <form action="/cuenta/listas/<%= lista.id_lista %>?_method=DELETE" method="post" onsubmit="return confirm('¿Eliminar esta lista y sus elementos?')"><button class="btn btn-outline-danger">Eliminar lista</button></form>
+    <form action="/cuenta/listas/<%= lista.id_lista %>?_method=DELETE" method="post" data-confirmar="¿Eliminar esta lista y sus elementos?"><button class="btn btn-outline-danger">Eliminar lista</button></form>
   </div>
   <% if (!items.length) { %><p class="text-muted">Esta lista aún no tiene elementos.</p><% } %>
   <div class="row g-3">

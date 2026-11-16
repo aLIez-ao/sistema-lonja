@@ -11,7 +11,7 @@
         <div class="col-12 col-lg-6"><article class="card h-100"><div class="card-body">
           <div class="d-flex justify-content-between gap-2 align-items-start"><div><h3 class="h5 mb-1"><a href="/tienda/especie/<%= opinion.id_cat %>"><%= opinion.especie?.nombre || 'Especie' %></a></h3><div class="text-warning" aria-label="<%= opinion.estrellas %> de 5 estrellas"><%= '★'.repeat(opinion.estrellas) %></div></div><span class="badge <%= opinion.visible ? 'text-bg-success' : 'text-bg-secondary' %>"><%= opinion.visible ? 'Visible' : 'Oculta por moderación' %></span></div>
           <h4 class="h6 mt-3"><%= opinion.titulo %></h4><p class="mb-2"><%= opinion.texto %></p><small class="text-muted">Actualizada: <%= fechaHora(opinion.fecha) %></small>
-          <div class="d-flex flex-wrap gap-2 mt-3"><a class="btn btn-sm btn-outline-primary" href="/tienda/especie/<%= opinion.id_cat %>#opiniones">Editar opinión</a><form action="/cuenta/opiniones/<%= opinion.id_op %>?_method=DELETE" method="post" onsubmit="return confirm('¿Eliminar esta opinión?')"><button class="btn btn-sm btn-outline-danger">Eliminar</button></form></div>
+          <div class="d-flex flex-wrap gap-2 mt-3"><a class="btn btn-sm btn-outline-primary" href="/tienda/especie/<%= opinion.id_cat %>#opiniones">Editar opinión</a><form action="/cuenta/opiniones/<%= opinion.id_op %>?_method=DELETE" method="post" data-confirmar="¿Eliminar esta opinión?"><button class="btn btn-sm btn-outline-danger">Eliminar</button></form></div>
         </div></article></div>
       <% }) %>
     </div>

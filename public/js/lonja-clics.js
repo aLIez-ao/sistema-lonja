@@ -467,4 +467,21 @@
     inicializarNuevaEspecie();
     inicializarRequiereEspecies();
   });
+
+  document.addEventListener('submit', (ev) => {
+    const formulario = ev.target.closest('form[data-confirmar]');
+    if (formulario && !window.confirm(formulario.dataset.confirmar)) ev.preventDefault();
+  });
+
+  document.addEventListener('change', (ev) => {
+    const control = ev.target.closest('[data-submit-form]');
+    if (control?.form) control.form.requestSubmit();
+  });
+
+  document.addEventListener('click', (ev) => {
+    const boton = ev.target.closest('[data-print]');
+    if (!boton) return;
+    ev.preventDefault();
+    window.print();
+  });
 })();

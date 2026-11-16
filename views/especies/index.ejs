@@ -55,7 +55,7 @@
                 <%- icono('pencil', 14) %>
               </a>
               <% if (usuario.rol === 'admin') { %>
-              <form action="/especies/<%= e.id_epe %>?_method=DELETE" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar esta especie?')">
+              <form action="/especies/<%= e.id_epe %>?_method=DELETE" method="POST" class="d-inline" data-confirmar="¿Eliminar esta especie?">
                 <button class="btn btn-sm btn-outline-danger" type="submit" title="Eliminar especie" aria-label="Eliminar especie">
                   <%- icono('trash', 14) %>
                 </button>

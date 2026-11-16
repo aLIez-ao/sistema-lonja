@@ -11,7 +11,7 @@
       <%- icono('pencil', 16, 'me-1') %>Editar
     </a>
     <% if (usuario.rol === 'admin') { %>
-      <form action="/tipos/<%= tipo.id_tpo %>?_method=DELETE" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este tipo?')">
+      <form action="/tipos/<%= tipo.id_tpo %>?_method=DELETE" method="POST" class="d-inline" data-confirmar="¿Eliminar este tipo?">
         <button class="btn btn-outline-danger" type="submit"><%- icono('trash', 16, 'me-1') %>Eliminar</button>
       </form>
     <% } %>

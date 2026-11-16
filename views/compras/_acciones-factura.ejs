@@ -18,7 +18,7 @@
     <button class="<%= clase %> btn-outline-primary" type="submit"><%- icono('envelope', tamIcono, 'me-1') %><%= t('enviar_correo') %></button>
   </form>
 <% } %>
-<button class="<%= clase %> btn-outline-secondary" type="button" onclick="window.print()">
+<button class="<%= clase %> btn-outline-secondary" type="button" data-print>
   <%- icono('printer', tamIcono, 'me-1') %>Imprimir
 </button>
 <% if (enModal) { %>

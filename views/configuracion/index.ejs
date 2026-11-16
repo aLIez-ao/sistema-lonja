@@ -78,7 +78,7 @@
               <!-- Tema -->
               <div class="col-md-6">
                 <label class="form-label fw-semibold"><%= t('tema') %></label>
-                <select name="tema" class="form-select" onchange="aplicarPreferencia('tema', this.value)">
+                <select name="tema" class="form-select" data-preferencia="tema">
                   <option value="ocean" <%= pref.tema === 'ocean' ? 'selected' : '' %>>Claro</option>
                   <option value="dark" <%= pref.tema === 'dark' ? 'selected' : '' %>>Oscuro</option>
                 </select>
@@ -87,7 +87,7 @@
               <!-- Moneda -->
               <div class="col-md-6">
                 <label class="form-label fw-semibold"><%= t('moneda') %></label>
-                <select name="moneda" class="form-select" onchange="aplicarPreferencia('moneda', this.value)">
+                <select name="moneda" class="form-select" data-preferencia="moneda">
                   <option value="MXN" <%= pref.moneda === 'MXN' ? 'selected' : '' %>>MXN - Peso Mexicano ($)</option>
                   <option value="USD" <%= pref.moneda === 'USD' ? 'selected' : '' %>>USD - Dólar Estadounidense ($)</option>
                   <option value="EUR" <%= pref.moneda === 'EUR' ? 'selected' : '' %>>EUR - Euro (€)</option>
@@ -97,7 +97,7 @@
               <!-- Idioma -->
               <div class="col-md-6">
                 <label class="form-label fw-semibold"><%= t('idioma') %></label>
-                <select name="idioma" class="form-select" onchange="aplicarPreferencia('idioma', this.value)">
+                <select name="idioma" class="form-select" data-preferencia="idioma">
                   <option value="es" <%= pref.idioma === 'es' ? 'selected' : '' %>>Español (México)</option>
                   <option value="en" <%= pref.idioma === 'en' ? 'selected' : '' %>>English (US)</option>
                 </select>
@@ -106,7 +106,7 @@
               <!-- Tamaño de Fuente -->
               <div class="col-md-6">
                 <label class="form-label fw-semibold"><%= t('tamano_fuente') %></label>
-                <select name="tamanoFuente" class="form-select" onchange="aplicarPreferencia('tamanoFuente', this.value)">
+                <select name="tamanoFuente" class="form-select" data-preferencia="tamanoFuente">
                   <option value="sm" <%= pref.tamanoFuente === 'sm' ? 'selected' : '' %>>Pequeña (13.5px)</option>
                   <option value="md" <%= pref.tamanoFuente === 'md' ? 'selected' : '' %>>Normal (15px)</option>
                   <option value="lg" <%= pref.tamanoFuente === 'lg' ? 'selected' : '' %>>Grande (16.5px)</option>
@@ -116,7 +116,7 @@
               <!-- Tipo de Fuente -->
               <div class="col-md-6">
                 <label class="form-label fw-semibold"><%= t('tipo_fuente') %></label>
-                <select name="tipoFuente" class="form-select" onchange="aplicarPreferencia('tipoFuente', this.value)">
+                <select name="tipoFuente" class="form-select" data-preferencia="tipoFuente">
                   <option value="sans" <%= pref.tipoFuente === 'sans' ? 'selected' : '' %>>Inter / Sans Moderna</option>
                   <option value="roboto" <%= pref.tipoFuente === 'roboto' ? 'selected' : '' %>>Roboto Google</option>
                   <option value="segoe" <%= pref.tipoFuente === 'segoe' ? 'selected' : '' %>>Segoe UI</option>

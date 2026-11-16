@@ -9,7 +9,7 @@
   <div class="d-flex flex-wrap gap-2 align-items-end d-print-none">
     <form method="GET" action="/reportes/diario" class="m-0">
       <label class="form-label small fw-semibold mb-1" for="selectorAnio">Año</label>
-      <select class="form-select" id="selectorAnio" name="anio" onchange="this.form.submit()" style="min-width: 7.5rem;">
+      <select class="form-select" id="selectorAnio" name="anio" data-submit-form style="min-width: 7.5rem;">
         <% aniosDisponibles.forEach(a => { %>
           <option value="<%= a %>" <%= a === anio ? 'selected' : '' %>><%= a %></option>
         <% }) %>

@@ -40,7 +40,7 @@
               <%- icono('pencil', 14) %>
             </a>
             <% if (usuario.rol === 'admin') { %>
-            <form action="/tipos/<%= tipo.id_tpo %>?_method=DELETE" method="POST" class="d-inline" onsubmit="return confirm('¿Eliminar este tipo?')">
+            <form action="/tipos/<%= tipo.id_tpo %>?_method=DELETE" method="POST" class="d-inline" data-confirmar="¿Eliminar este tipo?">
               <button class="btn btn-sm btn-outline-danger" type="submit" title="Eliminar tipo" aria-label="Eliminar tipo">
                 <%- icono('trash', 14) %>
               </button>

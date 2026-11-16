@@ -58,6 +58,12 @@ test("sin sesión se redirige al login", async () => {
   }
 });
 
+test("la CSP estricta permite solo scripts del mismo origen y prohíbe marcos", async () => {
+  const respuesta = await sesion().get("/");
+  assert.equal(respuesta.status, 200);
+  assert.equal(respuesta.headers.get("content-security-policy"), "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'");
+});
+
 test("login: credenciales malas rechazadas, buenas entran con cookie httpOnly", async () => {
   const mal = await sesion().post("/credenciales", { usuario: "admin", password: "incorrecta" });
   assert.equal(mal.status, 401);
