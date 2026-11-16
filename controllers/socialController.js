@@ -17,6 +17,7 @@ async function listaFavoritos(id_usuario) {
 
 const limitePreguntas = crearLimite({ max: 5, ventanaMs: 60 * 60 * 1000 });
 const limpio = (v, max) => String(v ?? "").trim().slice(0, max);
+const esListaFavoritos = (nombre) => String(nombre ?? "").trim().toLocaleLowerCase() === "favoritos";
 
 export function protegerAccionComprador(req, res, next) {
   if (req.usuario?.rol === "comprador") return next();
@@ -71,6 +72,7 @@ export async function alternarFavorito(req, res) {
 export async function crearLista(req, res) {
   const nombre = limpio(req.body.nombre, 40);
   if (!nombre) return esJson(req) ? res.status(400).json({ ok: false, mensaje: "Escribe un nombre para la lista." }) : volverA(req, res, "/cuenta/listas", { error: "Escribe un nombre para la lista." });
+  if (esListaFavoritos(nombre)) return esJson(req) ? res.status(409).json({ ok: false, mensaje: "Ese nombre está reservado para tus favoritos." }) : volverA(req, res, "/cuenta/listas", { error: "Ese nombre está reservado para tus favoritos." });
   let lista;
   try { lista = await Lista.create({ id_usuario: req.usuario.id, nombre }); }
   catch { return esJson(req) ? res.status(409).json({ ok: false, mensaje: "Ya existe una lista con ese nombre." }) : volverA(req, res, "/cuenta/listas", { error: "Ya existe una lista con ese nombre." }); }
@@ -117,12 +119,19 @@ export async function renombrarLista(req, res) {
   if (!lista) return errorDeSitio(req, res, 404, "No encontramos esa lista.", "/cuenta/listas");
   const nombre = limpio(req.body.nombre, 40);
   if (!nombre) return volverA(req, res, `/cuenta/listas/${lista.id_lista}`, { error: "El nombre no puede quedar vacío." });
-  await lista.update({ nombre });
+  if (esListaFavoritos(lista.nombre)) return volverA(req, res, `/cuenta/listas/${lista.id_lista}`, { error: "La lista Favoritos no se puede renombrar." });
+  if (esListaFavoritos(nombre)) return volverA(req, res, `/cuenta/listas/${lista.id_lista}`, { error: "Ese nombre está reservado para tus favoritos." });
+  try { await lista.update({ nombre }); }
+  catch (e) {
+    if (e.name === "SequelizeUniqueConstraintError") return volverA(req, res, `/cuenta/listas/${lista.id_lista}`, { error: "Ya existe una lista con ese nombre." });
+    throw e;
+  }
   return volverA(req, res, `/cuenta/listas/${lista.id_lista}`, { mensaje: "Lista actualizada." });
 }
 export async function borrarLista(req, res) {
   const lista = await Lista.findOne({ where: { id_lista: req.params.id, id_usuario: req.usuario.id } });
   if (!lista) return errorDeSitio(req, res, 404, "No encontramos esa lista.", "/cuenta/listas");
+  if (esListaFavoritos(lista.nombre)) return volverA(req, res, `/cuenta/listas/${lista.id_lista}`, { error: "La lista Favoritos no se puede eliminar." });
   await ListaItem.destroy({ where: { id_lista: lista.id_lista } }); await lista.destroy();
   return volverA(req, res, "/cuenta/listas", { mensaje: "Lista eliminada." });
 }
