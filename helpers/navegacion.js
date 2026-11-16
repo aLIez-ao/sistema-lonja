@@ -36,14 +36,18 @@ export function rutaReferer(req, porDefecto = "/") {
 
 /** Valida que un método con efectos venga del mismo host y tenga origen explícito. */
 export function origenDePeticionValido(req) {
+  const appUrl = String(process.env.APP_URL || "").trim();
   const host = String(req.get?.("host") || "").toLowerCase();
-  if (!host) return false;
+  if (!host && !appUrl) return false;
   const fuentes = [req.get?.("origin"), req.get?.("referer")].filter(Boolean);
   if (!fuentes.length) return false;
   try {
+    const origenEsperado = appUrl ? new URL(appUrl).origin.toLowerCase() : null;
+    if (appUrl && !["http:", "https:"].includes(new URL(appUrl).protocol)) return false;
     return fuentes.every((fuente) => {
       const url = new URL(fuente);
-      return ["http:", "https:"].includes(url.protocol) && url.host.toLowerCase() === host;
+      if (!["http:", "https:"].includes(url.protocol)) return false;
+      return origenEsperado ? url.origin.toLowerCase() === origenEsperado : url.host.toLowerCase() === host;
     });
   } catch {
     return false;

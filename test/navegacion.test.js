@@ -20,3 +20,21 @@ test("las solicitudes con efectos requieren origen o referer del mismo host", ()
   cabeceras.referer = undefined;
   assert.equal(origenDePeticionValido(req), false);
 });
+
+test("APP_URL fija el origen de confianza cuando el proxy cambia Host", () => {
+  const anterior = process.env.APP_URL;
+  try {
+    process.env.APP_URL = "https://lonja.example/base";
+    const cabeceras = { host: "proxy-interno:8080", origin: "https://lonja.example", referer: "https://lonja.example/cuenta" };
+    const req = { get: (nombre) => cabeceras[nombre] };
+    assert.equal(origenDePeticionValido(req), true);
+    cabeceras.origin = "https://atacante.example";
+    assert.equal(origenDePeticionValido(req), false);
+    process.env.APP_URL = "javascript:alert(1)";
+    cabeceras.origin = "https://lonja.example";
+    assert.equal(origenDePeticionValido(req), false);
+  } finally {
+    if (anterior === undefined) delete process.env.APP_URL;
+    else process.env.APP_URL = anterior;
+  }
+});
