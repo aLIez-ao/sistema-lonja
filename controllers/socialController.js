@@ -114,15 +114,28 @@ export async function detalleLista(req, res) {
   const lista = await Lista.findOne({ where: { id_lista: req.params.id, id_usuario: req.usuario.id } });
   if (!lista) return errorDeSitio(req, res, 404, "No encontramos esa lista.", "/cuenta/listas");
   const items = await ListaItem.findAll({ where: { id_lista: lista.id_lista }, order: [["fecha", "DESC"]] });
-  const disponibilidad = await disponibilidadDeLotes(items.filter((item) => item.tipo === "lote").map((item) => item.id_ref), { usuarioId: req.usuario.id });
-  const datos = await Promise.all(items.map(async (i) => {
-    const elemento = i.tipo === "lote" ? await Lote.findByPk(i.id_ref, { include: [{ model: Especie, as: "especies" }, { model: Compra, as: "compra" }] }) : await EspecieCatalogo.findByPk(i.id_ref);
+  const idsLotes = [...new Set(items.filter((item) => item.tipo === "lote").map((item) => Number(item.id_ref)))];
+  const idsEspecies = [...new Set(items.filter((item) => item.tipo === "especie").map((item) => Number(item.id_ref)))];
+  const [lotes, especies, disponibilidad] = await Promise.all([
+    idsLotes.length ? Lote.findAll({
+      where: { id_lte: { [Op.in]: idsLotes } },
+      include: [{ model: Especie, as: "especies", include: [{ model: Tipo, as: "tipo" }] }, { model: Compra, as: "compra" }],
+    }) : [],
+    idsEspecies.length ? EspecieCatalogo.findAll({ where: { id_cat: { [Op.in]: idsEspecies } } }) : [],
+    disponibilidadDeLotes(idsLotes, { usuarioId: req.usuario.id }),
+  ]);
+  const elementos = new Map([
+    ...lotes.map((lote) => [`lote:${lote.id_lte}`, lote]),
+    ...especies.map((especie) => [`especie:${especie.id_cat}`, especie]),
+  ]);
+  const datos = items.map((i) => {
+    const elemento = elementos.get(`${i.tipo}:${i.id_ref}`);
     if (!elemento) return null;
     const loteState = i.tipo === "lote" ? disponibilidad.get(Number(i.id_ref)) : null;
     const plain = typeof elemento.get === "function" ? elemento.get({ plain: true }) : elemento;
     const vista = i.tipo === "lote" ? prepararLote(plain) : { ...plain, imagen: plain.imagen || imagenDeEspecie(plain) };
     return { tipo: i.tipo, elemento: vista, vendido: i.tipo === "lote" && (Boolean(plain.compra) || loteState?.motivo === "vendido"), reservado: i.tipo === "lote" && ["reservado", "reservado_propio"].includes(loteState?.motivo), disponible: i.tipo === "lote" && !loteState?.motivo };
-  }));
+  });
   res.render("cuenta/lista", { lista, items: datos.filter(Boolean) });
 }
 export async function agregarLista(req, res) {
