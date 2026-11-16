@@ -9,6 +9,8 @@
     "start": "node index.js",
     "test": "node --test test/*.test.js",
     "test:cov": "node --test --experimental-test-coverage test/*.test.js",
+    "lint": "eslint .",
+    "format": "prettier --write app.js index.js \"{config,controllers,helpers,middleware,models,routes,scripts,test,public/js}/**/*.js\" package.json eslint.config.js .prettierrc.json",
     "demo": "node scripts/demo.js",
     "correo:configurar": "node scripts/configurar-correo.js"
   },
@@ -34,7 +36,12 @@
     "sequelize": "^6.37.8"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.15.0",
+    "eslint-plugin-n": "^18.5.0",
+    "globals": "^17.14.0",
     "nodemon": "^3.1.14",
+    "prettier": "^3.10.1",
     "sqlite3": "^6.0.1"
   }
 }

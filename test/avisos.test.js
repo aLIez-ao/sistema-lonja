@@ -27,7 +27,7 @@ test("los avisos solo llegan a compradores suscritos y el enlace permite confirm
   assert.equal(enviados.length, 1);
   assert.equal(enviados[0].to, suscrita.correo);
   assert.match(enviados[0].html, /date de baja aquí/);
-  const urlBaja = /href="(http:\/\/[^\"]+\/avisos\/baja\/[^\"]+)"/.exec(enviados[0].html)?.[1];
+  const urlBaja = /href="(http:\/\/[^"]+\/avisos\/baja\/[^"]+)"/.exec(enviados[0].html)?.[1];
   assert.ok(urlBaja);
 
   const anonimo = cliente(srv.base);

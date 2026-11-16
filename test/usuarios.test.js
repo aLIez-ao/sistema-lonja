@@ -27,7 +27,7 @@ test("usuarios separa trabajadores y clientes con búsquedas y páginas independ
   assert.match(clientes, /@cliente0/); assert.doesNotMatch(clientes, /@trabajador0/);
   assert.match(trabajadores, /Nuevo usuario/); assert.doesNotMatch(clientes, /Nuevo usuario/);
   assert.match(clientes, /Cliente #/); assert.match(clientes, />2</);
-  assert.match(primera.texto, /qT=Trabajador[^\"]*&amp;?qC=Cliente/);
+  assert.match(primera.texto, /qT=Trabajador[^"]*&amp;?qC=Cliente/);
 
   const segunda = await admin.get("/usuarios?qT=Trabajador&qC=Cliente&paginaT=2");
   assert.match(segunda.texto, /Página 2 de 2/);
