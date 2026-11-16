@@ -164,13 +164,11 @@ const actualizar = async (req, res) => {
       errs.push(mensajeBD(e));
     }
   }
-  res
-    .status(400)
-    .render('compradores/formulario', {
-      comprador: { ...req.body, codigo_cpr: comprador.codigo_cpr },
-      action: `/compradores/${comprador.codigo_cpr}?_method=PUT`,
-      errores: errs,
-    });
+  res.status(400).render('compradores/formulario', {
+    comprador: { ...req.body, codigo_cpr: comprador.codigo_cpr },
+    action: `/compradores/${comprador.codigo_cpr}?_method=PUT`,
+    errores: errs,
+  });
 };
 
 const eliminar = async (req, res) => {

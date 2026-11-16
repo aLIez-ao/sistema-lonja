@@ -107,12 +107,10 @@ const enviarRecuperacionPassword = async (req, res) => {
       .render('login/olvide-password', { mensaje: null, error: 'Escribe tu correo o tu nombre de usuario.' });
 
   if (limiteRecuperacion.bloqueado(req.ip)) {
-    return res
-      .status(429)
-      .render('login/olvide-password', {
-        mensaje: null,
-        error: 'Demasiadas solicitudes desde este equipo. Intenta de nuevo más tarde.',
-      });
+    return res.status(429).render('login/olvide-password', {
+      mensaje: null,
+      error: 'Demasiadas solicitudes desde este equipo. Intenta de nuevo más tarde.',
+    });
   }
   limiteRecuperacion.fallo(req.ip);
 

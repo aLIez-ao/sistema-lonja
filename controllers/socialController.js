@@ -118,13 +118,11 @@ export async function alternarFavorito(req, res) {
   const id_ref = Number(req.body.id_ref);
   const lista = await listaFavoritos(req.usuario.id);
   if (!tipoValido(tipo) || !Number.isInteger(id_ref) || id_ref < 1 || !(await elementoValido(tipo, id_ref))) {
-    return res
-      .status(404)
-      .json({
-        ok: false,
-        mensaje: 'No encontramos ese lote o especie.',
-        total: await ListaItem.count({ where: { id_lista: lista.id_lista } }),
-      });
+    return res.status(404).json({
+      ok: false,
+      mensaje: 'No encontramos ese lote o especie.',
+      total: await ListaItem.count({ where: { id_lista: lista.id_lista } }),
+    });
   }
   const where = { id_lista: lista.id_lista, tipo, id_ref };
   const actual = await ListaItem.findOne({ where });
