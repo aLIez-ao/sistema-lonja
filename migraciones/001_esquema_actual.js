@@ -1,6 +1,6 @@
 import { DataTypes } from 'sequelize';
-import { asegurarAncho, asegurarColumna } from '../helpers/esquema.js';
-import { rellenarCatalogoEspecies } from '../helpers/catalogoMigracion.js';
+import { asegurarAncho, asegurarColumna } from './esquema.js';
+import { rellenarCatalogoEspecies } from './catalogo.js';
 
 const COLUMNAS_USUARIO = {
   correo: { type: DataTypes.STRING(80), allowNull: true, unique: true },

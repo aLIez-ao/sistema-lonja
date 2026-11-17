@@ -1,6 +1,6 @@
 import { DataTypes } from 'sequelize';
 import db from '../compartido/config/db.js';
-import { asegurarColumna } from '../helpers/esquema.js';
+import { asegurarColumna } from './esquema.js';
 
 export async function up({ transaction }) {
   await asegurarColumna(

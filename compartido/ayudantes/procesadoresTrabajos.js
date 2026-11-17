@@ -1,13 +1,9 @@
 import { Op } from 'sequelize';
-import { Compra, Comprador, Especie, Lote, Pedido, PedidoItem, Tipo, Usuario } from '../models/index.js';
-import {
-  enviarBoletinClientes,
-  enviarEmailComprobanteCompra,
-  enviarEmailPedido,
-} from '../compartido/ayudantes/email.js';
-import { generarFacturaPDF } from '../compartido/ayudantes/facturaPdf.js';
-import { crearTokenBajaAvisos } from '../compartido/ayudantes/tokens.js';
-import { registrarProcesadorTrabajo } from '../compartido/ayudantes/colaTrabajos.js';
+import { Compra, Comprador, Especie, Lote, Pedido, PedidoItem, Tipo, Usuario } from '../../models/index.js';
+import { enviarBoletinClientes, enviarEmailComprobanteCompra, enviarEmailPedido } from './email.js';
+import { generarFacturaPDF } from './facturaPdf.js';
+import { crearTokenBajaAvisos } from './tokens.js';
+import { registrarProcesadorTrabajo } from './colaTrabajos.js';
 
 const incluirLote = {
   model: Lote,

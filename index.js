@@ -4,12 +4,12 @@ import db from './compartido/config/db.js';
 import './models/index.js';
 import app from './app.js';
 import { crearAdministradorInicial, crearTiposIniciales } from './modulos/cuentas/index.js';
-import { asegurarEsquema } from './helpers/migraciones.js';
+import { asegurarEsquema } from './migraciones/ejecutor.js';
 import { verificarTransporte } from './compartido/ayudantes/email.js';
 import { liberarPedidosVencidos } from './modulos/pedidos/index.js';
-import { validarSecretosInicio } from './helpers/validacionSecretos.js';
+import { validarSecretosInicio } from './compartido/config/validacionSecretos.js';
 import { detenerColaTrabajos, iniciarColaTrabajos } from './compartido/ayudantes/colaTrabajos.js';
-import './helpers/procesadoresTrabajos.js';
+import './compartido/ayudantes/procesadoresTrabajos.js';
 
 const port = process.env.PORT || 2800;
 let servidor;

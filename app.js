@@ -5,34 +5,9 @@ import methodOverride from 'method-override';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import './compartido/config/entorno.js';
-import rutaProteger, { permitir, usuarioDesdeToken } from './middleware/protegerRutas.js';
+import { usuarioDesdeToken } from './middleware/protegerRutas.js';
 import { middlewarePreferencias } from './middleware/preferencias.js';
-import {
-  rutasLogin as router_login,
-  rutasRegistro as router_registro,
-  rutasUsuarios as router_usuario,
-  rutasConfiguracion as router_configuracion,
-  rutasAvisos as router_avisos,
-} from './modulos/cuentas/index.js';
-import {
-  rutasTipos as router_tipo,
-  rutasCatalogo as router_catalogo,
-  rutasEspecies as router_especie,
-  rutasLotes as router_lote,
-} from './modulos/catalogo/index.js';
-import {
-  rutasCompradores as router_comprador,
-  rutasCompras as router_compra,
-  rutasReportes as router_reporte,
-} from './modulos/ventas/index.js';
-import {
-  rutasBusqueda as router_busqueda,
-  rutasPublicas as router_tienda,
-  rutasCarrito as router_carrito,
-  socialController as social,
-} from './modulos/tienda/index.js';
-import router_cuenta from './routes/cuenta_router.js';
-import { router as router_pedido, rutasAdmin as router_pedido_admin } from './modulos/pedidos/index.js';
+import { montarModulos } from './modulos/index.js';
 import { formatoFechaHora } from './compartido/ayudantes/fechas.js';
 import { icono } from './compartido/ayudantes/iconos.js';
 import { CarritoItem, Lista, ListaItem } from './models/index.js';
@@ -132,41 +107,7 @@ app.get('/salud', async (_req, res) => {
   }
 });
 
-// Rutas públicas: tienda, acceso, recuperación y registro de compradores
-app.use('/', router_login);
-app.use('/registro', router_registro);
-// La portada (GET /) y las páginas /tienda/* son públicas.
-app.use('/', router_tienda);
-app.use('/avisos', router_avisos);
-
-// Solo personal de la lonja (admin y capturista): pantallas de administración
-const soloPersonal = [rutaProteger, permitir('admin', 'capturista')];
-app.use('/tipos', soloPersonal, router_tipo);
-app.use('/compradores', soloPersonal, router_comprador);
-app.use('/lotes', soloPersonal, router_lote);
-app.use('/especies', soloPersonal, router_especie);
-app.use('/catalogo', soloPersonal, router_catalogo);
-app.use('/compras', soloPersonal, router_compra);
-app.use('/pedidos', soloPersonal, router_pedido_admin);
-app.use('/reportes', soloPersonal, router_reporte);
-app.use('/buscar', soloPersonal, router_busqueda);
-app.get('/preguntas', ...soloPersonal, social.moderarPreguntas);
-app.post('/preguntas/:id', ...soloPersonal, social.responderPregunta);
-app.get('/opiniones', ...soloPersonal, social.moderarOpiniones);
-app.post('/opiniones/:id', ...soloPersonal, social.cambiarVisibilidadOpinion);
-
-// Cuenta de comprador: solo el rol comprador, siempre filtrado por su id
-app.use('/cuenta', rutaProteger, permitir('comprador'), router_cuenta);
-
-// Carrito y ciclo de compra: exclusivos para cuentas de comprador.
-app.use('/carrito', rutaProteger, permitir('comprador'), router_carrito);
-app.use('/pedido', rutaProteger, permitir('comprador'), router_pedido);
-
-// Configuración: todos los roles (las pestañas de administración se ocultan)
-app.use('/configuracion', rutaProteger, router_configuracion);
-
-// Solo administrador
-app.use('/usuarios', rutaProteger, permitir('admin'), router_usuario);
+montarModulos(app);
 
 app.use((req, res) => res.status(404).render('error', { codigo: 404, mensaje: 'Página no encontrada.' }));
 

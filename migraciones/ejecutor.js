@@ -1,8 +1,8 @@
 import { registro } from '../compartido/ayudantes/registro.js';
 import db from '../compartido/config/db.js';
 import { Migracion } from '../models/index.js';
-import { migraciones } from '../migraciones/index.js';
-import { rellenarCatalogoEspecies } from './catalogoMigracion.js';
+import { migraciones } from './index.js';
+import { rellenarCatalogoEspecies } from './catalogo.js';
 
 export { rellenarCatalogoEspecies };
 

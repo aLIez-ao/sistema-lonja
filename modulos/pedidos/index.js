@@ -24,6 +24,5 @@ export {
   reservaEfectivoMinutos,
   reservaMinutos,
   textoDireccion,
-  totalLineas,
 } from './ayudantes/pedidos.js';
-export { disponibilidadDeLotes, loteDisponible, reservasActivas } from '../catalogo/index.js';
+export { disponibilidadDeLotes, loteDisponible, reservasActivas, totalLineas } from '../catalogo/index.js';

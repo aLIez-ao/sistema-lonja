@@ -1,6 +1,6 @@
 import '../compartido/config/entorno.js';
 import db from '../compartido/config/db.js';
-import { asegurarEsquema, revertirUltimaMigracion } from '../helpers/migraciones.js';
+import { asegurarEsquema, revertirUltimaMigracion } from '../migraciones/ejecutor.js';
 
 const argumentos = new Set(process.argv.slice(2));
 const revertir = argumentos.has('--revertir');

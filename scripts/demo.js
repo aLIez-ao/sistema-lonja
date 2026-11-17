@@ -18,7 +18,7 @@ import {
   Opinion,
 } from '../models/index.js';
 import { crearTiposIniciales, crearAdministradorInicial } from '../modulos/cuentas/index.js';
-import { asegurarEsquema } from '../helpers/migraciones.js';
+import { asegurarEsquema } from '../migraciones/ejecutor.js';
 import { redondea } from '../compartido/ayudantes/fechas.js';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';

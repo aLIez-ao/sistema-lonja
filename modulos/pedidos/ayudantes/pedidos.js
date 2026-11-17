@@ -1,6 +1,5 @@
 import { Op } from 'sequelize';
 import { Pedido } from '../../../models/index.js';
-import { redondea } from '../../../compartido/ayudantes/fechas.js';
 import { ESTADO_PEDIDO } from '../../../models/Pedido.js';
 import { loteDisponible, reservasActivas, disponibilidadDeLotes } from '../../catalogo/index.js';
 
@@ -16,9 +15,6 @@ export const costoEnvio = (subtotal, entrega) => {
   const gratisDesde = Math.max(0, numero(process.env.ENVIO_GRATIS_DESDE, 2500));
   return subtotal >= gratisDesde ? 0 : costo;
 };
-
-export const totalLineas = (lotes) =>
-  redondea(lotes.reduce((suma, lote) => suma + Number(lote.kilos) * Number(lote.precio_kilo_salida), 0));
 
 export { loteDisponible, reservasActivas, disponibilidadDeLotes };
 

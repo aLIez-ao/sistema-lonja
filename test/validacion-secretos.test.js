@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validarSecretosInicio } from '../helpers/validacionSecretos.js';
+import { validarSecretosInicio } from '../compartido/config/validacionSecretos.js';
 
 test('señala secretos de ejemplo en desarrollo sin incluir sus valores', () => {
   const resultado = validarSecretosInicio({

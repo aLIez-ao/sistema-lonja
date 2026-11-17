@@ -1,6 +1,10 @@
 import { Op } from 'sequelize';
 import { Compra, Lote, Pedido, PedidoItem } from '../../../models/index.js';
 import { ESTADO_PEDIDO } from '../../../models/Pedido.js';
+import { redondea } from '../../../compartido/ayudantes/fechas.js';
+
+export const totalLineas = (lotes) =>
+  redondea(lotes.reduce((suma, lote) => suma + Number(lote.kilos) * Number(lote.precio_kilo_salida), 0));
 
 export async function reservasActivas({ ahora = new Date(), exceptoPedido = null, transaction } = {}) {
   const filas = await PedidoItem.findAll({

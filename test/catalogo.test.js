@@ -2,7 +2,7 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { arrancar, cliente, modelos, db } from './ayuda.js';
-import { asegurarEsquema, rellenarCatalogoEspecies, revertirUltimaMigracion } from '../helpers/migraciones.js';
+import { asegurarEsquema, rellenarCatalogoEspecies, revertirUltimaMigracion } from '../migraciones/ejecutor.js';
 
 const { Lote, Especie, EspecieCatalogo, Migracion } = modelos;
 let srv, admin;

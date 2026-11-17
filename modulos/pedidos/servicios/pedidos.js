@@ -11,9 +11,8 @@ import {
   reservaMinutos,
   reservaEfectivoMinutos,
   textoDireccion,
-  totalLineas,
 } from '../ayudantes/pedidos.js';
-import { disponibilidadDeLotes, reservasActivas } from '../../catalogo/index.js';
+import { disponibilidadDeLotes, reservasActivas, totalLineas } from '../../catalogo/index.js';
 import { crearLimite } from '../../../compartido/ayudantes/seguridad.js';
 import {
   ESTADO_PEDIDO,
