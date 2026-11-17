@@ -1,29 +1,29 @@
 import bcrypt from 'bcryptjs';
 import { Op } from 'sequelize';
-import db from '../compartido/config/db.js';
-import { Usuario, Comprador } from '../models/index.js';
-import { enviarEmailPasswordCambiada, estadoCorreo, enviarCorreoPrueba } from '../compartido/ayudantes/email.js';
+import db from '../../../compartido/config/db.js';
+import { Usuario } from '../../../models/index.js';
+import { enviarEmailPasswordCambiada, estadoCorreo, enviarCorreoPrueba } from '../../../compartido/ayudantes/email.js';
 import {
   enviarVerificacionCorreo,
   limiteVerificacion,
   segundosEsperaVerificacion,
   urlBase,
-} from '../helpers/cuentas.js';
-import { prepararFoto } from '../helpers/avatar.js';
-import { problemasPassword } from '../compartido/ayudantes/seguridad.js';
-import { JWTGenera, opcionesCookieSesion } from '../compartido/ayudantes/tokens.js';
-import { aMensaje, ErrorImagen } from '../compartido/ayudantes/utiles.js';
-import { compradorDe, compradorPorCorreo } from '../helpers/comprador.js';
-import { encolarTrabajo } from '../compartido/ayudantes/colaTrabajos.js';
-import { registro } from '../compartido/ayudantes/registro.js';
-import { prefValida } from '../middleware/preferencias.js';
+} from '../ayudantes/cuentas.js';
+import { prepararFoto } from '../ayudantes/avatar.js';
+import { problemasPassword } from '../../../compartido/ayudantes/seguridad.js';
+import { JWTGenera, opcionesCookieSesion } from '../../../compartido/ayudantes/tokens.js';
+import { aMensaje, ErrorImagen } from '../../../compartido/ayudantes/utiles.js';
+import { compradorDe, compradorPorCorreo } from '../ayudantes/comprador.js';
+import { enviarAvisoMasivo } from '../servicios/avisos.js';
+import { registro } from '../../../compartido/ayudantes/registro.js';
+import { prefValida } from '../../../middleware/preferencias.js';
 import {
   CATEGORIAS,
   COOKIE_DE_PREF,
   aplicarConsentimiento,
   guardarCookiePreferencia,
-} from '../compartido/ayudantes/cookies.js';
-import { correoValido, telefonoValido } from '../compartido/ayudantes/validacion.js';
+} from '../../../compartido/ayudantes/cookies.js';
+import { correoValido, telefonoValido } from '../../../compartido/ayudantes/validacion.js';
 
 const renderConfiguracion = async (req, res, adicionales = {}) => {
   const us = await Usuario.findByPk(req.usuario.id);
@@ -288,27 +288,15 @@ export const enviarAvisoClientes = async (req, res) => {
   if (!['evento', 'politica', 'urgente'].includes(tipo))
     return res.redirect(`/configuracion?${aError('El tipo de aviso no es válido.')}#pane-avisos`);
 
-  const usuarios = await Usuario.findAll({
-    where: { rol: 'comprador', activo: true, email_verificado: true, recibir_avisos: true },
-    include: [{ model: Comprador, as: 'comprador', required: true }],
-  });
   const baseUrl = urlBase(req);
-  if (!usuarios.length)
+  const resultado = await enviarAvisoMasivo({ asunto, titulo, mensaje, tipo, baseUrl });
+  if (resultado.motivo === 'sin_suscriptores')
     return res.redirect(
       `/configuracion?${aMensaje('No hay compradores suscritos con correo verificado.')}#pane-avisos`,
     );
-  const encolado = await encolarTrabajo('aviso_masivo', {
-    usuarioIds: usuarios.map((usuario) => usuario.id),
-    asunto,
-    titulo,
-    mensaje,
-    tipo,
-    baseUrl,
-    enviadosIds: [],
-  });
-  if (!encolado)
+  if (!resultado.ok)
     return res.redirect(
       `/configuracion?${aError('La cola de correo está llena. Inténtalo de nuevo más tarde.')}#pane-avisos`,
     );
-  res.redirect(`/configuracion?${aMensaje(`Aviso en cola para ${usuarios.length} suscriptores.`)}#pane-avisos`);
+  res.redirect(`/configuracion?${aMensaje(`Aviso en cola para ${resultado.cantidad} suscriptores.`)}#pane-avisos`);
 };

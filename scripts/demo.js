@@ -17,7 +17,7 @@ import {
   Pregunta,
   Opinion,
 } from '../models/index.js';
-import { crearTiposIniciales, crearAdministradorInicial } from '../helpers/semillas.js';
+import { crearTiposIniciales, crearAdministradorInicial } from '../modulos/cuentas/index.js';
 import { asegurarEsquema } from '../helpers/migraciones.js';
 import { redondea } from '../compartido/ayudantes/fechas.js';
 import { resolve } from 'node:path';

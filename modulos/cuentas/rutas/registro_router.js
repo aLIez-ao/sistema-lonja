@@ -1,5 +1,5 @@
 import express from 'express';
-import { verRegistro, registrar } from '../controllers/registroController.js';
+import { verRegistro, registrar } from '../controladores/registroController.js';
 
 const router = express.Router();
 router.get('/', verRegistro);

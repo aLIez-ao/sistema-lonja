@@ -1,5 +1,5 @@
 import express from 'express';
-import * as c from '../controllers/usuarioController.js';
+import * as c from '../controladores/usuarioController.js';
 
 // Todo este router se monta con permitir("admin") en app.js
 const router = express.Router();

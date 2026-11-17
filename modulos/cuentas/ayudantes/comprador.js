@@ -1,6 +1,6 @@
 // Vínculo entre una cuenta en línea (Usuario) y su comprador de la lonja (Comprador).
 import { col, fn, where as sqlWhere } from 'sequelize';
-import { Comprador, Usuario } from '../models/index.js';
+import { Comprador, Usuario } from '../../../models/index.js';
 
 /** Comprador vinculado a la cuenta, o null. */
 export const compradorDe = (usuario) =>

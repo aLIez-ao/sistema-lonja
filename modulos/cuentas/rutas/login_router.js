@@ -10,8 +10,8 @@ import {
   verRestablecerPassword,
   restablecerPassword,
   verificarEmailToken,
-} from '../controllers/loginController.js';
-import rutaProteger, { permitir } from '../middleware/protegerRutas.js';
+} from '../controladores/loginController.js';
+import rutaProteger, { permitir } from '../../../middleware/protegerRutas.js';
 
 const router = express.Router();
 

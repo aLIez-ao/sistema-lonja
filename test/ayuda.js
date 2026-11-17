@@ -19,7 +19,7 @@ process.env.UPLOADS_DIR = uploadsTemp;
 const { default: db } = await import('../compartido/config/db.js');
 const modelos = await import('../models/index.js');
 const { default: app } = await import('../app.js');
-const { crearAdministradorInicial, crearTiposIniciales } = await import('../helpers/semillas.js');
+const { crearAdministradorInicial, crearTiposIniciales } = await import('../modulos/cuentas/index.js');
 const { asegurarEsquema } = await import('../helpers/migraciones.js');
 const { iniciarColaTrabajos, detenerColaTrabajos } = await import('../compartido/ayudantes/colaTrabajos.js');
 await import('../helpers/procesadoresTrabajos.js');

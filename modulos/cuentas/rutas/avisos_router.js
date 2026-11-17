@@ -1,6 +1,6 @@
 import express from 'express';
-import { bajaAvisos, confirmarBajaAvisos, descartarAvisoSuscripcion } from '../controllers/avisosController.js';
-import rutaProteger, { permitir } from '../middleware/protegerRutas.js';
+import { bajaAvisos, confirmarBajaAvisos, descartarAvisoSuscripcion } from '../controladores/avisosController.js';
+import rutaProteger, { permitir } from '../../../middleware/protegerRutas.js';
 
 const router = express.Router();
 router.get('/baja/:token', confirmarBajaAvisos);

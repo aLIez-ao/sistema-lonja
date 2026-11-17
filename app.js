@@ -7,7 +7,13 @@ import { fileURLToPath } from 'url';
 import './compartido/config/entorno.js';
 import rutaProteger, { permitir, usuarioDesdeToken } from './middleware/protegerRutas.js';
 import { middlewarePreferencias } from './middleware/preferencias.js';
-import router_login from './routes/login_router.js';
+import {
+  rutasLogin as router_login,
+  rutasRegistro as router_registro,
+  rutasUsuarios as router_usuario,
+  rutasConfiguracion as router_configuracion,
+  rutasAvisos as router_avisos,
+} from './modulos/cuentas/index.js';
 import router_tipo from './routes/tipo_router.js';
 import router_comprador from './routes/comprador_router.js';
 import router_lote from './routes/lote_router.js';
@@ -15,15 +21,11 @@ import router_especie from './routes/especie_router.js';
 import router_catalogo from './routes/catalogo_router.js';
 import router_compra from './routes/compra_router.js';
 import router_reporte from './routes/reporte_router.js';
-import router_usuario from './routes/usuario_router.js';
-import router_configuracion from './routes/configuracion_router.js';
 import router_busqueda from './routes/busqueda_router.js';
-import router_registro from './routes/registro_router.js';
 import router_cuenta from './routes/cuenta_router.js';
 import router_tienda from './routes/tienda_router.js';
 import router_carrito from './routes/carrito_router.js';
 import { router as router_pedido, rutasAdmin as router_pedido_admin } from './modulos/pedidos/index.js';
-import router_avisos from './routes/avisos_router.js';
 import * as social from './controllers/socialController.js';
 import { formatoFechaHora } from './compartido/ayudantes/fechas.js';
 import { icono } from './compartido/ayudantes/iconos.js';

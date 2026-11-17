@@ -3,7 +3,8 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { arrancar, cliente, modelos } from './ayuda.js';
-import { limiteRegistro } from '../controllers/registroController.js';
+import { registroController } from '../modulos/cuentas/index.js';
+const { limiteRegistro } = registroController;
 
 const { Usuario, Comprador, DireccionEntrega } = modelos;
 let srv;

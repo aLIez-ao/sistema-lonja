@@ -9,9 +9,9 @@ import {
   cambiarPasswordCuenta,
   enviarAvisoClientes,
   probarCorreo,
-} from '../controllers/configuracionController.js';
+} from '../controladores/configuracionController.js';
 
-import { permitir } from '../middleware/protegerRutas.js';
+import { permitir } from '../../../middleware/protegerRutas.js';
 
 const router = express.Router();
 

@@ -1,6 +1,5 @@
 import express from 'express';
-import * as cuenta from '../controllers/cuentaController.js';
-import * as direcciones from '../controllers/direccionController.js';
+import { cuentaController as cuenta, direccionController as direcciones } from '../modulos/cuentas/index.js';
 import * as pedidos from '../modulos/pedidos/index.js';
 import * as social from '../controllers/socialController.js';
 

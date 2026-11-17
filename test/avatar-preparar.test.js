@@ -6,7 +6,7 @@ import path from 'node:path';
 
 const uploads = await fs.mkdtemp(path.join(os.tmpdir(), 'lonja-avatar-test-'));
 process.env.UPLOADS_DIR = uploads;
-const { DIR_AVATARES, prepararFoto } = await import('../helpers/avatar.js');
+const { DIR_AVATARES, prepararFoto } = await import('../modulos/cuentas/index.js');
 const png =
   'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==';
 const anteriorUrl = '/uploads/avatares/u7-anterior.png';

@@ -3,7 +3,7 @@ import './compartido/config/entorno.js';
 import db from './compartido/config/db.js';
 import './models/index.js';
 import app from './app.js';
-import { crearAdministradorInicial, crearTiposIniciales } from './helpers/semillas.js';
+import { crearAdministradorInicial, crearTiposIniciales } from './modulos/cuentas/index.js';
 import { asegurarEsquema } from './helpers/migraciones.js';
 import { verificarTransporte } from './compartido/ayudantes/email.js';
 import { liberarPedidosVencidos } from './modulos/pedidos/index.js';

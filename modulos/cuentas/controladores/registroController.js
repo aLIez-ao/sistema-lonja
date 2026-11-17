@@ -1,11 +1,11 @@
-import { registro } from '../compartido/ayudantes/registro.js';
+import { registro } from '../../../compartido/ayudantes/registro.js';
 import { col, fn, where as sqlWhere } from 'sequelize';
-import db from '../compartido/config/db.js';
-import { Usuario, Comprador } from '../models/index.js';
-import { crearLimite, problemasPassword } from '../compartido/ayudantes/seguridad.js';
-import { enviarVerificacionCorreo } from '../helpers/cuentas.js';
-import { compradorPorCorreo } from '../helpers/comprador.js';
-import { correoValido, telefonoValido } from '../compartido/ayudantes/validacion.js';
+import db from '../../../compartido/config/db.js';
+import { Usuario, Comprador } from '../../../models/index.js';
+import { crearLimite, problemasPassword } from '../../../compartido/ayudantes/seguridad.js';
+import { enviarVerificacionCorreo } from '../ayudantes/cuentas.js';
+import { compradorPorCorreo } from '../ayudantes/comprador.js';
+import { correoValido, telefonoValido } from '../../../compartido/ayudantes/validacion.js';
 
 const HORA = 60 * 60 * 1000;
 

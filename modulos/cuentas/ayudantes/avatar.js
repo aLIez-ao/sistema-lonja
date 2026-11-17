@@ -2,11 +2,11 @@
 // así no hace falta multipart ni dependencias nuevas. Aquí se valida y se guarda en disco.
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { borrarImagen, guardarImagenDataURL } from './imagenes.js';
+import { borrarImagen, guardarImagenDataURL } from '../../../helpers/imagenes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const DIR_AVATARES = path.join(
-  process.env.UPLOADS_DIR || path.join(__dirname, '..', 'public', 'uploads'),
+  process.env.UPLOADS_DIR || path.join(__dirname, '..', '..', '..', 'public', 'uploads'),
   'avatares',
 );
 const URL_BASE = '/uploads/avatares/';

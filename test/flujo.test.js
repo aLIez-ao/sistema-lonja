@@ -13,7 +13,7 @@ process.env.APP_URL = '';
 const { default: db } = await import('../compartido/config/db.js');
 await import('../models/index.js');
 const { default: app } = await import('../app.js');
-const { crearAdministradorInicial, crearTiposIniciales } = await import('../helpers/semillas.js');
+const { crearAdministradorInicial, crearTiposIniciales } = await import('../modulos/cuentas/index.js');
 const { Compra, Lote, Especie, EspecieCatalogo } = await import('../models/index.js');
 
 let server, base;

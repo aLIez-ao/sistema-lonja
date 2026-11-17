@@ -2,7 +2,8 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { arrancar, cliente, modelos } from './ayuda.js';
-import { limiteLoginCuenta } from '../controllers/loginController.js';
+import { loginController } from '../modulos/cuentas/index.js';
+const { limiteLoginCuenta } = loginController;
 
 const { Usuario } = modelos;
 let srv, admin;

@@ -1,14 +1,14 @@
-import { registro } from '../compartido/ayudantes/registro.js';
+import { registro } from '../../../compartido/ayudantes/registro.js';
 import { body } from 'express-validator';
 import { Op, fn, col } from 'sequelize';
-import { Usuario, Pedido, ROLES } from '../models/index.js';
-import { mensajesError, mensajeBD, aMensaje } from '../compartido/ayudantes/utiles.js';
-import { problemasPassword, passwordInutilizable } from '../compartido/ayudantes/seguridad.js';
-import { aplicarFoto, borrarFoto } from '../helpers/avatar.js';
-import { enviarEnlacePassword, enviarVerificacionCorreo, resumenEnvio } from '../helpers/cuentas.js';
-import { condicionBusqueda } from '../helpers/busqueda.js';
-import { reglaCorreo, reglaTelefono } from '../compartido/ayudantes/validacion.js';
-import { anexarParametrosQuery } from '../compartido/ayudantes/listado.js';
+import { Usuario, Pedido, ROLES } from '../../../models/index.js';
+import { mensajesError, mensajeBD, aMensaje } from '../../../compartido/ayudantes/utiles.js';
+import { problemasPassword, passwordInutilizable } from '../../../compartido/ayudantes/seguridad.js';
+import { aplicarFoto, borrarFoto } from '../ayudantes/avatar.js';
+import { enviarEnlacePassword, enviarVerificacionCorreo, resumenEnvio } from '../ayudantes/cuentas.js';
+import { condicionBusqueda } from '../../../helpers/busqueda.js';
+import { reglaCorreo, reglaTelefono } from '../../../compartido/ayudantes/validacion.js';
+import { anexarParametrosQuery } from '../../../compartido/ayudantes/listado.js';
 
 const reglas = [
   body('usuario')
