@@ -1,3 +1,4 @@
+import { registro } from '../helpers/registro.js';
 import { Op } from 'sequelize';
 import { Compra, Lote, Comprador, Especie, Tipo } from '../models/index.js';
 import {
@@ -162,7 +163,7 @@ const anualPdf = async (req, res) => {
     });
     res.send(pdf);
   } catch (err) {
-    console.error('Error al generar PDF de reporte anual:', err);
+    registro.error('Error al generar PDF de reporte anual:', err);
     res.status(500).render('error', { codigo: 500, mensaje: 'No se pudo generar el reporte en PDF.' });
   }
 };

@@ -1,3 +1,4 @@
+import { registro } from './registro.js';
 import { validationResult } from 'express-validator';
 
 export class ErrorDeUsuario extends Error {
@@ -29,7 +30,7 @@ export const mensajeBD = (err) => {
   if (n === 'SequelizeForeignKeyConstraintError')
     return 'No se puede completar: el registro está relacionado con otros datos.';
   if (n === 'SequelizeValidationError') return err.errors.map((e) => e.message).join('. ');
-  console.error(err);
+  registro.error(err);
   return 'Ocurrió un error inesperado. Intenta de nuevo.';
 };
 

@@ -1,3 +1,4 @@
+import { registro } from '../helpers/registro.js';
 import { body } from 'express-validator';
 import { Op, fn, col } from 'sequelize';
 import { Usuario, Pedido, ROLES } from '../models/index.js';
@@ -280,7 +281,7 @@ const eliminar = async (req, res) => {
     try {
       await borrarFoto(us);
     } catch (e) {
-      console.warn('No se pudo borrar la foto del usuario eliminado:', e.message);
+      registro.warn('No se pudo borrar la foto del usuario eliminado:', e.message);
     }
   }
   res.redirect(`/usuarios?${aMensaje('Usuario eliminado')}`);

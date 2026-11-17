@@ -1,3 +1,4 @@
+import { registro } from './registro.js';
 import '../config/entorno.js';
 import { Tipo, Usuario } from '../models/index.js';
 
@@ -5,7 +6,7 @@ import { Tipo, Usuario } from '../models/index.js';
 export async function crearAdministradorInicial() {
   const { ADMIN_USER, ADMIN_PASSWORD } = process.env;
   if (!ADMIN_USER || !ADMIN_PASSWORD) {
-    console.warn('No se definieron ADMIN_USER o ADMIN_PASSWORD. Se omite la creación del administrador.');
+    registro.warn('No se definieron ADMIN_USER o ADMIN_PASSWORD. Se omite la creación del administrador.');
     return;
   }
   const existe = await Usuario.findOne({ where: { usuario: ADMIN_USER } });
@@ -16,7 +17,7 @@ export async function crearAdministradorInicial() {
     password: ADMIN_PASSWORD, // el hook beforeSave la cifra con bcrypt
     rol: 'admin',
   });
-  console.log(`Usuario administrador inicial creado: ${ADMIN_USER}`);
+  registro.info(`Usuario administrador inicial creado: ${ADMIN_USER}`);
 }
 
 /** Catálogo inicial de tipos si la tabla está vacía. */

@@ -1,3 +1,4 @@
+import { registro } from '../helpers/registro.js';
 import { Usuario, Compra, Lote, Especie, DireccionEntrega } from '../models/index.js';
 import { aMensaje, aError } from '../helpers/utiles.js';
 import { aplicarFoto } from '../helpers/avatar.js';
@@ -162,7 +163,7 @@ export const actualizarDatos = async (req, res) => {
     }
     return res.redirect(`/cuenta/datos?${aMensaje(aviso)}`);
   } catch (e) {
-    console.error('No se pudieron actualizar los datos de la cuenta:', e);
+    registro.error('No se pudieron actualizar los datos de la cuenta:', e);
     const errorImagen =
       /^(?:La imagen debe ser un archivo JPG, PNG o WebP|La imagen es demasiado grande|El archivo no es una imagen válida)$/.test(
         String(e?.message || ''),

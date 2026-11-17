@@ -1,3 +1,4 @@
+import { registro } from './helpers/registro.js';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import methodOverride from 'method-override';
@@ -164,7 +165,7 @@ app.use((req, res) => res.status(404).render('error', { codigo: 404, mensaje: 'P
 
 // Manejador central de errores
 app.use((err, req, res, next) => {
-  console.error(err);
+  registro.error(err);
   if (res.headersSent) return next(err);
   res.status(500).render('error', { codigo: 500, mensaje: 'Error interno del servidor.' });
 });

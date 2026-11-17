@@ -1,3 +1,4 @@
+import { registro } from './helpers/registro.js';
 import './config/entorno.js';
 import db from './config/db.js';
 import './models/index.js';
@@ -18,14 +19,14 @@ const apagar = (senal) => {
   clearInterval(barridoReservas);
   servidor.close(async (error) => {
     if (error) {
-      console.error(`Error al cerrar el servidor tras ${senal}:`, error);
+      registro.error(`Error al cerrar el servidor tras ${senal}:`, error);
       process.exitCode = 1;
     }
     try {
       await esperarColaTrabajos();
       await db.close();
     } catch (errorDb) {
-      console.error('Error al cerrar la conexión a la base de datos:', errorDb);
+      registro.error('Error al cerrar la conexión a la base de datos:', errorDb);
       process.exitCode = 1;
     }
   });
@@ -37,11 +38,11 @@ process.once('SIGTERM', () => apagar('SIGTERM'));
 (async () => {
   try {
     const validacion = validarSecretosInicio();
-    for (const aviso of validacion.avisos) console.warn(`Configuración de seguridad: ${aviso}`);
+    for (const aviso of validacion.avisos) registro.warn(`Configuración de seguridad: ${aviso}`);
     if (validacion.errores.length)
       throw new Error(`Configuración de seguridad inválida: ${validacion.errores.join(' ')}`);
     await db.authenticate();
-    console.log('Conexión a la base de datos establecida.');
+    registro.info('Conexión a la base de datos establecida.');
 
     // BD_SYNC: safe (solo crea lo que falta) | alter | force (borra todo)
     const modo = process.env.BD_SYNC || 'safe';
@@ -49,7 +50,7 @@ process.once('SIGTERM', () => apagar('SIGTERM'));
       throw new Error('BD_SYNC=alter/force está prohibido en producción.');
     }
     await db.sync(modo === 'force' ? { force: true } : modo === 'alter' ? { alter: true } : {});
-    console.log(`Modelos sincronizados (${modo}).`);
+    registro.info(`Modelos sincronizados (${modo}).`);
 
     await asegurarEsquema();
     await crearAdministradorInicial();
@@ -57,22 +58,22 @@ process.once('SIGTERM', () => apagar('SIGTERM'));
 
     // Diagnóstico del correo: informa sin detener el servidor
     const correo = await verificarTransporte();
-    if (correo.configurado && !correo.error) console.log('\x1b[32mCorreo listo\x1b[0m');
-    else if (correo.error) console.warn(`\x1b[31mGmail rechazó las credenciales: ${correo.error}\x1b[0m`);
-    else console.warn('\x1b[33mCorreo NO configurado (modo simulador). Define GMAIL_USER y GMAIL_PASS en .env\x1b[0m');
+    if (correo.configurado && !correo.error) registro.info('Correo configurado');
+    else if (correo.error) registro.warn('Gmail rechazó las credenciales', { error: correo.error });
+    else registro.warn('Correo no configurado; se usará el simulador');
 
     barridoReservas = setInterval(() => {
       liberarPedidosVencidos().catch((error) =>
-        console.warn('No se pudieron limpiar reservas vencidas:', error.message),
+        registro.warn('No se pudieron limpiar reservas vencidas:', error.message),
       );
     }, 60_000);
     barridoReservas.unref();
 
     servidor = app.listen(port, () => {
-      console.log(`Servidor corriendo en \x1b[36mhttp://localhost:${port}\x1b[0m`);
+      registro.info(`Servidor corriendo en \x1b[36mhttp://localhost:${port}\x1b[0m`);
     });
   } catch (err) {
-    console.error('Error al iniciar:', err);
+    registro.error('Error al iniciar:', err);
     process.exit(1);
   }
 })();

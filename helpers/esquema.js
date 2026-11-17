@@ -1,3 +1,4 @@
+import { registro } from './registro.js';
 import db from '../config/db.js';
 import { DataTypes } from 'sequelize';
 
@@ -7,7 +8,7 @@ export async function asegurarColumna(tabla, nombre, definicion, transaction) {
   const actuales = await qi.describeTable(tabla, { transaction });
   if (actuales[nombre]) return false;
   await qi.addColumn(tabla, nombre, definicion, { transaction });
-  console.log(`Columna '${nombre}' agregada a la tabla ${tabla}`);
+  registro.info(`Columna '${nombre}' agregada a la tabla ${tabla}`);
   return true;
 }
 
@@ -18,7 +19,7 @@ export async function asegurarAncho(tabla, nombre, longitud, transaction) {
   const columna = actuales[nombre];
   if (!columna) {
     await qi.addColumn(tabla, nombre, { type: DataTypes.STRING(longitud), allowNull: true }, { transaction });
-    console.log(`Columna '${nombre}' agregada a la tabla ${tabla}`);
+    registro.info(`Columna '${nombre}' agregada a la tabla ${tabla}`);
     return true;
   }
   const tipo = String(columna.type || '');
@@ -30,6 +31,6 @@ export async function asegurarAncho(tabla, nombre, longitud, transaction) {
     definicion.defaultValue = columna.defaultValue;
   }
   await qi.changeColumn(tabla, nombre, definicion, { transaction });
-  console.log(`Columna '${tabla}.${nombre}' ampliada de ${actual} a ${longitud}`);
+  registro.info(`Columna '${tabla}.${nombre}' ampliada de ${actual} a ${longitud}`);
   return true;
 }

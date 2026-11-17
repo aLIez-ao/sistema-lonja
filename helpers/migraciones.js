@@ -1,3 +1,4 @@
+import { registro } from './registro.js';
 import db from '../config/db.js';
 import { Migracion } from '../models/index.js';
 import { migraciones } from '../migraciones/index.js';
@@ -18,7 +19,7 @@ export async function asegurarEsquema() {
       await migracion.up({ transaction });
       await Migracion.create({ id: migracion.id, aplicado_en: new Date() }, { transaction });
     });
-    console.log(`Migración aplicada: ${migracion.id}`);
+    registro.info(`Migración aplicada: ${migracion.id}`);
   }
 }
 

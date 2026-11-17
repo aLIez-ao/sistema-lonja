@@ -158,7 +158,7 @@ export const actualizarCuenta = async (req, res) => {
     try {
       await fotoPreparada.confirmar();
     } catch (error) {
-      console.warn('La cuenta se actualizó, pero no se pudo retirar la foto anterior:', error.message);
+      registro.warn('La cuenta se actualizó, pero no se pudo retirar la foto anterior:', error.message);
     }
 
     let aviso = 'Datos de la cuenta actualizados.';
@@ -185,10 +185,10 @@ export const actualizarCuenta = async (req, res) => {
       try {
         await fotoPreparada?.revertir();
       } catch (error) {
-        console.warn('No se pudo limpiar la foto preparada:', error.message);
+        registro.warn('No se pudo limpiar la foto preparada:', error.message);
       }
     }
-    console.error('No se pudo actualizar la cuenta:', err);
+    registro.error('No se pudo actualizar la cuenta:', err);
     res.redirect(
       `/configuracion?${aError(err instanceof ErrorImagen ? err.message : 'No se pudieron guardar los datos. Revisa la información e inténtalo de nuevo.')}#pane-cuenta`,
     );

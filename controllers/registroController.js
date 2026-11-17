@@ -1,3 +1,4 @@
+import { registro } from '../helpers/registro.js';
 import { col, fn, where as sqlWhere } from 'sequelize';
 import db from '../config/db.js';
 import { Usuario, Comprador } from '../models/index.js';
@@ -154,14 +155,14 @@ const registrar = async (req, res) => {
     const us = resultado.us;
 
     const envio = await enviarVerificacionCorreo(req, us).catch((e) => {
-      console.error('No se pudo enviar la verificación del registro:', e.message);
+      registro.error('No se pudo enviar la verificación del registro:', e.message);
       return { ok: false };
     });
     if (envio.simulado && process.env.NODE_ENV !== 'production') enlace = envio.enlace;
   } catch (e) {
     // Un choque de correo por concurrencia también responde igual que el alta correcta.
     if (e?.name !== 'SequelizeUniqueConstraintError') {
-      console.error('Error al registrar comprador:', e);
+      registro.error('Error al registrar comprador:', e);
       return res
         .status(500)
         .render('error', { codigo: 500, mensaje: 'No pudimos crear la cuenta. Inténtalo más tarde.' });

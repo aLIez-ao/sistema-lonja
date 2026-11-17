@@ -1,3 +1,4 @@
+import { registro } from '../helpers/registro.js';
 import { body } from 'express-validator';
 import bcrypt from 'bcryptjs';
 import { Op } from 'sequelize';
@@ -121,7 +122,7 @@ const enviarRecuperacionPassword = async (req, res) => {
     try {
       await enviarEnlacePassword(req, us, 'recuperacion');
     } catch (e) {
-      console.error('No se pudo enviar la recuperación:', e.message);
+      registro.error('No se pudo enviar la recuperación:', e.message);
     }
   }
   res.render('login/olvide-password', { mensaje: AVISO_RECUPERACION, error: null });
@@ -203,7 +204,7 @@ const verificarEmailToken = async (req, res) => {
       await vincularComprador(us);
     } catch (error) {
       if (error.code !== 'COMPRADOR_YA_VINCULADO') throw error;
-      console.warn(
+      registro.warn(
         `No se vinculó el comprador de la cuenta ${us.id}: el registro de cliente ya pertenece a otra cuenta.`,
       );
       return res.redirect(

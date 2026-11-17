@@ -4,15 +4,44 @@ const normalizarError = (error) => {
   return String(error);
 };
 
+const prioridades = { error: 0, warn: 1, info: 2 };
+
+const nivelMinimo = () => {
+  const configurado = String(process.env.LOG_NIVEL || 'info').toLowerCase();
+  return Object.hasOwn(prioridades, configurado) ? configurado : 'info';
+};
+
 const emitir = (nivel, evento, contexto = {}) => {
+  if (prioridades[nivel] > prioridades[nivelMinimo()]) return;
   const datos = Object.fromEntries(Object.entries(contexto).filter(([, valor]) => valor !== undefined));
-  if (datos.error !== undefined) datos.error = normalizarError(datos.error);
+  for (const clave of ['error', 'detalle']) {
+    if (datos[clave] !== undefined) datos[clave] = normalizarError(datos[clave]);
+  }
   console[nivel](JSON.stringify({ fecha: new Date().toISOString(), nivel, evento, ...datos }));
+};
+
+const registrarArgumentos = (nivel, argumentos) => {
+  const [primero, ...resto] = argumentos;
+  const evento = typeof primero === 'string' ? primero : 'Evento de aplicación';
+  const contexto = {};
+  if (primero instanceof Error) contexto.error = primero;
+  else if (primero !== undefined && typeof primero !== 'string') contexto.detalle = primero;
+
+  if (resto.length === 1 && resto[0] && typeof resto[0] === 'object' && !(resto[0] instanceof Error)) {
+    Object.assign(contexto, resto[0]);
+  } else if (resto.length) {
+    contexto.detalle = resto.length === 1 ? resto[0] : resto;
+    if (resto[0] instanceof Error) {
+      contexto.error = resto[0];
+      delete contexto.detalle;
+    }
+  }
+  emitir(nivel, evento, contexto);
 };
 
 /** Registro estructurado con contexto breve y sin volcar objetos de aplicación completos. */
 export const registro = Object.freeze({
-  info: (evento, contexto) => emitir('info', evento, contexto),
-  warn: (evento, contexto) => emitir('warn', evento, contexto),
-  error: (evento, contexto) => emitir('error', evento, contexto),
+  info: (...argumentos) => registrarArgumentos('info', argumentos),
+  warn: (...argumentos) => registrarArgumentos('warn', argumentos),
+  error: (...argumentos) => registrarArgumentos('error', argumentos),
 });

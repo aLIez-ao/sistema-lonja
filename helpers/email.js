@@ -1,3 +1,4 @@
+import { registro } from './registro.js';
 import nodemailer from 'nodemailer';
 import '../config/entorno.js';
 import { enmascararCorreo } from './correoUtils.js';
@@ -89,12 +90,7 @@ async function enviarCorreo({ para, asunto, html, texto, adjuntos = [] }) {
   const transporter = obtenerTransporte();
 
   if (!transporter) {
-    console.log('\x1b[33m==================================================================\x1b[0m');
-    console.log('\x1b[33m[SIMULADOR DE CORREO - Configura GMAIL_USER y GMAIL_PASS en .env]\x1b[0m');
-    console.log(`Para: ${para}`);
-    console.log(`Asunto: ${asunto}`);
-    console.log(`Contenido:\n${texto || html}`);
-    console.log('\x1b[33m==================================================================\x1b[0m');
+    registro.info('Correo simulado', { destinatario: enmascararCorreo(para), asunto });
     return { simulado: true, mensaje: 'Correo simulado en consola (configura Gmail en .env para envío real)' };
   }
 
@@ -107,15 +103,14 @@ async function enviarCorreo({ para, asunto, html, texto, adjuntos = [] }) {
       html,
       attachments: adjuntos,
     });
-    console.log(`\x1b[32mCorreo enviado a ${para} (ID: ${info.messageId})\x1b[0m`);
+    registro.info('Correo enviado', { destinatario: enmascararCorreo(para), messageId: info.messageId });
     return { ok: true, messageId: info.messageId };
   } catch (error) {
     ultimoError = error;
     ultimoErrorFecha = new Date();
     const detalle = traducirErrorCorreo(error);
     // El detalle técnico completo solo en consola y en la pestaña Correo del administrador.
-    console.error(`\x1b[31mError al enviar correo a ${para}: ${detalle}\x1b[0m`);
-    console.error(error);
+    registro.error('No se pudo enviar correo', { destinatario: enmascararCorreo(para), detalle });
     return { ok: false, error: detalle, tecnico: error.message };
   }
 }

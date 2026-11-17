@@ -1,3 +1,4 @@
+import { registro } from '../helpers/registro.js';
 import { body } from 'express-validator';
 import { Op, col } from 'sequelize';
 import db from '../config/db.js';
@@ -207,7 +208,7 @@ const registrar = async (req, res) => {
               folio: nuevaCompra.id_cmp,
             });
           });
-          if (!encolado) console.warn('No se encoló la factura: la cola de trabajos está llena.');
+          if (!encolado) registro.warn('No se encoló la factura: la cola de trabajos está llena.');
         }
 
         return res.redirect(
@@ -324,7 +325,7 @@ const descargarFacturaPdf = async (req, res) => {
     });
     res.send(pdfBuffer);
   } catch (err) {
-    console.error('Error al generar PDF de factura:', err);
+    registro.error('Error al generar PDF de factura:', err);
     res.status(500).send('Error interno al generar factura PDF');
   }
 };

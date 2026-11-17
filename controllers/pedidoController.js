@@ -1,3 +1,4 @@
+import { registro } from '../helpers/registro.js';
 import { Op } from 'sequelize';
 import {
   CarritoItem,
@@ -197,7 +198,7 @@ export const pagar = async (req, res) => {
       parrafos: ['Tu pago de prueba fue aprobado. Esta aplicación no realizó ningún cargo real.'],
     });
   });
-  if (!encolado) console.warn('No se encolaron las facturas del pedido: la cola de trabajos está llena.');
+  if (!encolado) registro.warn('No se encolaron las facturas del pedido: la cola de trabajos está llena.');
   return res.redirect(
     `/cuenta/pedidos/${pedido.id_ped}?${aMensaje('Pago de prueba aprobado. No se realizó ningún cargo real.')}`,
   );

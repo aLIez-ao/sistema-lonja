@@ -1,3 +1,4 @@
+import { registro } from '../helpers/registro.js';
 import { Op } from 'sequelize';
 import { Pedido, Usuario, Comprador, PedidoItem, Lote, Especie, Compra } from '../models/index.js';
 import { enviarEmailPedido } from '../helpers/email.js';
@@ -115,7 +116,7 @@ export async function cambiarEstado(req, res) {
         parrafos,
       }),
     );
-    if (!encolado) console.warn('No se encoló la notificación del pedido: la cola de trabajos está llena.');
+    if (!encolado) registro.warn('No se encoló la notificación del pedido: la cola de trabajos está llena.');
   }
   res.redirect(`/pedidos/${pedido.id_ped}?${aMensaje('Estado actualizado.')}`);
 }
@@ -138,7 +139,7 @@ export async function confirmarCobro(req, res) {
           parrafos: ['El personal confirmó el cobro de tu pedido.'],
         }),
       );
-      if (!encolado) console.warn('No se encoló el aviso de cobro: la cola de trabajos está llena.');
+      if (!encolado) registro.warn('No se encoló el aviso de cobro: la cola de trabajos está llena.');
     }
   }
   return res.redirect(`/pedidos/${req.params.id}?mensaje=${encodeURIComponent(mensaje)}`);

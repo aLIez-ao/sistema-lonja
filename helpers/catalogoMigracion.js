@@ -1,3 +1,4 @@
+import { registro } from './registro.js';
 import { col, fn, where as sqlWhere } from 'sequelize';
 import { Especie, EspecieCatalogo } from '../models/index.js';
 
@@ -32,7 +33,7 @@ export async function rellenarCatalogoEspecies({ transaction } = {}) {
     const nombre = [...grupo.nombres.entries()].sort((a, b) => b[1] - a[1])[0][0].trim();
     const idTpo = [...grupo.tipos.entries()].sort((a, b) => b[1] - a[1])[0][0];
     if (grupo.tipos.size > 1) {
-      console.warn(`El nombre "${nombre}" aparece con varios tipos; se usó el más frecuente (${idTpo}).`);
+      registro.warn(`El nombre "${nombre}" aparece con varios tipos; se usó el más frecuente (${idTpo}).`);
     }
 
     let catalogo = await catalogoPorNombre(clave, transaction);
@@ -50,6 +51,6 @@ export async function rellenarCatalogoEspecies({ transaction } = {}) {
     asignados += grupo.filas.length;
   }
 
-  if (creados || asignados) console.log(`Catálogo de especies: ${creados} creados, ${asignados} especies vinculadas`);
+  if (creados || asignados) registro.info(`Catálogo de especies: ${creados} creados, ${asignados} especies vinculadas`);
   return { creados, asignados };
 }

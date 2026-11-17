@@ -1,3 +1,4 @@
+import { registro } from '../helpers/registro.js';
 import { Op } from 'sequelize';
 import db from '../config/db.js';
 import { CarritoItem, Pedido, PedidoItem, DireccionEntrega, Lote, Compra, Especie } from '../models/index.js';
@@ -127,7 +128,7 @@ export async function crearPedido({ usuario, entrega, idDireccion }) {
   } catch (error) {
     if (error instanceof ErrorDeUsuario)
       return { ok: false, tipo: 'regla', estado: error.estado || 400, mensaje: error.message };
-    console.error('No se pudo crear el pedido:', mensajeBD(error));
+    registro.error('No se pudo crear el pedido:', mensajeBD(error));
     return {
       ok: false,
       tipo: 'interno',
@@ -252,7 +253,7 @@ export async function pagarPedido({ usuario, pedidoId, metodo, tarjeta }) {
       return { estado: ESTADO_PEDIDO.PAGADO, pedido, compras };
     });
   } catch (error) {
-    console.error('No se pudo completar el pago:', mensajeBD(error));
+    registro.error('No se pudo completar el pago:', mensajeBD(error));
     return { estado: 'error' };
   }
 }
