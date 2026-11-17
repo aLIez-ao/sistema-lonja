@@ -2,7 +2,10 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { generarFacturaPDF } from '../helpers/facturaPdf.js';
 import { formatearMoneda, t } from '../helpers/i18n.js';
-import { enviarEmailVerificacion, enviarEmailRecuperacion } from '../helpers/email.js';
+
+// Este archivo prueba el simulador. No hereda credenciales de correo reales del .env local.
+for (const variable of ['GMAIL_USER', 'GMAIL_PASS', 'EMAIL_USER', 'EMAIL_PASS']) process.env[variable] = '';
+const { enviarEmailVerificacion, enviarEmailRecuperacion } = await import('../helpers/email.js');
 
 test('i18n traduce correctamente en español e inglés', () => {
   assert.equal(t('inicio', 'es'), 'Dashboard');
