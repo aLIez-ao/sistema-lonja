@@ -11,7 +11,7 @@ Proyecto de **Web 2** (FES Aragón, UNAM) · Entrega: **12 de noviembre de 2026*
 | 3. Operación en línea | Carrito, reserva temporal, checkout, pago simulado, facturas e historial; listas, preguntas respondidas y opiniones con compra verificada. |
 | 4. Reportes | `/reportes/diario`: compras por periodo enlazadas a su factura, CSV y reporte oficial en PDF. |
 
-Esquema relacional: `tipo`, `especie`, `catalogo_especie`, `lote`, `compra`, `comprador`, `usuario`, `direccion_entrega`, `carrito_item`, `pedido`, `pedido_item` y tablas de comunidad. Ver [base de datos](doc/02-base-de-datos.md).
+Esquema relacional: `tipo`, `especie`, `catalogo_especie`, `lote`, `compra`, `comprador`, `usuario`, `direccion_entrega`, `carrito_item`, `pedido`, `pedido_item` y tablas de comunidad.
 
 ## Stack
 Node.js (ESM) · Express 5 · Sequelize + MariaDB · EJS · Bootstrap 5 (local) · JWT · bcryptjs · express-validator — el mismo de los PDF de ejemplo de la materia.
@@ -52,13 +52,8 @@ En `/usuarios`, el administrador consulta por separado trabajadores y clientes. 
 ## Estructura
 ```
 index.js · app.js · config/ · models/ · controllers/ · routes/ · middleware/ · helpers/
-views/ · public/ · scripts/ · test/ · doc/ · doc/guia-codigo/
+views/ · public/ · scripts/ · test/
 ```
-
-## Documentación
-- [Guía del código](doc/guia-codigo/README.md): guía por capas y recorridos para lectores técnicos y no técnicos.
-- [Documentación operativa](doc/README.md): arquitectura, base de datos, rutas y permisos, instalación, seguridad y pruebas.
-Los planes e informes internos se mantienen localmente y no forman parte de la documentación versionada.
 
 ## Estado y advertencias
 - 181 pruebas automáticas pasan sobre SQLite; **las migraciones y los flujos no se verificaron contra MariaDB real**.
