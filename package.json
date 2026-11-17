@@ -12,6 +12,8 @@
     "lint": "eslint .",
     "format": "prettier --write app.js index.js \"{config,controllers,helpers,migraciones,middleware,models,routes,scripts,servicios,test,public/js}/**/*.js\" package.json eslint.config.js .prettierrc.json",
     "format:check": "prettier --check app.js index.js \"{config,controllers,helpers,migraciones,middleware,models,routes,scripts,servicios,test,public/js}/**/*.js\" package.json eslint.config.js .prettierrc.json",
+    "migrar": "node scripts/migrar.js --aplicar",
+    "migrar:revertir": "node scripts/migrar.js --revertir",
     "demo": "node scripts/demo.js",
     "correo:configurar": "node scripts/configurar-correo.js"
   },
