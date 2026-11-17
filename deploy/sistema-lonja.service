@@ -1,0 +1,27 @@
+[Unit]
+Description=Sistema Lonja
+After=network-online.target mariadb.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=lonja
+Group=lonja
+WorkingDirectory=/opt/sistema-lonja
+Environment=NODE_ENV=production
+EnvironmentFile=/etc/sistema-lonja/app.env
+Environment=UPLOADS_DIR=/var/lib/sistema-lonja/uploads
+ExecStart=/usr/bin/node /opt/sistema-lonja/index.js
+Restart=on-failure
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=30
+UMask=0027
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/var/lib/sistema-lonja/uploads
+
+[Install]
+WantedBy=multi-user.target
