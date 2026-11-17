@@ -29,6 +29,7 @@ import { formatoFechaHora } from './helpers/fechas.js';
 import { icono } from './helpers/iconos.js';
 import { CarritoItem, Lista, ListaItem } from './models/index.js';
 import { origenDePeticionValido } from './helpers/navegacion.js';
+import db from './config/db.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -111,6 +112,16 @@ app.use((req, res, next) => {
     mensaje: 'No se pudo validar el origen de esta solicitud. Vuelve a cargar la página e inténtalo de nuevo.',
     accion: { texto: 'Volver', url: '/' },
   });
+});
+
+// Endpoint de disponibilidad para el gestor de procesos; no devuelve detalles de conexión.
+app.get('/salud', async (_req, res) => {
+  try {
+    await db.authenticate();
+    return res.status(200).json({ bd: 'ok' });
+  } catch {
+    return res.status(503).json({ bd: 'error' });
+  }
 });
 
 // Rutas públicas: tienda, acceso, recuperación y registro de compradores
