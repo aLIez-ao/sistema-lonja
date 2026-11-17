@@ -35,6 +35,18 @@ jobs:
       - run: npm ci
       - run: npm audit --omit=dev --audit-level=high
 
+  cobertura:
+    name: Cobertura de líneas (mínimo 80 %)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run test:cov
+
   integracion-mariadb:
     name: Integración con MariaDB 11
     runs-on: ubuntu-latest
