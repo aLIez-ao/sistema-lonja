@@ -21,6 +21,8 @@ const modelos = await import('../models/index.js');
 const { default: app } = await import('../app.js');
 const { crearAdministradorInicial, crearTiposIniciales } = await import('../helpers/semillas.js');
 const { asegurarEsquema } = await import('../helpers/migraciones.js');
+const { iniciarColaTrabajos, detenerColaTrabajos } = await import('../helpers/colaTrabajos.js');
+await import('../helpers/procesadoresTrabajos.js');
 
 export { db, app, modelos };
 
@@ -30,11 +32,13 @@ export async function arrancar() {
   await asegurarEsquema();
   await crearAdministradorInicial();
   await crearTiposIniciales();
+  await iniciarColaTrabajos();
   const server = app.listen(0);
   const base = `http://127.0.0.1:${server.address().port}`;
   return {
     base,
     cerrar: async () => {
+      await detenerColaTrabajos();
       await new Promise((resolve, reject) => server.close((error) => (error ? reject(error) : resolve())));
       await db.close();
       await fs.rm(uploadsTemp, { recursive: true, force: true });

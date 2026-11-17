@@ -1,7 +1,6 @@
 import { registro } from '../helpers/registro.js';
 import { Op } from 'sequelize';
 import { Pedido, Usuario, Comprador, PedidoItem, Lote, Especie, Compra } from '../models/index.js';
-import { enviarEmailPedido } from '../helpers/email.js';
 import { aError, aMensaje } from '../helpers/utiles.js';
 import { errorDeSitio } from '../helpers/navegacion.js';
 import { encolarTrabajo } from '../helpers/colaTrabajos.js';
@@ -105,17 +104,13 @@ export async function cambiarEstado(req, res) {
   if ([ESTADO_PEDIDO.ENVIADO, ESTADO_PEDIDO.ENTREGADO].includes(siguiente) && pedido.usuario?.correo) {
     const parrafos =
       siguiente === ESTADO_PEDIDO.ENVIADO ? ['Tu pedido está en camino.'] : ['Tu pedido fue marcado como entregado.'];
-    const encolado = encolarTrabajo(`aviso de estado del pedido ${pedido.id_ped}`, () =>
-      enviarEmailPedido({
-        usuario: pedido.usuario,
-        correo: pedido.usuario.correo,
-        pedido,
-        items: pedido.items,
-        asunto: 'Actualización de pedido',
-        titulo: siguiente === ESTADO_PEDIDO.ENVIADO ? 'Pedido enviado' : 'Pedido entregado',
-        parrafos,
-      }),
-    );
+    const encolado = await encolarTrabajo('aviso_estado_pedido', {
+      pedidoId: pedido.id_ped,
+      usuarioId: pedido.usuario.id,
+      asunto: 'Actualización de pedido',
+      titulo: siguiente === ESTADO_PEDIDO.ENVIADO ? 'Pedido enviado' : 'Pedido entregado',
+      parrafos,
+    });
     if (!encolado) registro.warn('No se encoló la notificación del pedido: la cola de trabajos está llena.');
   }
   res.redirect(`/pedidos/${pedido.id_ped}?${aMensaje('Estado actualizado.')}`);
@@ -128,17 +123,13 @@ export async function confirmarCobro(req, res) {
   if (salida.items) {
     const usuario = await Usuario.findByPk(salida.pedido.id_usuario);
     if (usuario?.correo) {
-      const encolado = encolarTrabajo(`aviso de cobro del pedido ${salida.pedido.id_ped}`, () =>
-        enviarEmailPedido({
-          usuario,
-          correo: usuario.correo,
-          pedido: salida.pedido,
-          items: salida.items,
-          asunto: 'Cobro confirmado',
-          titulo: 'Pago en la lonja confirmado',
-          parrafos: ['El personal confirmó el cobro de tu pedido.'],
-        }),
-      );
+      const encolado = await encolarTrabajo('aviso_estado_pedido', {
+        pedidoId: salida.pedido.id_ped,
+        usuarioId: usuario.id,
+        asunto: 'Cobro confirmado',
+        titulo: 'Pago en la lonja confirmado',
+        parrafos: ['El personal confirmó el cobro de tu pedido.'],
+      });
       if (!encolado) registro.warn('No se encoló el aviso de cobro: la cola de trabajos está llena.');
     }
   }

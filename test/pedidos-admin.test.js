@@ -70,6 +70,7 @@ test('administración de pedidos filtra, avanza estado y notifica enviado/entreg
   assert.equal((await Pedido.findByPk(pedido.id_ped)).estado, 'pagado');
   await admin.post(`/pedidos/${pedido.id_ped}/estado`, { estado: 'preparando' });
   await admin.post(`/pedidos/${pedido.id_ped}/estado`, { estado: 'enviado' });
+  await esperarColaTrabajos();
   fijarTransporteParaPruebas({
     async sendMail() {
       throw new Error('transporte no disponible');

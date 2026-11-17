@@ -1,5 +1,4 @@
 import { registro } from '../helpers/registro.js';
-import { Op } from 'sequelize';
 import {
   CarritoItem,
   Pedido,
@@ -16,7 +15,6 @@ import { aMensaje } from '../helpers/utiles.js';
 import { redondea } from '../helpers/fechas.js';
 import { generarFacturaPDF } from '../helpers/facturaPdf.js';
 import { datosFactura } from '../helpers/factura.js';
-import { enviarEmailPedido } from '../helpers/email.js';
 import {
   costoEnvio,
   reservaMinutos,
@@ -170,33 +168,10 @@ export const pagar = async (req, res) => {
   }
 
   const pedido = resultado.pedido;
-  const encolado = encolarTrabajo(`facturas de pedido ${pedido.id_ped}`, async () => {
-    const compraIds = resultado.compras.map((compra) => compra.id_cmp);
-    const completas = await Compra.findAll({
-      where: { id_cmp: { [Op.in]: compraIds } },
-      include: [
-        { model: Comprador, as: 'comprador' },
-        { model: Pedido, as: 'pedido' },
-        { model: Lote, as: 'lote', include: [includeEspecies] },
-      ],
-    });
-    const facturas = await Promise.all(
-      completas.map(async (compra) => ({
-        folio: `FAC-${String(compra.id_cmp).padStart(6, '0')}`,
-        pdf: await generarFacturaPDF(compra),
-      })),
-    );
-    const items = await PedidoItem.findAll({ where: { id_ped: pedido.id_ped } });
-    await enviarEmailPedido({
-      usuario,
-      correo: usuario.correo,
-      pedido,
-      items,
-      facturas,
-      asunto: 'Confirmación de pago',
-      titulo: 'Pago confirmado',
-      parrafos: ['Tu pago de prueba fue aprobado. Esta aplicación no realizó ningún cargo real.'],
-    });
+  const encolado = await encolarTrabajo('facturas_pedido', {
+    pedidoId: pedido.id_ped,
+    usuarioId: usuario.id,
+    compraIds: resultado.compras.map((compra) => compra.id_cmp),
   });
   if (!encolado) registro.warn('No se encolaron las facturas del pedido: la cola de trabajos está llena.');
   return res.redirect(

@@ -8,7 +8,8 @@ import { asegurarEsquema } from './helpers/migraciones.js';
 import { verificarTransporte } from './helpers/email.js';
 import { liberarPedidosVencidos } from './helpers/pedidos.js';
 import { validarSecretosInicio } from './helpers/validacionSecretos.js';
-import { esperarColaTrabajos } from './helpers/colaTrabajos.js';
+import { detenerColaTrabajos, iniciarColaTrabajos } from './helpers/colaTrabajos.js';
+import './helpers/procesadoresTrabajos.js';
 
 const port = process.env.PORT || 2800;
 let servidor;
@@ -23,7 +24,7 @@ const apagar = (senal) => {
       process.exitCode = 1;
     }
     try {
-      await esperarColaTrabajos();
+      await detenerColaTrabajos();
       await db.close();
     } catch (errorDb) {
       registro.error('Error al cerrar la conexión a la base de datos:', errorDb);
@@ -53,6 +54,7 @@ process.once('SIGTERM', () => apagar('SIGTERM'));
     registro.info(`Modelos sincronizados (${modo}).`);
 
     await asegurarEsquema();
+    await iniciarColaTrabajos();
     await crearAdministradorInicial();
     await crearTiposIniciales();
 

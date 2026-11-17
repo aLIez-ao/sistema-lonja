@@ -193,21 +193,11 @@ const registrar = async (req, res) => {
       });
       if (resultado.error) errs.push(resultado.error);
       else {
-        const { nuevaCompra, lote, comprador } = resultado;
+        const { nuevaCompra, comprador } = resultado;
 
         // Si el comprador tiene correo, enviar comprobante / factura opcional o automáticamente
         if (comprador.correo) {
-          const encolado = encolarTrabajo(`factura de compra ${nuevaCompra.id_cmp}`, async () => {
-            nuevaCompra.lote = lote;
-            nuevaCompra.comprador = comprador;
-            const pdfBuffer = await generarFacturaPDF(nuevaCompra);
-            await enviarEmailComprobanteCompra({
-              compra: nuevaCompra,
-              comprador,
-              pdfBuffer,
-              folio: nuevaCompra.id_cmp,
-            });
-          });
+          const encolado = await encolarTrabajo('factura_compra', { id_cmp: nuevaCompra.id_cmp });
           if (!encolado) registro.warn('No se encoló la factura: la cola de trabajos está llena.');
         }
 

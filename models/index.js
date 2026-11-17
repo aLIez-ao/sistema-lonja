@@ -14,6 +14,7 @@ import ListaItem from './ListaItem.js';
 import Pregunta from './Pregunta.js';
 import Opinion from './Opinion.js';
 import Migracion from './Migracion.js';
+import Trabajo from './Trabajo.js';
 
 // Tipo 1 --- N Especie
 Tipo.hasMany(Especie, { foreignKey: { name: 'id_tpo', allowNull: false }, as: 'especies', onDelete: 'RESTRICT' });
@@ -138,5 +139,6 @@ export {
   Pregunta,
   Opinion,
   Migracion,
+  Trabajo,
 };
 export { ROLES } from './Usuario.js';

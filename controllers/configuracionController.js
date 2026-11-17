@@ -2,12 +2,7 @@ import bcrypt from 'bcryptjs';
 import { Op } from 'sequelize';
 import db from '../config/db.js';
 import { Usuario, Comprador } from '../models/index.js';
-import {
-  enviarBoletinClientes,
-  enviarEmailPasswordCambiada,
-  estadoCorreo,
-  enviarCorreoPrueba,
-} from '../helpers/email.js';
+import { enviarEmailPasswordCambiada, estadoCorreo, enviarCorreoPrueba } from '../helpers/email.js';
 import {
   enviarVerificacionCorreo,
   limiteVerificacion,
@@ -16,7 +11,7 @@ import {
 } from '../helpers/cuentas.js';
 import { prepararFoto } from '../helpers/avatar.js';
 import { problemasPassword } from '../helpers/seguridad.js';
-import { JWTGenera, opcionesCookieSesion, crearTokenBajaAvisos } from '../helpers/tokens.js';
+import { JWTGenera, opcionesCookieSesion } from '../helpers/tokens.js';
 import { aMensaje, ErrorImagen } from '../helpers/utiles.js';
 import { compradorDe, compradorPorCorreo } from '../helpers/comprador.js';
 import { encolarTrabajo } from '../helpers/colaTrabajos.js';
@@ -293,25 +288,22 @@ export const enviarAvisoClientes = async (req, res) => {
     include: [{ model: Comprador, as: 'comprador', required: true }],
   });
   const baseUrl = urlBase(req);
-  const compradores = usuarios.map((usuario) => ({
-    ...usuario.comprador.get({ plain: true }),
-    correo: usuario.correo,
-    bajaUrl: `${baseUrl}/avisos/baja/${crearTokenBajaAvisos(usuario.id)}`,
-  }));
-  if (!compradores.length)
+  if (!usuarios.length)
     return res.redirect(
       `/configuracion?${aMensaje('No hay compradores suscritos con correo verificado.')}#pane-avisos`,
     );
-  const encolado = encolarTrabajo(`aviso masivo (${compradores.length} suscriptores)`, async () => {
-    const resultados = await enviarBoletinClientes({ asunto, titulo, mensaje, tipo, compradores });
-    const enviados = resultados.filter(({ resultado }) => resultado.ok).length;
-    const simulados = resultados.filter(({ resultado }) => resultado.simulado).length;
-    const fallidos = resultados.length - enviados - simulados;
-    registro.info('Aviso masivo completado', { destinatarios: resultados.length, enviados, simulados, fallidos });
+  const encolado = await encolarTrabajo('aviso_masivo', {
+    usuarioIds: usuarios.map((usuario) => usuario.id),
+    asunto,
+    titulo,
+    mensaje,
+    tipo,
+    baseUrl,
+    enviadosIds: [],
   });
   if (!encolado)
     return res.redirect(
       `/configuracion?${aError('La cola de correo está llena. Inténtalo de nuevo más tarde.')}#pane-avisos`,
     );
-  res.redirect(`/configuracion?${aMensaje(`Aviso en cola para ${compradores.length} suscriptores.`)}#pane-avisos`);
+  res.redirect(`/configuracion?${aMensaje(`Aviso en cola para ${usuarios.length} suscriptores.`)}#pane-avisos`);
 };

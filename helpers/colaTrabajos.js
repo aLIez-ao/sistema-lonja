@@ -1,48 +1,128 @@
+import { Op } from 'sequelize';
+import { Trabajo } from '../models/index.js';
 import { registro } from './registro.js';
 
 const MAX_PENDIENTES = 500;
-const cola = [];
-const esperas = [];
+const MAX_REINTENTOS = 3;
+const ESPERAS_REINTENTO_MS = [60_000, 300_000, 900_000];
+const procesadores = new Map();
 let procesando = false;
+let programado = false;
+let tareaActual = Promise.resolve();
+let temporizador;
 
-function resolverEsperas() {
-  if (procesando || cola.length) return;
-  while (esperas.length) esperas.shift()();
+export function registrarProcesadorTrabajo(tipo, procesar) {
+  if (!tipo || typeof procesar !== 'function') throw new TypeError('El procesador requiere tipo y función.');
+  procesadores.set(tipo, procesar);
 }
 
-function iniciar() {
-  if (procesando || !cola.length) return;
+async function reclamarSiguiente() {
+  const trabajo = await Trabajo.findOne({
+    where: { estado: 'pendiente', proximo_intento: { [Op.lte]: new Date() } },
+    order: [['id_trabajo', 'ASC']],
+  });
+  if (!trabajo) return null;
+  await trabajo.update({ estado: 'procesando', actualizado_en: new Date() });
+  return trabajo;
+}
+
+async function ejecutar(trabajo) {
+  const procesador = procesadores.get(trabajo.tipo);
+  if (!procesador) {
+    await trabajo.update({ estado: 'fallido', ultimo_error: `No hay procesador registrado para ${trabajo.tipo}.` });
+    return;
+  }
+
+  try {
+    const resultado = await procesador(trabajo.carga, {
+      guardarCarga: async (carga) => {
+        await trabajo.update({ carga, actualizado_en: new Date() });
+      },
+    });
+    if (resultado?.ok === false)
+      throw new Error(resultado.error || resultado.mensaje || 'El trabajo no fue confirmado.');
+    await trabajo.update({ estado: 'completado', ultimo_error: null, actualizado_en: new Date() });
+  } catch (error) {
+    const reintentos = trabajo.intentos + 1;
+    const terminal = reintentos > MAX_REINTENTOS;
+    const proximo = terminal ? null : new Date(Date.now() + ESPERAS_REINTENTO_MS[reintentos - 1]);
+    await trabajo.update({
+      estado: terminal ? 'fallido' : 'pendiente',
+      intentos: Math.min(reintentos, MAX_REINTENTOS),
+      proximo_intento: proximo,
+      ultimo_error: String(error?.message || error).slice(0, 2000),
+      actualizado_en: new Date(),
+    });
+    registro.error('Falló un trabajo en segundo plano', {
+      trabajo: trabajo.tipo,
+      id: trabajo.id_trabajo,
+      intentos: Math.min(reintentos, MAX_REINTENTOS),
+      error,
+    });
+  }
+}
+
+async function procesarPendientes() {
+  if (procesando) return tareaActual;
   procesando = true;
-  setImmediate(async () => {
-    while (cola.length) {
-      const trabajo = cola.shift();
-      try {
-        const resultado = await trabajo.ejecutar();
-        if (resultado?.ok === false)
-          registro.error('El trabajo en segundo plano informó un fallo', {
-            trabajo: trabajo.nombre,
-            error: resultado.error || resultado.mensaje || 'El envío no fue confirmado',
-          });
-      } catch (error) {
-        registro.error('Falló el trabajo en segundo plano', { trabajo: trabajo.nombre, error });
+  tareaActual = (async () => {
+    try {
+      while (true) {
+        const trabajo = await reclamarSiguiente();
+        if (!trabajo) break;
+        await ejecutar(trabajo);
       }
+    } catch (error) {
+      registro.error('No se pudo consultar la cola persistente', { error });
+    } finally {
+      procesando = false;
     }
-    procesando = false;
-    resolverEsperas();
-    if (cola.length) iniciar();
+  })();
+  return tareaActual;
+}
+
+function programarProcesamiento() {
+  if (procesando || programado) return;
+  programado = true;
+  tareaActual = new Promise((resolver) => {
+    setImmediate(() => {
+      programado = false;
+      procesarPendientes().then(resolver, resolver);
+    });
   });
 }
 
-/** Encola trabajo no crítico para liberar la respuesta HTTP; la cola es volátil y acotada. */
-export function encolarTrabajo(nombre, ejecutar) {
-  if (cola.length >= MAX_PENDIENTES) return false;
-  cola.push({ nombre: String(nombre), ejecutar });
-  iniciar();
-  return true;
+/** Reanuda trabajos interrumpidos y sondea vencimientos en el mismo proceso. */
+export async function iniciarColaTrabajos() {
+  await Trabajo.update({ estado: 'pendiente', actualizado_en: new Date() }, { where: { estado: 'procesando' } });
+  if (!temporizador) {
+    temporizador = setInterval(() => void procesarPendientes(), 5_000);
+    temporizador.unref?.();
+  }
+  await procesarPendientes();
 }
 
-/** Espera la cola para apagado ordenado y pruebas. */
-export function esperarColaTrabajos() {
-  if (!procesando && !cola.length) return Promise.resolve();
-  return new Promise((resolve) => esperas.push(resolve));
+/** Guarda un trabajo serializable y lo ejecuta en segundo plano. */
+export async function encolarTrabajo(tipo, carga) {
+  try {
+    const pendientes = await Trabajo.count({ where: { estado: { [Op.in]: ['pendiente', 'procesando'] } } });
+    if (pendientes >= MAX_PENDIENTES) return false;
+    await Trabajo.create({ tipo, carga, estado: 'pendiente', intentos: 0, proximo_intento: new Date() });
+    programarProcesamiento();
+    return true;
+  } catch (error) {
+    registro.error('No se pudo guardar un trabajo en segundo plano', { tipo, error });
+    return false;
+  }
+}
+
+/** Espera solo a los trabajos que ya están ejecutándose; los reintentos se conservan en BD. */
+export async function esperarColaTrabajos() {
+  await tareaActual;
+}
+
+export async function detenerColaTrabajos() {
+  if (temporizador) clearInterval(temporizador);
+  temporizador = undefined;
+  await esperarColaTrabajos();
 }
