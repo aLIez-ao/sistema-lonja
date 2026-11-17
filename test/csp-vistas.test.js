@@ -17,13 +17,14 @@ async function archivosEjs(directorio) {
   return grupos.flat();
 }
 
-test('las vistas respetan la CSP: sin manejadores ni scripts ejecutables en línea', async () => {
+test('las vistas respetan la CSP: sin estilos ni manejadores en línea', async () => {
   const archivos = await archivosEjs(raiz);
   assert.ok(archivos.length > 0, 'se encontraron vistas EJS');
 
   for (const archivo of archivos) {
     const contenido = await readFile(archivo, 'utf8');
     assert.doesNotMatch(contenido, /\son[a-z]+\s*=/i, `${archivo}: manejador inline`);
+    assert.doesNotMatch(contenido, /\sstyle\s*=/i, `${archivo}: estilo inline`);
 
     for (const [, atributos] of contenido.matchAll(/<script\b([^>]*)>/gi)) {
       if (!/\bsrc\s*=/i.test(atributos)) {

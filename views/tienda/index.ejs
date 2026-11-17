@@ -5,7 +5,7 @@
 
 <div class="tienda">
   <% if (usuario?.rol === 'comprador' && !usuario.recibir_avisos && !usuario.aviso_suscripcion_descartado) { %>
-    <aside class="alert alert-info alert-dismissible fade show mx-auto mt-3" style="max-width: 72rem" role="status" data-aviso-suscripcion>
+    <aside class="alert alert-info alert-dismissible fade show mx-auto mt-3 aviso-suscripcion" role="status" data-aviso-suscripcion>
       <strong>Recibe novedades de la lonja.</strong> Activa los avisos por correo desde tu <a href="/configuracion">configuración</a>. Puedes darte de baja en cualquier momento.
       <button type="button" class="btn-close" aria-label="Cerrar aviso" data-cerrar-aviso-suscripcion></button>
     </aside>
@@ -15,7 +15,8 @@
     <% if (destacados.length) { %>
       <div class="tienda-heroe__slides" data-heroe role="region" aria-roledescription="carrusel" aria-label="Lotes destacados" tabindex="0">
         <% destacados.forEach((lote, i) => { %>
-          <a class="tienda-heroe__slide <%= i === 0 ? 'activo' : '' %>" href="/tienda/lote/<%= lote.id_lte %>" style="--imagen: url('<%= lote.imagen %>')">
+          <a class="tienda-heroe__slide <%= i === 0 ? 'activo' : '' %>" href="/tienda/lote/<%= lote.id_lte %>">
+            <img class="tienda-heroe__imagen" src="<%= lote.imagen %>" alt="" aria-hidden="true">
             <span class="tienda-heroe__velo"></span>
             <span class="tienda-heroe__contenido">
               <span class="tienda-heroe__etiqueta"><%- icono('fire', 13, 'me-1') %>Destacado de hoy</span>

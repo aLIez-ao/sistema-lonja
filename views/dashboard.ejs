@@ -94,7 +94,7 @@
         <span class="text-muted small"><%= lotes.vendidos %> de <%= lotes.total %> lotes</span>
       </div>
       <div class="medidor mt-2" role="img" aria-label="<%= lotes.porcentajeVendido %>% de los lotes vendidos">
-        <div class="medidor-relleno" style="width: <%= lotes.porcentajeVendido %>%"></div>
+        <progress class="medidor-progreso" max="100" value="<%= lotes.porcentajeVendido %>" aria-label="Porcentaje vendido"><%= lotes.porcentajeVendido %>%</progress>
       </div>
       <div class="d-flex justify-content-between small text-muted mt-2">
         <span>Vendidos: <strong><%= lotes.vendidos %></strong></span>

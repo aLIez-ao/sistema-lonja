@@ -40,7 +40,7 @@
               const cantidad = resumenOpiniones.distribucion[n - 1] || 0;
               const pct = resumenOpiniones.total ? Math.round((cantidad / resumenOpiniones.total) * 100) : 0;
             %>
-              <li><span><%= n %> <%- icono('star-fill', 12) %></span><span class="tienda-distribucion__barra"><span style="width: <%= pct %>%"></span></span><span><%= cantidad %></span></li>
+              <li><span><%= n %> <%- icono('star-fill', 12) %></span><progress class="tienda-distribucion__barra" max="100" value="<%= pct %>" aria-label="<%= pct %>%"><%= pct %>%</progress><span><%= cantidad %></span></li>
             <% }) %>
           </ul>
         <% } %>

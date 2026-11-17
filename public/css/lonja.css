@@ -270,6 +270,29 @@ main.container {
 .indicador-rotulo { font-size: 0.8rem; color: var(--lonja-text-muted); }
 .medidor { height: 10px; border-radius: 5px; background: var(--lonja-surface-subtle); border: 1px solid var(--lonja-border); overflow: hidden; }
 .medidor-relleno { height: 100%; background: var(--lonja-navy); border-radius: 5px 0 0 5px; }
+.medidor-progreso { display: block; width: 100%; height: 100%; border: 0; appearance: none; }
+.medidor-progreso::-webkit-progress-bar { background: transparent; }
+.medidor-progreso::-webkit-progress-value { background: var(--lonja-navy); }
+.medidor-progreso::-moz-progress-bar { background: var(--lonja-navy); }
+.aviso-baja-card { max-width: 38rem; }
+.catalogo-descripcion { max-width: 22rem; }
+.config-tabs { border-radius: 12px; overflow: hidden; }
+.carrito-resumen { top: 1rem; }
+.selector-anio { min-width: 7.5rem; }
+.logo-autenticacion { width: auto; }
+.logo-login { max-height: 56px; }
+.logo-registro { max-height: 48px; }
+.factura-col-lote { width: 55pt; }
+.factura-col-descripcion { width: 165pt; }
+.factura-col-cajas { width: 50pt; }
+.factura-col-peso, .factura-col-salida, .factura-col-final { width: 65pt; }
+.factura-col-total { width: 67pt; }
+.aviso-suscripcion { max-width: 72rem; }
+.factura-tabla th:nth-child(1) { width: 55pt; }
+.factura-tabla th:nth-child(2) { width: 165pt; }
+.factura-tabla th:nth-child(3) { width: 50pt; }
+.factura-tabla th:nth-child(4), .factura-tabla th:nth-child(5), .factura-tabla th:nth-child(6) { width: 65pt; }
+.factura-tabla th:nth-child(7) { width: 67pt; }
 .grafica-baja { height: 200px; }
 .accordion { --bs-accordion-bg: var(--lonja-surface); --bs-accordion-color: var(--lonja-text); --bs-accordion-border-color: var(--lonja-border); --bs-accordion-btn-color: var(--lonja-text); --bs-accordion-active-bg: var(--lonja-surface-subtle); --bs-accordion-active-color: var(--lonja-text); --bs-accordion-btn-focus-box-shadow: 0 0 0 3px rgba(8, 126, 139, 0.15); }
 

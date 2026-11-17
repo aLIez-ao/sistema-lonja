@@ -4,7 +4,7 @@
   const _url = `/tienda/lote/${lote.id_lte}`;
   const _nombre = lote.nombresEspecies || `Lote #${lote.id_lte}`;
 %>
-<article class="lote-card" style="--i: <%= _pos %>">
+<article class="lote-card">
   <a class="lote-card__media" href="<%= _url %>" aria-label="Ver <%= _nombre %>">
     <img src="<%= lote.imagen %>" alt="<%= _nombre %>" width="480" height="320" loading="lazy">
     <span class="lote-card__insignias">

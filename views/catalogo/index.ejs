@@ -45,7 +45,7 @@
           </td>
           <td>
             <strong><%= e.nombre %></strong>
-            <% if (e.descripcion) { %><div class="small text-muted text-truncate" style="max-width: 22rem;"><%= e.descripcion %></div><% } %>
+            <% if (e.descripcion) { %><div class="small text-muted text-truncate catalogo-descripcion"><%= e.descripcion %></div><% } %>
           </td>
           <td><a class="enlace-registro" href="/catalogo?tipo=<%= e.id_tpo %>"><%= e.tipo.nombre %></a></td>
           <td>

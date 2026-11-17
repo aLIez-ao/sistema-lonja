@@ -31,7 +31,7 @@
 <div class="row g-4">
   <!-- Menú lateral de pestañas -->
   <div class="col-lg-3">
-    <div class="list-group shadow-sm" id="configTabs" role="tablist" style="border-radius: 12px; overflow: hidden;">
+    <div class="list-group shadow-sm config-tabs" id="configTabs" role="tablist">
       <a class="list-group-item list-group-item-action active py-3 fw-semibold" id="tab-sitio" data-bs-toggle="list" href="#pane-sitio" role="tab">
         <%- icono('gear', 16, 'me-2') %>
         Apariencia
@@ -161,7 +161,7 @@
                 </div>
                 <div class="table-responsive mt-2">
                   <table class="table table-sm align-middle mb-0 small">
-                    <thead><tr><th style="width: 24%">Cookie</th><th>Para qué sirve</th><th style="width: 22%">Duración</th></tr></thead>
+                    <thead><tr><th>Cookie</th><th>Para qué sirve</th><th>Duración</th></tr></thead>
                     <tbody>
                       <% cat.cookies.forEach(c => { %>
                         <tr><td><code><%= c.nombre %></code></td><td><%= c.proposito %></td><td><%= c.duracion %></td></tr>
