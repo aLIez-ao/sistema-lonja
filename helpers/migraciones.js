@@ -1,186 +1,16 @@
 import db from '../config/db.js';
-import { DataTypes, col, fn, where as sqlWhere } from 'sequelize';
-import { Especie, EspecieCatalogo, Migracion } from '../models/index.js';
+import { Migracion } from '../models/index.js';
+import { migraciones } from '../migraciones/index.js';
+import { rellenarCatalogoEspecies } from './catalogoMigracion.js';
 
-// Columnas agregadas a "usuario" después de la primera versión. Con BD_SYNC=safe, sync() no
-// altera tablas existentes, así que aquí se crean las que falten.
-const COLUMNAS_USUARIO = {
-  correo: { type: DataTypes.STRING(80), allowNull: true, unique: true },
-  email_verificado: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
-  recibir_avisos: { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
-  token_verificacion: { type: DataTypes.STRING(100), allowNull: true },
-  token_verificacion_expira: { type: DataTypes.DATE, allowNull: true },
-  token_verificacion_envio: { type: DataTypes.DATE, allowNull: true },
-  token_recuperacion: { type: DataTypes.STRING(100), allowNull: true },
-  token_recuperacion_expira: { type: DataTypes.DATE, allowNull: true },
-  preferencias: { type: DataTypes.TEXT, allowNull: true },
-  telefono: { type: DataTypes.STRING(20), allowNull: true },
-  puesto: { type: DataTypes.STRING(60), allowNull: true },
-  foto: { type: DataTypes.STRING(120), allowNull: true },
-  sesion_version: { type: DataTypes.INTEGER, allowNull: false, defaultValue: 0 },
-  // Vínculo de la cuenta en línea con su comprador (Fase 2)
-  codigo_cpr: { type: DataTypes.SMALLINT, allowNull: true, unique: true },
-  rfc: { type: DataTypes.STRING(13), allowNull: true },
-  razon_social: { type: DataTypes.STRING(100), allowNull: true },
-};
+export { rellenarCatalogoEspecies };
 
-/** Agrega la columna si falta; los fallos de esquema detienen el arranque. */
-export async function asegurarColumna(tabla, nombre, definicion, transaction) {
-  const qi = db.getQueryInterface();
-  const actuales = await qi.describeTable(tabla, { transaction });
-  if (actuales[nombre]) return false;
-  await qi.addColumn(tabla, nombre, definicion, { transaction });
-  console.log(`Columna '${nombre}' agregada a la tabla ${tabla}`);
-  return true;
-}
-
-/** Ensancha una columna si su longitud actual es menor que la pedida. No recorta nunca. */
-export async function asegurarAncho(tabla, nombre, longitud, transaction) {
-  const qi = db.getQueryInterface();
-  const actuales = await qi.describeTable(tabla, { transaction });
-  const col = actuales[nombre];
-  if (!col) {
-    await qi.addColumn(tabla, nombre, { type: DataTypes.STRING(longitud), allowNull: true }, { transaction });
-    console.log(`Columna '${nombre}' agregada a la tabla ${tabla}`);
-    return true;
-  }
-  const tipo = String(col.type || '');
-  const m = /\((\d+)\)/.exec(tipo);
-  const actual = m ? Number(m[1]) : 255;
-  if (actual >= longitud) return false;
-  const definicion = { type: DataTypes.STRING(longitud), allowNull: col.allowNull };
-  // describeTable devuelve `defaultValue: null` también cuando SQL no tiene DEFAULT;
-  // pasarlo a changeColumn genera `DEFAULT NULL`, inválido para columnas NOT NULL.
-  if (col.defaultValue !== null && col.defaultValue !== undefined) {
-    definicion.defaultValue = col.defaultValue;
-  }
-  await qi.changeColumn(tabla, nombre, definicion, { transaction });
-  console.log(`Columna '${tabla}.${nombre}' ampliada de ${actual} a ${longitud}`);
-  return true;
-}
-
-/** Compatibilidad con llamadas anteriores. */
+/** Compatibilidad con la llamada histórica. */
 export async function asegurarColumnasUsuario() {
   return asegurarEsquema();
 }
 
-/** Busca un catálogo por nombre sin distinguir mayúsculas. */
-const catalogoPorNombre = (nombre, transaction) =>
-  EspecieCatalogo.findOne({
-    where: sqlWhere(fn('LOWER', col('nombre')), String(nombre).trim().toLowerCase()),
-    transaction,
-  });
-
-/**
- * Rellena `especie.id_cat` a partir de las especies ya capturadas.
- * Idempotente: si vuelve a ejecutarse no crea catálogos duplicados.
- */
-export async function rellenarCatalogoEspecies({ transaction } = {}) {
-  const pendientes = await Especie.findAll({ where: { id_cat: null }, transaction });
-  if (!pendientes.length) return { creados: 0, asignados: 0 };
-
-  // Agrupa por nombre normalizado y elige la capitalización y el tipo más frecuentes.
-  const grupos = new Map();
-  for (const e of pendientes) {
-    const clave = String(e.nombre || '')
-      .trim()
-      .toLowerCase();
-    if (!clave) continue;
-    const g = grupos.get(clave) || { nombres: new Map(), tipos: new Map(), imagenes: [], filas: [] };
-    g.nombres.set(e.nombre, (g.nombres.get(e.nombre) || 0) + 1);
-    g.tipos.set(e.id_tpo, (g.tipos.get(e.id_tpo) || 0) + 1);
-    if (e.imagen) g.imagenes.push(e.imagen);
-    g.filas.push(e);
-    grupos.set(clave, g);
-  }
-
-  let creados = 0;
-  let asignados = 0;
-  for (const [clave, g] of grupos) {
-    const nombre = [...g.nombres.entries()].sort((a, b) => b[1] - a[1])[0][0].trim();
-    const idTpo = [...g.tipos.entries()].sort((a, b) => b[1] - a[1])[0][0];
-    if (g.tipos.size > 1) {
-      console.warn(`El nombre "${nombre}" aparece con varios tipos; se usó el más frecuente (${idTpo}).`);
-    }
-
-    let catalogo = await catalogoPorNombre(clave, transaction);
-    if (!catalogo) {
-      catalogo = await EspecieCatalogo.create(
-        { nombre, id_tpo: idTpo, imagen: g.imagenes[0] || null, activo: true },
-        { transaction },
-      );
-      creados += 1;
-    }
-    await Especie.update({ id_cat: catalogo.id_cat }, { where: { id_epe: g.filas.map((f) => f.id_epe) }, transaction });
-    asignados += g.filas.length;
-  }
-
-  if (creados || asignados) console.log(`Catálogo de especies: ${creados} creados, ${asignados} especies vinculadas`);
-  return { creados, asignados };
-}
-
-/** Primera migración: actualiza el esquema histórico y consolida el catálogo. */
-async function migrarEsquemaActual({ transaction }) {
-  for (const [nombre, definicion] of Object.entries(COLUMNAS_USUARIO)) {
-    await asegurarColumna('usuario', nombre, definicion, transaction);
-  }
-
-  // Catálogo de especies (Fase 1)
-  await asegurarColumna(
-    'especie',
-    'id_cat',
-    {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: { model: 'catalogo_especie', key: 'id_cat' },
-      onDelete: 'SET NULL',
-      onUpdate: 'CASCADE',
-    },
-    transaction,
-  );
-  await asegurarAncho('especie', 'nombre', 40, transaction);
-  await asegurarAncho('comprador', 'nombre', 40, transaction);
-  await asegurarAncho('comprador', 'apellido_paterno', 40, transaction);
-  await asegurarAncho('comprador', 'apellido_materno', 40, transaction);
-
-  // La tabla pedido se crea desde el modelo; esta FK permite conservar compras antiguas.
-  await asegurarColumna(
-    'compra',
-    'id_ped',
-    {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-      references: { model: 'pedido', key: 'id_ped' },
-      onDelete: 'SET NULL',
-      onUpdate: 'CASCADE',
-    },
-    transaction,
-  );
-
-  await rellenarCatalogoEspecies({ transaction });
-}
-
-const migraciones = [
-  { id: '001_esquema_actual', up: migrarEsquemaActual },
-  {
-    id: '002_aviso_suscripcion_descartado',
-    up: ({ transaction }) =>
-      asegurarColumna(
-        'usuario',
-        'aviso_suscripcion_descartado',
-        { type: DataTypes.BOOLEAN, allowNull: false, defaultValue: false },
-        transaction,
-      ),
-    down: async ({ transaction }) => {
-      const qi = db.getQueryInterface();
-      if ((await qi.describeTable('usuario', { transaction })).aviso_suscripcion_descartado) {
-        await qi.removeColumn('usuario', 'aviso_suscripcion_descartado', { transaction });
-      }
-    },
-  },
-];
-
-/** Ejecuta una vez cada migración pendiente y registra su versión aplicada. */
+/** Aplica en orden las migraciones que aún no aparecen en la tabla de versiones. */
 export async function asegurarEsquema() {
   for (const migracion of migraciones) {
     if (await Migracion.findByPk(migracion.id)) continue;
@@ -192,7 +22,7 @@ export async function asegurarEsquema() {
   }
 }
 
-/** Revierte la última migración conocida; el llamador debe haber detenido versiones nuevas de la app. */
+/** Revierte la última migración reversible. El proceso de la aplicación debe estar detenido. */
 export async function revertirUltimaMigracion() {
   for (const migracion of [...migraciones].reverse()) {
     if (!(await Migracion.findByPk(migracion.id))) continue;

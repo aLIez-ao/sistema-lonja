@@ -10,8 +10,8 @@
     "test": "node --test test/*.test.js",
     "test:cov": "node --test --experimental-test-coverage --test-coverage-lines=80 test/*.test.js",
     "lint": "eslint .",
-    "format": "prettier --write app.js index.js \"{config,controllers,helpers,middleware,models,routes,scripts,servicios,test,public/js}/**/*.js\" package.json eslint.config.js .prettierrc.json",
-    "format:check": "prettier --check app.js index.js \"{config,controllers,helpers,middleware,models,routes,scripts,servicios,test,public/js}/**/*.js\" package.json eslint.config.js .prettierrc.json",
+    "format": "prettier --write app.js index.js \"{config,controllers,helpers,migraciones,middleware,models,routes,scripts,servicios,test,public/js}/**/*.js\" package.json eslint.config.js .prettierrc.json",
+    "format:check": "prettier --check app.js index.js \"{config,controllers,helpers,migraciones,middleware,models,routes,scripts,servicios,test,public/js}/**/*.js\" package.json eslint.config.js .prettierrc.json",
     "demo": "node scripts/demo.js",
     "correo:configurar": "node scripts/configurar-correo.js"
   },
