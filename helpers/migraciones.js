@@ -160,23 +160,8 @@ async function migrarEsquemaActual({ transaction }) {
   await rellenarCatalogoEspecies({ transaction });
 }
 
-async function revertirEsquemaActual({ transaction }) {
-  const qi = db.getQueryInterface();
-  for (const [tabla, nombre] of [
-    ['compra', 'id_ped'],
-    ['especie', 'id_cat'],
-  ]) {
-    if ((await qi.describeTable(tabla, { transaction }))[nombre]) await qi.removeColumn(tabla, nombre, { transaction });
-  }
-  for (const nombre of Object.keys(COLUMNAS_USUARIO).reverse()) {
-    if ((await qi.describeTable('usuario', { transaction }))[nombre]) {
-      await qi.removeColumn('usuario', nombre, { transaction });
-    }
-  }
-}
-
 const migraciones = [
-  { id: '001_esquema_actual', up: migrarEsquemaActual, down: revertirEsquemaActual },
+  { id: '001_esquema_actual', up: migrarEsquemaActual },
   {
     id: '002_aviso_suscripcion_descartado',
     up: ({ transaction }) =>

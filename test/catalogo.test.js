@@ -43,6 +43,8 @@ test('la migración crea el catálogo desde las especies existentes y es idempot
   assert.equal(await Migracion.count({ where: { id: '002_aviso_suscripcion_descartado' } }), 1);
   assert.equal(await revertirUltimaMigracion(), '002_aviso_suscripcion_descartado');
   assert.equal((await db.getQueryInterface().describeTable('usuario')).aviso_suscripcion_descartado, undefined);
+  await assert.rejects(revertirUltimaMigracion(), /no tiene una reversión definida/);
+  assert.equal(await Migracion.count({ where: { id: '001_esquema_actual' } }), 1);
   await asegurarEsquema();
   assert.ok((await db.getQueryInterface().describeTable('usuario')).aviso_suscripcion_descartado);
 });
