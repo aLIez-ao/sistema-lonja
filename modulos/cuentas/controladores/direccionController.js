@@ -2,7 +2,7 @@ import { Op } from 'sequelize';
 import db from '../../../compartido/config/db.js';
 import { DireccionEntrega } from '../../../models/index.js';
 import { aMensaje } from '../../../compartido/ayudantes/utiles.js';
-import { ESTADOS, MUNICIPIOS_VERACRUZ } from '../../../helpers/mexico.js';
+import { ESTADOS, MUNICIPIOS_VERACRUZ } from '../../../compartido/ayudantes/mexico.js';
 import { telefonoValido } from '../../../compartido/ayudantes/validacion.js';
 
 const CP = /^\d{5}$/;

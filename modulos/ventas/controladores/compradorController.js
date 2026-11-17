@@ -1,11 +1,11 @@
 import { body } from 'express-validator';
-import { reglaCorreo } from '../compartido/ayudantes/validacion.js';
+import { reglaCorreo } from '../../../compartido/ayudantes/validacion.js';
 import { literal } from 'sequelize';
-import { Comprador, Compra, Lote, Especie, Tipo, Usuario } from '../models/index.js';
-import { mensajesError, mensajeBD, aMensaje, aError } from '../compartido/ayudantes/utiles.js';
-import { leerListado, consultarListado, combinarWhere } from '../compartido/ayudantes/listado.js';
-import { condicionBusqueda } from '../helpers/busqueda.js';
-import { condicionFiltros, filtroSiNo } from '../helpers/filtros.js';
+import { Comprador, Compra, Lote, Especie, Tipo, Usuario } from '../../../models/index.js';
+import { mensajesError, mensajeBD, aMensaje, aError } from '../../../compartido/ayudantes/utiles.js';
+import { leerListado, consultarListado, combinarWhere } from '../../../compartido/ayudantes/listado.js';
+import { condicionBusqueda } from '../../../helpers/busqueda.js';
+import { condicionFiltros, filtroSiNo } from '../../../helpers/filtros.js';
 
 const reglas = [
   body('nombre')

@@ -11,8 +11,8 @@ import {
   verFactura,
   descargarFacturaPdf,
   enviarFacturaPorCorreo,
-} from '../controllers/compraController.js';
-import { permitir } from '../middleware/protegerRutas.js';
+} from '../controladores/compraController.js';
+import { permitir } from '../../../middleware/protegerRutas.js';
 
 const router = express.Router();
 

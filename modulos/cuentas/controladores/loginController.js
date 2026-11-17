@@ -3,7 +3,7 @@ import { body } from 'express-validator';
 import bcrypt from 'bcryptjs';
 import { Op } from 'sequelize';
 import { Usuario } from '../../../models/index.js';
-import { estadisticasInicio } from '../../../helpers/estadisticas.js';
+import { estadisticasInicio } from '../../../compartido/ayudantes/estadisticas.js';
 import { JWTGenera, opcionesCookieSesion } from '../../../compartido/ayudantes/tokens.js';
 import { mensajesError, aMensaje } from '../../../compartido/ayudantes/utiles.js';
 import { enviarEmailPasswordCambiada } from '../../../compartido/ayudantes/email.js';

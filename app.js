@@ -20,9 +20,11 @@ import {
   rutasEspecies as router_especie,
   rutasLotes as router_lote,
 } from './modulos/catalogo/index.js';
-import router_comprador from './routes/comprador_router.js';
-import router_compra from './routes/compra_router.js';
-import router_reporte from './routes/reporte_router.js';
+import {
+  rutasCompradores as router_comprador,
+  rutasCompras as router_compra,
+  rutasReportes as router_reporte,
+} from './modulos/ventas/index.js';
 import router_busqueda from './routes/busqueda_router.js';
 import router_cuenta from './routes/cuenta_router.js';
 import router_tienda from './routes/tienda_router.js';

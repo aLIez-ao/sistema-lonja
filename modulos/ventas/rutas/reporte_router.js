@@ -1,5 +1,5 @@
 import express from 'express';
-import { anual, anualPdf, reporteCsv } from '../controllers/reporteController.js';
+import { anual, anualPdf, reporteCsv } from '../controladores/reporteController.js';
 
 const router = express.Router();
 

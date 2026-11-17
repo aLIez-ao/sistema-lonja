@@ -1,6 +1,6 @@
-import { registro } from '../compartido/ayudantes/registro.js';
+import { registro } from '../../../compartido/ayudantes/registro.js';
 import { Op } from 'sequelize';
-import { Compra, Lote, Comprador, Especie, Tipo } from '../models/index.js';
+import { Compra, Lote, Comprador, Especie, Tipo } from '../../../models/index.js';
 import {
   hoy,
   fechaValida,
@@ -11,8 +11,8 @@ import {
   formatoFecha,
   redondea,
   NOMBRES_MESES,
-} from '../compartido/ayudantes/fechas.js';
-import { generarReporteAnualPDF } from '../helpers/reportePdf.js';
+} from '../../../compartido/ayudantes/fechas.js';
+import { generarReporteAnualPDF } from '../ayudantes/reportePdf.js';
 
 const incluye = [
   { model: Comprador, as: 'comprador' },

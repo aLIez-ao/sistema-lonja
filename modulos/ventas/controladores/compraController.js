@@ -1,18 +1,18 @@
-import { registro } from '../compartido/ayudantes/registro.js';
+import { registro } from '../../../compartido/ayudantes/registro.js';
 import { body } from 'express-validator';
 import { Op, col } from 'sequelize';
-import db from '../compartido/config/db.js';
-import { Compra, Lote, Comprador, Especie, Tipo } from '../models/index.js';
-import { mensajesError, mensajeBD, aMensaje, aError } from '../compartido/ayudantes/utiles.js';
-import { redondea } from '../compartido/ayudantes/fechas.js';
-import { generarFacturaPDF } from '../compartido/ayudantes/facturaPdf.js';
-import { datosFactura } from '../compartido/ayudantes/factura.js';
-import { enviarEmailComprobanteCompra } from '../compartido/ayudantes/email.js';
-import { leerListado, consultarListado, combinarWhere } from '../compartido/ayudantes/listado.js';
-import { condicionBusqueda } from '../helpers/busqueda.js';
-import { condicionFiltros, filtroEntero, filtroFecha, filtroNumero } from '../helpers/filtros.js';
-import { loteDisponible, reservasActivas } from '../modulos/catalogo/index.js';
-import { encolarTrabajo } from '../compartido/ayudantes/colaTrabajos.js';
+import { Compra, Lote, Comprador, Especie, Tipo } from '../../../models/index.js';
+import { mensajesError, mensajeBD, aMensaje, aError } from '../../../compartido/ayudantes/utiles.js';
+import { redondea } from '../../../compartido/ayudantes/fechas.js';
+import { generarFacturaPDF } from '../../../compartido/ayudantes/facturaPdf.js';
+import { datosFactura } from '../../../compartido/ayudantes/factura.js';
+import { enviarEmailComprobanteCompra } from '../../../compartido/ayudantes/email.js';
+import { leerListado, consultarListado, combinarWhere } from '../../../compartido/ayudantes/listado.js';
+import { condicionBusqueda } from '../../../helpers/busqueda.js';
+import { condicionFiltros, filtroEntero, filtroFecha, filtroNumero } from '../../../helpers/filtros.js';
+import { reservasActivas } from '../../catalogo/index.js';
+import { registrarCompraMostrador } from '../servicios/compras.js';
+import { encolarTrabajo } from '../../../compartido/ayudantes/colaTrabajos.js';
 
 const reglas = [
   body('precio_kilo_final')
@@ -160,36 +160,10 @@ const registrar = async (req, res) => {
   const errs = mensajesError(req);
   if (!errs.length) {
     try {
-      const resultado = await db.transaction(async (transaction) => {
-        const disponibilidad = await loteDisponible(req.body.id_cmp, { transaction });
-        if (disponibilidad.motivo)
-          return {
-            error:
-              {
-                no_existe: 'El lote no existe',
-                vendido: 'Ese lote ya fue comprado',
-                reservado: 'Ese lote está reservado por un pedido en línea y no se puede vender en mostrador',
-                reservado_propio: 'Ese lote está reservado por un pedido en línea y no se puede vender en mostrador',
-              }[disponibilidad.motivo] || 'El lote no está disponible',
-          };
-        const lote = await Lote.findByPk(disponibilidad.lote.id_lte, {
-          transaction,
-          include: [{ model: Especie, as: 'especies', include: [{ model: Tipo, as: 'tipo' }] }],
-        });
-        const comprador = await Comprador.findByPk(req.body.codigo_cpr, { transaction });
-        if (!comprador) return { error: 'El comprador no existe' };
-        const precio = Number(req.body.precio_kilo_final);
-        const total = redondea(Number(lote.kilos) * precio);
-        const nuevaCompra = await Compra.create(
-          {
-            id_cmp: lote.id_lte,
-            codigo_cpr: req.body.codigo_cpr,
-            precio_kilo_final: precio,
-            precio_total: total,
-          },
-          { transaction },
-        );
-        return { nuevaCompra, lote, comprador };
+      const resultado = await registrarCompraMostrador({
+        idLote: req.body.id_cmp,
+        codigoComprador: req.body.codigo_cpr,
+        precioFinal: req.body.precio_kilo_final,
       });
       if (resultado.error) errs.push(resultado.error);
       else {
