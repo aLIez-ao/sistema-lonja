@@ -1,11 +1,11 @@
 import { body } from 'express-validator';
 import { col, Op } from 'sequelize';
-import { Especie, EspecieCatalogo, Lote, Tipo, Compra } from '../models/index.js';
-import { mensajesError, mensajeBD, aMensaje, aError } from '../compartido/ayudantes/utiles.js';
-import { leerListado, consultarListado, combinarWhere } from '../compartido/ayudantes/listado.js';
-import { condicionBusqueda } from '../helpers/busqueda.js';
-import { condicionFiltros, filtroEntero, filtroLista } from '../helpers/filtros.js';
-import { LoteVendidoError, exigirLoteNoVendido, responderErrorLote } from '../helpers/lotes.js';
+import { Especie, EspecieCatalogo, Lote, Tipo, Compra } from '../../../models/index.js';
+import { mensajesError, mensajeBD, aMensaje, aError } from '../../../compartido/ayudantes/utiles.js';
+import { leerListado, consultarListado, combinarWhere } from '../../../compartido/ayudantes/listado.js';
+import { condicionBusqueda } from '../../../helpers/busqueda.js';
+import { condicionFiltros, filtroEntero, filtroLista } from '../../../helpers/filtros.js';
+import { LoteVendidoError, exigirLoteNoVendido, responderErrorLote } from '../ayudantes/lotes.js';
 
 const reglas = [
   body('id_lte').isInt({ min: 1 }).withMessage('Selecciona un lote'),

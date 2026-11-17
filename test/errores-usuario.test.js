@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { ErrorDeUsuario, ErrorImagen } from '../compartido/ayudantes/utiles.js';
-import { guardarImagenDataURL } from '../helpers/imagenes.js';
+import { guardarImagenDataURL } from '../compartido/ayudantes/imagenes.js';
 
 test('ErrorDeUsuario conserva su estado HTTP y distingue errores de validación', () => {
   const error = new ErrorDeUsuario('lote reservado', 409);

@@ -14,11 +14,13 @@ import {
   rutasConfiguracion as router_configuracion,
   rutasAvisos as router_avisos,
 } from './modulos/cuentas/index.js';
-import router_tipo from './routes/tipo_router.js';
+import {
+  rutasTipos as router_tipo,
+  rutasCatalogo as router_catalogo,
+  rutasEspecies as router_especie,
+  rutasLotes as router_lote,
+} from './modulos/catalogo/index.js';
 import router_comprador from './routes/comprador_router.js';
-import router_lote from './routes/lote_router.js';
-import router_especie from './routes/especie_router.js';
-import router_catalogo from './routes/catalogo_router.js';
 import router_compra from './routes/compra_router.js';
 import router_reporte from './routes/reporte_router.js';
 import router_busqueda from './routes/busqueda_router.js';

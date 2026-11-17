@@ -1,18 +1,18 @@
 import { body } from 'express-validator';
 import { literal, Op } from 'sequelize';
-import db from '../compartido/config/db.js';
-import { Lote, Especie, EspecieCatalogo, Tipo, Compra, Comprador, ListaItem } from '../models/index.js';
-import { mensajesError, mensajeBD, aMensaje, aError } from '../compartido/ayudantes/utiles.js';
-import { leerListado, consultarListado, combinarWhere } from '../compartido/ayudantes/listado.js';
-import { condicionBusqueda } from '../helpers/busqueda.js';
-import { condicionFiltros, filtroEntero, filtroFecha, filtroLista, filtroNumero } from '../helpers/filtros.js';
+import db from '../../../compartido/config/db.js';
+import { Lote, Especie, EspecieCatalogo, Tipo, Compra, Comprador, ListaItem } from '../../../models/index.js';
+import { mensajesError, mensajeBD, aMensaje, aError } from '../../../compartido/ayudantes/utiles.js';
+import { leerListado, consultarListado, combinarWhere } from '../../../compartido/ayudantes/listado.js';
+import { condicionBusqueda } from '../../../helpers/busqueda.js';
+import { condicionFiltros, filtroEntero, filtroFecha, filtroLista, filtroNumero } from '../../../helpers/filtros.js';
 import {
   LoteVendidoError,
   exigirLoteNoVendido,
   idsEspecies,
   responderErrorLote,
   sincronizarEspecies,
-} from '../helpers/lotes.js';
+} from '../ayudantes/lotes.js';
 
 const reglas = [
   body('kilos').isFloat({ gt: 0, max: 99999999 }).withMessage('Los kilos deben ser un número mayor a 0'),

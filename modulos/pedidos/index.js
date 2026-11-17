@@ -20,12 +20,10 @@ export {
 export { confirmarCobro, crearPedido, pagarPedido } from './servicios/pedidos.js';
 export {
   costoEnvio,
-  disponibilidadDeLotes,
   liberarPedidosVencidos,
-  loteDisponible,
   reservaEfectivoMinutos,
   reservaMinutos,
-  reservasActivas,
   textoDireccion,
   totalLineas,
 } from './ayudantes/pedidos.js';
+export { disponibilidadDeLotes, loteDisponible, reservasActivas } from '../catalogo/index.js';

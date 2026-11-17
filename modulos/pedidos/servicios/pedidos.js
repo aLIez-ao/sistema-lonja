@@ -7,14 +7,13 @@ import { redondea } from '../../../compartido/ayudantes/fechas.js';
 import { cobrar } from '../ayudantes/pasarela.js';
 import {
   costoEnvio,
-  disponibilidadDeLotes,
   liberarPedidosVencidos,
   reservaMinutos,
   reservaEfectivoMinutos,
-  reservasActivas,
   textoDireccion,
   totalLineas,
 } from '../ayudantes/pedidos.js';
+import { disponibilidadDeLotes, reservasActivas } from '../../catalogo/index.js';
 import { crearLimite } from '../../../compartido/ayudantes/seguridad.js';
 import {
   ESTADO_PEDIDO,

@@ -11,7 +11,7 @@ import { enviarEmailComprobanteCompra } from '../compartido/ayudantes/email.js';
 import { leerListado, consultarListado, combinarWhere } from '../compartido/ayudantes/listado.js';
 import { condicionBusqueda } from '../helpers/busqueda.js';
 import { condicionFiltros, filtroEntero, filtroFecha, filtroNumero } from '../helpers/filtros.js';
-import { loteDisponible, reservasActivas } from '../modulos/pedidos/index.js';
+import { loteDisponible, reservasActivas } from '../modulos/catalogo/index.js';
 import { encolarTrabajo } from '../compartido/ayudantes/colaTrabajos.js';
 
 const reglas = [

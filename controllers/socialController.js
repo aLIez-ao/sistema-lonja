@@ -17,7 +17,7 @@ import { crearLimite } from '../compartido/ayudantes/seguridad.js';
 import { enviarEmailRespuestaPregunta } from '../compartido/ayudantes/email.js';
 import { errorDeSitio, rutaReferer, volverA } from '../compartido/ayudantes/navegacion.js';
 import { nombrePublico, prepararLote, imagenDeEspecie } from '../helpers/tienda.js';
-import { disponibilidadDeLotes } from '../modulos/pedidos/index.js';
+import { disponibilidadDeLotes } from '../modulos/catalogo/index.js';
 import { ESTADO_PEDIDO } from '../models/Pedido.js';
 
 const esJson = (req) => req.is('json') || req.accepts(['html', 'json']) === 'json';

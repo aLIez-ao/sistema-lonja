@@ -1,5 +1,6 @@
 import { CarritoItem, Lote, Especie, Tipo, EspecieCatalogo } from '../models/index.js';
-import { loteDisponible, disponibilidadDeLotes, totalLineas } from '../modulos/pedidos/index.js';
+import { loteDisponible, disponibilidadDeLotes } from '../modulos/catalogo/index.js';
+import { totalLineas } from '../modulos/pedidos/index.js';
 import { prepararLote } from '../helpers/tienda.js';
 import { aMensaje } from '../compartido/ayudantes/utiles.js';
 

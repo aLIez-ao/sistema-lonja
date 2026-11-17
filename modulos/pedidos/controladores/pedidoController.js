@@ -15,13 +15,8 @@ import { aMensaje } from '../../../compartido/ayudantes/utiles.js';
 import { redondea } from '../../../compartido/ayudantes/fechas.js';
 import { generarFacturaPDF } from '../../../compartido/ayudantes/facturaPdf.js';
 import { datosFactura } from '../../../compartido/ayudantes/factura.js';
-import {
-  costoEnvio,
-  reservaMinutos,
-  reservaEfectivoMinutos,
-  reservasActivas,
-  totalLineas,
-} from '../ayudantes/pedidos.js';
+import { costoEnvio, reservaMinutos, reservaEfectivoMinutos, totalLineas } from '../ayudantes/pedidos.js';
+import { reservasActivas } from '../../catalogo/index.js';
 import { prepararLote } from '../../../helpers/tienda.js';
 import { encolarTrabajo } from '../../../compartido/ayudantes/colaTrabajos.js';
 import { ESTADO_PEDIDO, OPCIONES_PAGO_PEDIDO } from '../../../models/Pedido.js';

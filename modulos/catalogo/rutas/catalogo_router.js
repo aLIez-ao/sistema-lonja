@@ -1,6 +1,6 @@
 import express from 'express';
-import * as c from '../controllers/catalogoController.js';
-import { permitir } from '../middleware/protegerRutas.js';
+import * as c from '../controladores/catalogoController.js';
+import { permitir } from '../../../middleware/protegerRutas.js';
 
 const router = express.Router();
 router.get('/', c.lista);

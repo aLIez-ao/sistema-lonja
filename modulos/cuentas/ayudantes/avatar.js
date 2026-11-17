@@ -2,7 +2,7 @@
 // así no hace falta multipart ni dependencias nuevas. Aquí se valida y se guarda en disco.
 import path from 'path';
 import { fileURLToPath } from 'url';
-import { borrarImagen, guardarImagenDataURL } from '../../../helpers/imagenes.js';
+import { borrarImagen, guardarImagenDataURL } from '../../../compartido/ayudantes/imagenes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const DIR_AVATARES = path.join(

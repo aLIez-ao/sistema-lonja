@@ -1,6 +1,6 @@
 // Reglas compartidas de lotes: un lote vendido no se modifica por ninguna vía,
 // y sus especies son una copia del catálogo al momento de capturarlas.
-import { Compra, Especie, EspecieCatalogo, Lote } from '../models/index.js';
+import { Compra, Especie, EspecieCatalogo, Lote } from '../../../models/index.js';
 
 export class LoteNoEncontradoError extends Error {
   constructor() {

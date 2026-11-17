@@ -2,15 +2,18 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { body } from 'express-validator';
 import { col, fn, where as sqlWhere } from 'sequelize';
-import { Especie, EspecieCatalogo, Tipo } from '../models/index.js';
-import { mensajesError, mensajeBD, aMensaje, aError } from '../compartido/ayudantes/utiles.js';
-import { leerListado, consultarListado, combinarWhere } from '../compartido/ayudantes/listado.js';
-import { condicionBusqueda } from '../helpers/busqueda.js';
-import { condicionFiltros, filtroEntero, filtroLista } from '../helpers/filtros.js';
-import { borrarImagen, guardarImagenDataURL } from '../helpers/imagenes.js';
+import { Especie, EspecieCatalogo, Tipo } from '../../../models/index.js';
+import { mensajesError, mensajeBD, aMensaje, aError } from '../../../compartido/ayudantes/utiles.js';
+import { leerListado, consultarListado, combinarWhere } from '../../../compartido/ayudantes/listado.js';
+import { condicionBusqueda } from '../../../helpers/busqueda.js';
+import { condicionFiltros, filtroEntero, filtroLista } from '../../../helpers/filtros.js';
+import { borrarImagen, guardarImagenDataURL } from '../../../compartido/ayudantes/imagenes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const DIR_ESPECIES = path.join(process.env.UPLOADS_DIR || path.join(__dirname, '..', 'public', 'uploads'), 'especies');
+const DIR_ESPECIES = path.join(
+  process.env.UPLOADS_DIR || path.join(__dirname, '..', '..', '..', 'public', 'uploads'),
+  'especies',
+);
 const URL_ESPECIES = '/uploads/especies/';
 
 const reglas = [
