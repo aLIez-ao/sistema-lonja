@@ -34,3 +34,39 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm audit --omit=dev --audit-level=high
+
+  integracion-mariadb:
+    name: Integración con MariaDB 11
+    runs-on: ubuntu-latest
+    services:
+      mariadb:
+        image: mariadb:11
+        env:
+          MARIADB_ROOT_PASSWORD: root
+          MARIADB_DATABASE: lonja_test
+          MARIADB_USER: lonja
+          MARIADB_PASSWORD: lonja_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      BD_DIALEC: mariadb
+      BD_HOST: 127.0.0.1
+      BD_PORT: 3306
+      BD_NOMBRE: lonja_test
+      BD_USUARIO: lonja
+      BD_CLAVE: lonja_test
+      SC_JWT: ci_test_secret_not_for_production
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Pruebas de migraciones, pedidos y caja
+        run: node --test --test-concurrency=1 test/catalogo.test.js test/pedidos.test.js test/venta-mostrador.test.js

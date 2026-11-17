@@ -3,11 +3,11 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
-process.env.BD_DIALEC = 'sqlite';
-process.env.BD_STORAGE = ':memory:';
-process.env.SC_JWT = 'clave_de_pruebas';
-process.env.ADMIN_USER = 'admin';
-process.env.ADMIN_PASSWORD = 'AdminPrueba123';
+process.env.BD_DIALEC ||= 'sqlite';
+if (process.env.BD_DIALEC === 'sqlite') process.env.BD_STORAGE ||= ':memory:';
+process.env.SC_JWT ||= 'clave_de_pruebas';
+process.env.ADMIN_USER ||= 'admin';
+process.env.ADMIN_PASSWORD ||= 'AdminPrueba123';
 process.env.GMAIL_USER = '';
 process.env.GMAIL_PASS = '';
 process.env.EMAIL_USER = '';
