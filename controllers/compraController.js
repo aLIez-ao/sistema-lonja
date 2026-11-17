@@ -1,18 +1,18 @@
-import { registro } from '../helpers/registro.js';
+import { registro } from '../compartido/ayudantes/registro.js';
 import { body } from 'express-validator';
 import { Op, col } from 'sequelize';
-import db from '../config/db.js';
+import db from '../compartido/config/db.js';
 import { Compra, Lote, Comprador, Especie, Tipo } from '../models/index.js';
-import { mensajesError, mensajeBD, aMensaje, aError } from '../helpers/utiles.js';
-import { redondea } from '../helpers/fechas.js';
+import { mensajesError, mensajeBD, aMensaje, aError } from '../compartido/ayudantes/utiles.js';
+import { redondea } from '../compartido/ayudantes/fechas.js';
 import { generarFacturaPDF } from '../helpers/facturaPdf.js';
 import { datosFactura } from '../helpers/factura.js';
-import { enviarEmailComprobanteCompra } from '../helpers/email.js';
-import { leerListado, consultarListado, combinarWhere } from '../helpers/listado.js';
+import { enviarEmailComprobanteCompra } from '../compartido/ayudantes/email.js';
+import { leerListado, consultarListado, combinarWhere } from '../compartido/ayudantes/listado.js';
 import { condicionBusqueda } from '../helpers/busqueda.js';
 import { condicionFiltros, filtroEntero, filtroFecha, filtroNumero } from '../helpers/filtros.js';
 import { loteDisponible, reservasActivas } from '../helpers/pedidos.js';
-import { encolarTrabajo } from '../helpers/colaTrabajos.js';
+import { encolarTrabajo } from '../compartido/ayudantes/colaTrabajos.js';
 
 const reglas = [
   body('precio_kilo_final')

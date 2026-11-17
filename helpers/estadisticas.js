@@ -1,7 +1,14 @@
 // Estadísticas del tablero de inicio.
 import { Op } from 'sequelize';
 import { Compra, Lote, Comprador, Especie, Tipo, Pedido, Pregunta, Opinion } from '../models/index.js';
-import { hoy, rangoDelDia, redondea, formatoFecha, formatoHora, NOMBRES_MESES } from './fechas.js';
+import {
+  hoy,
+  rangoDelDia,
+  redondea,
+  formatoFecha,
+  formatoHora,
+  NOMBRES_MESES,
+} from '../compartido/ayudantes/fechas.js';
 import { ESTADO_PEDIDO } from '../models/Pedido.js';
 
 const DIA = 24 * 60 * 60 * 1000;

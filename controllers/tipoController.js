@@ -1,8 +1,8 @@
 import { body } from 'express-validator';
 import { literal } from 'sequelize';
 import { Tipo, Especie, Lote, Compra } from '../models/index.js';
-import { mensajesError, mensajeBD, aMensaje, aError } from '../helpers/utiles.js';
-import { leerListado, consultarListado } from '../helpers/listado.js';
+import { mensajesError, mensajeBD, aMensaje, aError } from '../compartido/ayudantes/utiles.js';
+import { leerListado, consultarListado } from '../compartido/ayudantes/listado.js';
 import { condicionBusqueda } from '../helpers/busqueda.js';
 
 const reglas = [

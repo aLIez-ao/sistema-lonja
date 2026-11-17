@@ -7,7 +7,7 @@
 // concatenado en el SQL.
 import { Op, fn, col, where as sqlWhere } from 'sequelize';
 import { Compra, Lote, Especie, EspecieCatalogo, Comprador, Tipo, Usuario } from '../models/index.js';
-import { formatoFechaHora, dinero } from './fechas.js';
+import { formatoFechaHora, dinero } from '../compartido/ayudantes/fechas.js';
 
 export const ENTIDADES = ['compras', 'lotes', 'especies', 'catalogo', 'compradores', 'tipos', 'usuarios'];
 

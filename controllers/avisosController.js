@@ -1,5 +1,5 @@
 import { Usuario } from '../models/index.js';
-import { idUsuarioDeTokenBajaAvisos } from '../helpers/tokens.js';
+import { idUsuarioDeTokenBajaAvisos } from '../compartido/ayudantes/tokens.js';
 
 const resolverUsuario = async (token) => {
   const id = idUsuarioDeTokenBajaAvisos(token);

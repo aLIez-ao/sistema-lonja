@@ -2,13 +2,13 @@
 // Solo se consultan lotes sin compra y especies activas; ningún dato de
 // compradores (nombres, correos o montos) sale por estas rutas.
 import { Op, fn, col, literal, where as sqlWhere } from 'sequelize';
-import db from '../config/db.js';
+import db from '../compartido/config/db.js';
 import { Lote, Especie, EspecieCatalogo, Tipo, Compra } from '../models/index.js';
-import { leerListado, consultarListado, combinarWhere } from '../helpers/listado.js';
+import { leerListado, consultarListado, combinarWhere } from '../compartido/ayudantes/listado.js';
 import { filtroEntero, filtroNumero } from '../helpers/filtros.js';
 import { textoBusqueda } from '../helpers/busqueda.js';
-import { rangoDelDia, hoy, dinero } from '../helpers/fechas.js';
-import { crearLimite } from '../helpers/seguridad.js';
+import { rangoDelDia, hoy, dinero } from '../compartido/ayudantes/fechas.js';
+import { crearLimite } from '../compartido/ayudantes/seguridad.js';
 import { prepararLote, imagenDeEspecie, precioMinimo } from '../helpers/tienda.js';
 import { reservasActivas } from '../helpers/pedidos.js';
 import { ponerOpinionesEnFicha, preguntasPublicas } from './socialController.js';

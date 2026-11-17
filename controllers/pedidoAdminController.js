@@ -1,9 +1,9 @@
-import { registro } from '../helpers/registro.js';
+import { registro } from '../compartido/ayudantes/registro.js';
 import { Op } from 'sequelize';
 import { Pedido, Usuario, Comprador, PedidoItem, Lote, Especie, Compra } from '../models/index.js';
-import { aError, aMensaje } from '../helpers/utiles.js';
-import { errorDeSitio } from '../helpers/navegacion.js';
-import { encolarTrabajo } from '../helpers/colaTrabajos.js';
+import { aError, aMensaje } from '../compartido/ayudantes/utiles.js';
+import { errorDeSitio } from '../compartido/ayudantes/navegacion.js';
+import { encolarTrabajo } from '../compartido/ayudantes/colaTrabajos.js';
 import { ESTADOS_PEDIDO, ESTADO_PEDIDO, ETIQUETA_ESTADO_PEDIDO } from '../models/Pedido.js';
 import { confirmarCobro as confirmarCobroServicio } from '../servicios/pedidos.js';
 

@@ -1,10 +1,10 @@
-import { registro } from './helpers/registro.js';
+import { registro } from './compartido/ayudantes/registro.js';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import methodOverride from 'method-override';
 import path from 'path';
 import { fileURLToPath } from 'url';
-import './config/entorno.js';
+import './compartido/config/entorno.js';
 import rutaProteger, { permitir, usuarioDesdeToken } from './middleware/protegerRutas.js';
 import { middlewarePreferencias } from './middleware/preferencias.js';
 import router_login from './routes/login_router.js';
@@ -26,11 +26,11 @@ import router_pedido from './routes/pedido_router.js';
 import router_pedido_admin from './routes/pedido_admin_router.js';
 import router_avisos from './routes/avisos_router.js';
 import * as social from './controllers/socialController.js';
-import { formatoFechaHora } from './helpers/fechas.js';
-import { icono } from './helpers/iconos.js';
+import { formatoFechaHora } from './compartido/ayudantes/fechas.js';
+import { icono } from './compartido/ayudantes/iconos.js';
 import { CarritoItem, Lista, ListaItem } from './models/index.js';
-import { origenDePeticionValido } from './helpers/navegacion.js';
-import db from './config/db.js';
+import { origenDePeticionValido } from './compartido/ayudantes/navegacion.js';
+import db from './compartido/config/db.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

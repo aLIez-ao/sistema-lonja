@@ -1,6 +1,6 @@
 import PDFDocument from 'pdfkit';
 import { datosFactura } from './factura.js';
-import { COLOR, dibujarLogo } from './pdfComun.js';
+import { COLOR, dibujarLogo } from '../compartido/ayudantes/pdfComun.js';
 
 // Columnas de la tabla (pt). La vista web usa los mismos anchos (views/compras/factura.ejs).
 const COLS = [

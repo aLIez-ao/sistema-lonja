@@ -1,4 +1,4 @@
-import '../config/entorno.js';
+import '../compartido/config/entorno.js';
 import { spawn } from 'node:child_process';
 import { createWriteStream } from 'node:fs';
 import { cp, mkdir, readdir, rename, rm, stat, writeFile } from 'node:fs/promises';

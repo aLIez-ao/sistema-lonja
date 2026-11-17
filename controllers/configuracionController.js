@@ -1,8 +1,8 @@
 import bcrypt from 'bcryptjs';
 import { Op } from 'sequelize';
-import db from '../config/db.js';
+import db from '../compartido/config/db.js';
 import { Usuario, Comprador } from '../models/index.js';
-import { enviarEmailPasswordCambiada, estadoCorreo, enviarCorreoPrueba } from '../helpers/email.js';
+import { enviarEmailPasswordCambiada, estadoCorreo, enviarCorreoPrueba } from '../compartido/ayudantes/email.js';
 import {
   enviarVerificacionCorreo,
   limiteVerificacion,
@@ -10,15 +10,20 @@ import {
   urlBase,
 } from '../helpers/cuentas.js';
 import { prepararFoto } from '../helpers/avatar.js';
-import { problemasPassword } from '../helpers/seguridad.js';
-import { JWTGenera, opcionesCookieSesion } from '../helpers/tokens.js';
-import { aMensaje, ErrorImagen } from '../helpers/utiles.js';
+import { problemasPassword } from '../compartido/ayudantes/seguridad.js';
+import { JWTGenera, opcionesCookieSesion } from '../compartido/ayudantes/tokens.js';
+import { aMensaje, ErrorImagen } from '../compartido/ayudantes/utiles.js';
 import { compradorDe, compradorPorCorreo } from '../helpers/comprador.js';
-import { encolarTrabajo } from '../helpers/colaTrabajos.js';
-import { registro } from '../helpers/registro.js';
+import { encolarTrabajo } from '../compartido/ayudantes/colaTrabajos.js';
+import { registro } from '../compartido/ayudantes/registro.js';
 import { prefValida } from '../middleware/preferencias.js';
-import { CATEGORIAS, COOKIE_DE_PREF, aplicarConsentimiento, guardarCookiePreferencia } from '../helpers/cookies.js';
-import { correoValido, telefonoValido } from '../helpers/validacion.js';
+import {
+  CATEGORIAS,
+  COOKIE_DE_PREF,
+  aplicarConsentimiento,
+  guardarCookiePreferencia,
+} from '../compartido/ayudantes/cookies.js';
+import { correoValido, telefonoValido } from '../compartido/ayudantes/validacion.js';
 
 const renderConfiguracion = async (req, res, adicionales = {}) => {
   const us = await Usuario.findByPk(req.usuario.id);

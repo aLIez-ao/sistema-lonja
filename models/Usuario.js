@@ -1,7 +1,7 @@
 import { DataTypes } from 'sequelize';
 import bcrypt from 'bcryptjs';
-import db from '../config/db.js';
-import { correoValido } from '../helpers/validacion.js';
+import db from '../compartido/config/db.js';
+import { correoValido } from '../compartido/ayudantes/validacion.js';
 
 // Roles: admin (todo, incluye usuarios y borrados) | capturista (captura y consulta)
 // | comprador (tienda en línea; solo se crea desde el registro público).

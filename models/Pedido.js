@@ -1,5 +1,5 @@
 import { DataTypes } from 'sequelize';
-import db from '../config/db.js';
+import db from '../compartido/config/db.js';
 
 export const ESTADO_PEDIDO = Object.freeze({
   PENDIENTE_PAGO: 'pendiente_pago',

@@ -1,6 +1,6 @@
 import { DataTypes } from 'sequelize';
-import db from '../config/db.js';
-import { correoValido } from '../helpers/validacion.js';
+import db from '../compartido/config/db.js';
+import { correoValido } from '../compartido/ayudantes/validacion.js';
 
 const Comprador = db.define(
   'Comprador',

@@ -1,9 +1,9 @@
-import { registro } from '../helpers/registro.js';
+import { registro } from '../compartido/ayudantes/registro.js';
 import { Op } from 'sequelize';
-import db from '../config/db.js';
+import db from '../compartido/config/db.js';
 import { CarritoItem, Pedido, PedidoItem, DireccionEntrega, Lote, Compra, Especie } from '../models/index.js';
-import { ErrorDeUsuario, mensajeBD } from '../helpers/utiles.js';
-import { redondea } from '../helpers/fechas.js';
+import { ErrorDeUsuario, mensajeBD } from '../compartido/ayudantes/utiles.js';
+import { redondea } from '../compartido/ayudantes/fechas.js';
 import { cobrar } from '../helpers/pasarela.js';
 import {
   costoEnvio,
@@ -15,7 +15,7 @@ import {
   textoDireccion,
   totalLineas,
 } from '../helpers/pedidos.js';
-import { crearLimite } from '../helpers/seguridad.js';
+import { crearLimite } from '../compartido/ayudantes/seguridad.js';
 import {
   ESTADO_PEDIDO,
   METODO_PAGO_PEDIDO,

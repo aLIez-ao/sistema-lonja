@@ -1,5 +1,5 @@
-import { registro } from './registro.js';
-import db from '../config/db.js';
+import { registro } from '../compartido/ayudantes/registro.js';
+import db from '../compartido/config/db.js';
 import { DataTypes } from 'sequelize';
 
 /** Agrega una columna solo si falta; los fallos detienen la migración. */

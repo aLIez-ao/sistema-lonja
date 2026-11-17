@@ -1,14 +1,14 @@
-import { registro } from './helpers/registro.js';
-import './config/entorno.js';
-import db from './config/db.js';
+import { registro } from './compartido/ayudantes/registro.js';
+import './compartido/config/entorno.js';
+import db from './compartido/config/db.js';
 import './models/index.js';
 import app from './app.js';
 import { crearAdministradorInicial, crearTiposIniciales } from './helpers/semillas.js';
 import { asegurarEsquema } from './helpers/migraciones.js';
-import { verificarTransporte } from './helpers/email.js';
+import { verificarTransporte } from './compartido/ayudantes/email.js';
 import { liberarPedidosVencidos } from './helpers/pedidos.js';
 import { validarSecretosInicio } from './helpers/validacionSecretos.js';
-import { detenerColaTrabajos, iniciarColaTrabajos } from './helpers/colaTrabajos.js';
+import { detenerColaTrabajos, iniciarColaTrabajos } from './compartido/ayudantes/colaTrabajos.js';
 import './helpers/procesadoresTrabajos.js';
 
 const port = process.env.PORT || 2800;

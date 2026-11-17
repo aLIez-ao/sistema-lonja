@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { registro } from '../helpers/registro.js';
+import { registro } from '../compartido/ayudantes/registro.js';
 
 test('LOG_NIVEL filtra niveles inferiores y emite eventos JSON', () => {
   const anterior = process.env.LOG_NIVEL;

@@ -1,6 +1,6 @@
 import { Usuario } from '../models/index.js';
-import { JWTVerifica, opcionesCookieSesion } from '../helpers/tokens.js';
-import { rutaVolver } from '../helpers/navegacion.js';
+import { JWTVerifica, opcionesCookieSesion } from '../compartido/ayudantes/tokens.js';
+import { rutaVolver } from '../compartido/ayudantes/navegacion.js';
 
 /**
  * Devuelve el usuario dueño del token o null si el token no sirve: firma inválida o vencida,

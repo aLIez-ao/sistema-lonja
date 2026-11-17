@@ -1,6 +1,10 @@
 // Operaciones de cuenta compartidas por login, configuración y administración de usuarios.
-import { nuevoToken, hashToken, crearLimite } from './seguridad.js';
-import { enviarEmailInvitacion, enviarEmailRecuperacion, enviarEmailVerificacion } from './email.js';
+import { nuevoToken, hashToken, crearLimite } from '../compartido/ayudantes/seguridad.js';
+import {
+  enviarEmailInvitacion,
+  enviarEmailRecuperacion,
+  enviarEmailVerificacion,
+} from '../compartido/ayudantes/email.js';
 
 const HORA = 60 * 60 * 1000;
 const SEGUNDO = 1000;

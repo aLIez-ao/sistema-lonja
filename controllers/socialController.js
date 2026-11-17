@@ -13,9 +13,9 @@ import {
   CarritoItem,
   Tipo,
 } from '../models/index.js';
-import { crearLimite } from '../helpers/seguridad.js';
-import { enviarEmailRespuestaPregunta } from '../helpers/email.js';
-import { errorDeSitio, rutaReferer, volverA } from '../helpers/navegacion.js';
+import { crearLimite } from '../compartido/ayudantes/seguridad.js';
+import { enviarEmailRespuestaPregunta } from '../compartido/ayudantes/email.js';
+import { errorDeSitio, rutaReferer, volverA } from '../compartido/ayudantes/navegacion.js';
 import { nombrePublico, prepararLote, imagenDeEspecie } from '../helpers/tienda.js';
 import { disponibilidadDeLotes } from '../helpers/pedidos.js';
 import { ESTADO_PEDIDO } from '../models/Pedido.js';

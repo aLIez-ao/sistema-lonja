@@ -1,7 +1,7 @@
 import { CarritoItem, Lote, Especie, Tipo, EspecieCatalogo } from '../models/index.js';
 import { loteDisponible, disponibilidadDeLotes, totalLineas } from '../helpers/pedidos.js';
 import { prepararLote } from '../helpers/tienda.js';
-import { aMensaje } from '../helpers/utiles.js';
+import { aMensaje } from '../compartido/ayudantes/utiles.js';
 
 const includeLote = {
   model: Lote,

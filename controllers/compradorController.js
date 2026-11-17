@@ -1,9 +1,9 @@
 import { body } from 'express-validator';
-import { reglaCorreo } from '../helpers/validacion.js';
+import { reglaCorreo } from '../compartido/ayudantes/validacion.js';
 import { literal } from 'sequelize';
 import { Comprador, Compra, Lote, Especie, Tipo, Usuario } from '../models/index.js';
-import { mensajesError, mensajeBD, aMensaje, aError } from '../helpers/utiles.js';
-import { leerListado, consultarListado, combinarWhere } from '../helpers/listado.js';
+import { mensajesError, mensajeBD, aMensaje, aError } from '../compartido/ayudantes/utiles.js';
+import { leerListado, consultarListado, combinarWhere } from '../compartido/ayudantes/listado.js';
 import { condicionBusqueda } from '../helpers/busqueda.js';
 import { condicionFiltros, filtroSiNo } from '../helpers/filtros.js';
 

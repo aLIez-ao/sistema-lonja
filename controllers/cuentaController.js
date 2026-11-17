@@ -1,10 +1,10 @@
-import { registro } from '../helpers/registro.js';
+import { registro } from '../compartido/ayudantes/registro.js';
 import { Usuario, Compra, Lote, Especie, DireccionEntrega } from '../models/index.js';
-import { aMensaje, aError } from '../helpers/utiles.js';
+import { aMensaje, aError } from '../compartido/ayudantes/utiles.js';
 import { aplicarFoto } from '../helpers/avatar.js';
 import { compradorDe, compradorPorCorreo, partirNombre } from '../helpers/comprador.js';
 import { enviarVerificacionCorreo, segundosEsperaVerificacion } from '../helpers/cuentas.js';
-import { correoValido, telefonoValido } from '../helpers/validacion.js';
+import { correoValido, telefonoValido } from '../compartido/ayudantes/validacion.js';
 
 const RFC = /^[A-ZÑ&]{3,4}\d{6}[A-Z0-9]{3}$/i;
 

@@ -2,7 +2,7 @@
 import { test, before, after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { arrancar, cliente, modelos } from './ayuda.js';
-import { hashToken } from '../helpers/seguridad.js';
+import { hashToken } from '../compartido/ayudantes/seguridad.js';
 import { limiteRegistro } from '../controllers/registroController.js';
 
 const { Usuario, Comprador, Tipo, Lote, Especie, EspecieCatalogo } = modelos;

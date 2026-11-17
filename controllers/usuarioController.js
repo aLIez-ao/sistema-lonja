@@ -1,14 +1,14 @@
-import { registro } from '../helpers/registro.js';
+import { registro } from '../compartido/ayudantes/registro.js';
 import { body } from 'express-validator';
 import { Op, fn, col } from 'sequelize';
 import { Usuario, Pedido, ROLES } from '../models/index.js';
-import { mensajesError, mensajeBD, aMensaje } from '../helpers/utiles.js';
-import { problemasPassword, passwordInutilizable } from '../helpers/seguridad.js';
+import { mensajesError, mensajeBD, aMensaje } from '../compartido/ayudantes/utiles.js';
+import { problemasPassword, passwordInutilizable } from '../compartido/ayudantes/seguridad.js';
 import { aplicarFoto, borrarFoto } from '../helpers/avatar.js';
 import { enviarEnlacePassword, enviarVerificacionCorreo, resumenEnvio } from '../helpers/cuentas.js';
 import { condicionBusqueda } from '../helpers/busqueda.js';
-import { reglaCorreo, reglaTelefono } from '../helpers/validacion.js';
-import { anexarParametrosQuery } from '../helpers/listado.js';
+import { reglaCorreo, reglaTelefono } from '../compartido/ayudantes/validacion.js';
+import { anexarParametrosQuery } from '../compartido/ayudantes/listado.js';
 
 const reglas = [
   body('usuario')

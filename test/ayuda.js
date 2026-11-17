@@ -16,12 +16,12 @@ process.env.APP_URL = '';
 const uploadsTemp = await fs.mkdtemp(path.join(os.tmpdir(), 'sistema-lonja-test-'));
 process.env.UPLOADS_DIR = uploadsTemp;
 
-const { default: db } = await import('../config/db.js');
+const { default: db } = await import('../compartido/config/db.js');
 const modelos = await import('../models/index.js');
 const { default: app } = await import('../app.js');
 const { crearAdministradorInicial, crearTiposIniciales } = await import('../helpers/semillas.js');
 const { asegurarEsquema } = await import('../helpers/migraciones.js');
-const { iniciarColaTrabajos, detenerColaTrabajos } = await import('../helpers/colaTrabajos.js');
+const { iniciarColaTrabajos, detenerColaTrabajos } = await import('../compartido/ayudantes/colaTrabajos.js');
 await import('../helpers/procesadoresTrabajos.js');
 
 export { db, app, modelos };

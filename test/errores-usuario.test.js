@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { ErrorDeUsuario, ErrorImagen } from '../helpers/utiles.js';
+import { ErrorDeUsuario, ErrorImagen } from '../compartido/ayudantes/utiles.js';
 import { guardarImagenDataURL } from '../helpers/imagenes.js';
 
 test('ErrorDeUsuario conserva su estado HTTP y distingue errores de validación', () => {

@@ -1,5 +1,5 @@
 import { DataTypes } from 'sequelize';
-import db from '../config/db.js';
+import db from '../compartido/config/db.js';
 
 // Direcciones de entrega del comprador. El pedido guarda además una copia de la
 // dirección usada para que editarla después no cambie pedidos anteriores.

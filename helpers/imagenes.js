@@ -4,7 +4,7 @@
 import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
-import { ErrorImagen } from './utiles.js';
+import { ErrorImagen } from '../compartido/ayudantes/utiles.js';
 
 const FIRMAS = [
   { ext: 'jpg', mime: 'image/jpeg', ok: (b) => b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff },

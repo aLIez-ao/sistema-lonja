@@ -1,5 +1,5 @@
-import '../config/entorno.js';
-import db from '../config/db.js';
+import '../compartido/config/entorno.js';
+import db from '../compartido/config/db.js';
 import { asegurarEsquema, revertirUltimaMigracion } from '../helpers/migraciones.js';
 
 const argumentos = new Set(process.argv.slice(2));

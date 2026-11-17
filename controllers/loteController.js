@@ -1,9 +1,9 @@
 import { body } from 'express-validator';
 import { literal, Op } from 'sequelize';
-import db from '../config/db.js';
+import db from '../compartido/config/db.js';
 import { Lote, Especie, EspecieCatalogo, Tipo, Compra, Comprador, ListaItem } from '../models/index.js';
-import { mensajesError, mensajeBD, aMensaje, aError } from '../helpers/utiles.js';
-import { leerListado, consultarListado, combinarWhere } from '../helpers/listado.js';
+import { mensajesError, mensajeBD, aMensaje, aError } from '../compartido/ayudantes/utiles.js';
+import { leerListado, consultarListado, combinarWhere } from '../compartido/ayudantes/listado.js';
 import { condicionBusqueda } from '../helpers/busqueda.js';
 import { condicionFiltros, filtroEntero, filtroFecha, filtroLista, filtroNumero } from '../helpers/filtros.js';
 import {

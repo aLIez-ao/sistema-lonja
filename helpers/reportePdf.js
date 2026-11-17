@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import PDFDocument from 'pdfkit';
-import { dinero, formatoFechaHora } from './fechas.js';
-import { COLOR, EMISOR, dibujarLogo, numerarPaginas } from './pdfComun.js';
+import { dinero, formatoFechaHora } from '../compartido/ayudantes/fechas.js';
+import { COLOR, EMISOR, dibujarLogo, numerarPaginas } from '../compartido/ayudantes/pdfComun.js';
 
 const X = 40;
 const W = 532;

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { correoValido, telefonoValido } from '../helpers/validacion.js';
+import { correoValido, telefonoValido } from '../compartido/ayudantes/validacion.js';
 
 test('validación compartida de correo recorta espacios y rechaza formatos incompletos', () => {
   assert.equal(correoValido(' persona@ejemplo.mx '), true);

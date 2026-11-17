@@ -6,7 +6,7 @@ import {
   esperarColaTrabajos,
   iniciarColaTrabajos,
   registrarProcesadorTrabajo,
-} from '../helpers/colaTrabajos.js';
+} from '../compartido/ayudantes/colaTrabajos.js';
 
 const { Trabajo } = modelos;
 let servidor;

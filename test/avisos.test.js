@@ -1,8 +1,8 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { arrancar, cliente, modelos } from './ayuda.js';
-import { fijarTransporteParaPruebas } from '../helpers/email.js';
-import { esperarColaTrabajos } from '../helpers/colaTrabajos.js';
+import { fijarTransporteParaPruebas } from '../compartido/ayudantes/email.js';
+import { esperarColaTrabajos } from '../compartido/ayudantes/colaTrabajos.js';
 
 const { Usuario, Comprador } = modelos;
 let srv;

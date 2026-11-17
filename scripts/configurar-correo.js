@@ -2,7 +2,7 @@ import { createInterface } from 'node:readline';
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { enmascararCorreo } from '../helpers/correoUtils.js';
+import { enmascararCorreo } from '../compartido/ayudantes/correoUtils.js';
 
 const CLAVES = ['GMAIL_USER', 'GMAIL_PASS', 'APP_URL'];
 
@@ -104,7 +104,7 @@ export async function ejecutarAsistente({
     const anteriores = Object.fromEntries(CLAVES.map((k) => [k, process.env[k]]));
     Object.assign(process.env, valores);
     try {
-      const resultado = await (verificar || (await import('../helpers/email.js')).verificarTransporte)();
+      const resultado = await (verificar || (await import('../compartido/ayudantes/email.js')).verificarTransporte)();
       output.write(`${resultado.error || resultado.mensaje}\n`);
       return { ok: !resultado.error, probada: true, resultado };
     } finally {

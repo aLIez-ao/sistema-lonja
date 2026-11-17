@@ -1,4 +1,4 @@
-import { registro } from './registro.js';
+import { registro } from '../compartido/ayudantes/registro.js';
 import { col, fn, where as sqlWhere } from 'sequelize';
 import { Especie, EspecieCatalogo } from '../models/index.js';
 

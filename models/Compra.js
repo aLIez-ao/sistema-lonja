@@ -1,5 +1,5 @@
 import { DataTypes } from 'sequelize';
-import db from '../config/db.js';
+import db from '../compartido/config/db.js';
 
 // Llave primaria compuesta (id_cmp, codigo_cpr), ambas FK, como en el diagrama.
 // id_cmp -> lote.id_lte y codigo_cpr -> comprador.codigo_cpr se declaran en models/index.js

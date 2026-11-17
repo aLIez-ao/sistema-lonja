@@ -1,5 +1,5 @@
-import { formatearMoneda, infoMoneda, t } from '../helpers/i18n.js';
-import { CATEGORIAS, COOKIE_CONSENT, COOKIE_DE_PREF, leerConsentimiento } from '../helpers/cookies.js';
+import { formatearMoneda, infoMoneda, t } from '../compartido/ayudantes/i18n.js';
+import { CATEGORIAS, COOKIE_CONSENT, COOKIE_DE_PREF, leerConsentimiento } from '../compartido/ayudantes/cookies.js';
 
 export const VALORES_PREF = {
   tema: ['ocean', 'dark'],

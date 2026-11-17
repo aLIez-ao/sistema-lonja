@@ -1,4 +1,4 @@
-import { registro } from '../helpers/registro.js';
+import { registro } from '../compartido/ayudantes/registro.js';
 import {
   CarritoItem,
   Pedido,
@@ -11,8 +11,8 @@ import {
   Tipo,
   Compra,
 } from '../models/index.js';
-import { aMensaje } from '../helpers/utiles.js';
-import { redondea } from '../helpers/fechas.js';
+import { aMensaje } from '../compartido/ayudantes/utiles.js';
+import { redondea } from '../compartido/ayudantes/fechas.js';
 import { generarFacturaPDF } from '../helpers/facturaPdf.js';
 import { datosFactura } from '../helpers/factura.js';
 import {
@@ -23,7 +23,7 @@ import {
   totalLineas,
 } from '../helpers/pedidos.js';
 import { prepararLote } from '../helpers/tienda.js';
-import { encolarTrabajo } from '../helpers/colaTrabajos.js';
+import { encolarTrabajo } from '../compartido/ayudantes/colaTrabajos.js';
 import { ESTADO_PEDIDO, OPCIONES_PAGO_PEDIDO } from '../models/Pedido.js';
 import { crearPedido, pagarPedido } from '../servicios/pedidos.js';
 

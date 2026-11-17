@@ -1,5 +1,5 @@
 import { Op } from 'sequelize';
-import { Trabajo } from '../models/index.js';
+import { Trabajo } from '../../models/index.js';
 import { registro } from './registro.js';
 
 const MAX_PENDIENTES = 500;

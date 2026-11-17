@@ -1,4 +1,4 @@
-import { registro } from '../helpers/registro.js';
+import { registro } from '../compartido/ayudantes/registro.js';
 import { Op } from 'sequelize';
 import { Compra, Lote, Comprador, Especie, Tipo } from '../models/index.js';
 import {
@@ -11,7 +11,7 @@ import {
   formatoFecha,
   redondea,
   NOMBRES_MESES,
-} from '../helpers/fechas.js';
+} from '../compartido/ayudantes/fechas.js';
 import { generarReporteAnualPDF } from '../helpers/reportePdf.js';
 
 const incluye = [

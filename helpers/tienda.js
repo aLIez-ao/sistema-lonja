@@ -1,7 +1,7 @@
 // Datos derivados para la tienda pública: imagen de una especie, total del
 // lote e insignias. Nada de aquí lee compradores ni compras: la tienda solo
 // trabaja con lotes disponibles y especies activas.
-import { redondea } from './fechas.js';
+import { redondea } from '../compartido/ayudantes/fechas.js';
 
 /** Muestra un nombre de comprador sin revelar su apellido completo. */
 export function nombrePublico(nombreCompleto) {

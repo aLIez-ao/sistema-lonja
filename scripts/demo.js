@@ -1,5 +1,5 @@
 // Generador de datos de prueba ampliados para el Sistema Lonja
-import db from '../config/db.js';
+import db from '../compartido/config/db.js';
 import {
   Tipo,
   Comprador,
@@ -19,7 +19,7 @@ import {
 } from '../models/index.js';
 import { crearTiposIniciales, crearAdministradorInicial } from '../helpers/semillas.js';
 import { asegurarEsquema } from '../helpers/migraciones.js';
-import { redondea } from '../helpers/fechas.js';
+import { redondea } from '../compartido/ayudantes/fechas.js';
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { DataTypes, Op } from 'sequelize';

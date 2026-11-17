@@ -10,7 +10,7 @@ process.env.ADMIN_USER = 'admin';
 process.env.ADMIN_PASSWORD = 'AdminPrueba123';
 process.env.APP_URL = '';
 
-const { default: db } = await import('../config/db.js');
+const { default: db } = await import('../compartido/config/db.js');
 await import('../models/index.js');
 const { default: app } = await import('../app.js');
 const { crearAdministradorInicial, crearTiposIniciales } = await import('../helpers/semillas.js');

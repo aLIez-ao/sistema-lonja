@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { origenDePeticionValido, rutaVolver } from '../helpers/navegacion.js';
+import { origenDePeticionValido, rutaVolver } from '../compartido/ayudantes/navegacion.js';
 
 test('solo acepta retornos internos sin controles, espacios ni barras invertidas', () => {
   assert.equal(rutaVolver('/cuenta/pedidos?page=2#actual'), '/cuenta/pedidos?page=2#actual');

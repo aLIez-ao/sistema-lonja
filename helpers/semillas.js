@@ -1,5 +1,5 @@
-import { registro } from './registro.js';
-import '../config/entorno.js';
+import { registro } from '../compartido/ayudantes/registro.js';
+import '../compartido/config/entorno.js';
 import { Tipo, Usuario } from '../models/index.js';
 
 /** Crea el administrador inicial (ADMIN_USER / ADMIN_PASSWORD) si no existe. */

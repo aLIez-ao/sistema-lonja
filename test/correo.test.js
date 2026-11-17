@@ -2,7 +2,7 @@
 import { test, before, after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { arrancar, cliente, modelos } from './ayuda.js';
-import { fijarTransporteParaPruebas } from '../helpers/email.js';
+import { fijarTransporteParaPruebas } from '../compartido/ayudantes/email.js';
 import { limiteVerificacion } from '../helpers/cuentas.js';
 
 const { Usuario } = modelos;

@@ -1,16 +1,16 @@
-import { registro } from '../helpers/registro.js';
+import { registro } from '../compartido/ayudantes/registro.js';
 import { body } from 'express-validator';
 import bcrypt from 'bcryptjs';
 import { Op } from 'sequelize';
 import { Usuario } from '../models/index.js';
 import { estadisticasInicio } from '../helpers/estadisticas.js';
-import { JWTGenera, opcionesCookieSesion } from '../helpers/tokens.js';
-import { mensajesError, aMensaje } from '../helpers/utiles.js';
-import { enviarEmailPasswordCambiada } from '../helpers/email.js';
-import { crearLimite, hashToken, problemasPassword } from '../helpers/seguridad.js';
+import { JWTGenera, opcionesCookieSesion } from '../compartido/ayudantes/tokens.js';
+import { mensajesError, aMensaje } from '../compartido/ayudantes/utiles.js';
+import { enviarEmailPasswordCambiada } from '../compartido/ayudantes/email.js';
+import { crearLimite, hashToken, problemasPassword } from '../compartido/ayudantes/seguridad.js';
 import { enviarEnlacePassword } from '../helpers/cuentas.js';
 import { vincularComprador } from '../helpers/comprador.js';
-import { destinoTrasEntrar, inicioSegun, rutaVolver } from '../helpers/navegacion.js';
+import { destinoTrasEntrar, inicioSegun, rutaVolver } from '../compartido/ayudantes/navegacion.js';
 
 const reglasLogin = [
   body('usuario').trim().notEmpty().withMessage('El usuario no debe estar vacío'),

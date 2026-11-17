@@ -2,7 +2,7 @@ import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { arrancar, cliente, modelos, db } from './ayuda.js';
 import { nombrePublico } from '../helpers/tienda.js';
-import { rutaReferer } from '../helpers/navegacion.js';
+import { rutaReferer } from '../compartido/ayudantes/navegacion.js';
 
 const {
   Usuario,

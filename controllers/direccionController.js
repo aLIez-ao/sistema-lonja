@@ -1,9 +1,9 @@
 import { Op } from 'sequelize';
-import db from '../config/db.js';
+import db from '../compartido/config/db.js';
 import { DireccionEntrega } from '../models/index.js';
-import { aMensaje } from '../helpers/utiles.js';
+import { aMensaje } from '../compartido/ayudantes/utiles.js';
 import { ESTADOS, MUNICIPIOS_VERACRUZ } from '../helpers/mexico.js';
-import { telefonoValido } from '../helpers/validacion.js';
+import { telefonoValido } from '../compartido/ayudantes/validacion.js';
 
 const CP = /^\d{5}$/;
 const MAX_DIRECCIONES = 10;

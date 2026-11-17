@@ -1,5 +1,5 @@
 import { DataTypes } from 'sequelize';
-import db from '../config/db.js';
+import db from '../compartido/config/db.js';
 
 // Las llaves foráneas id_lte, id_tpo e id_cat las agrega models/index.js (asociaciones)
 const Especie = db.define(

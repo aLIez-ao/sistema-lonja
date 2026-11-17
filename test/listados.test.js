@@ -3,7 +3,7 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { arrancar, cliente, modelos } from './ayuda.js';
-import { anexarParametrosQuery } from '../helpers/listado.js';
+import { anexarParametrosQuery } from '../compartido/ayudantes/listado.js';
 
 const { Compra, Lote, Comprador, Especie, Tipo } = modelos;
 
