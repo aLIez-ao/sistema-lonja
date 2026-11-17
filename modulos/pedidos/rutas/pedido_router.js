@@ -1,5 +1,5 @@
 import express from 'express';
-import * as c from '../controllers/pedidoController.js';
+import * as c from '../controladores/pedidoController.js';
 
 const router = express.Router();
 router.get('/nuevo', c.verNuevo);

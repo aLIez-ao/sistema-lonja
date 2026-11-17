@@ -5,13 +5,13 @@ import db from '../compartido/config/db.js';
 import { Compra, Lote, Comprador, Especie, Tipo } from '../models/index.js';
 import { mensajesError, mensajeBD, aMensaje, aError } from '../compartido/ayudantes/utiles.js';
 import { redondea } from '../compartido/ayudantes/fechas.js';
-import { generarFacturaPDF } from '../helpers/facturaPdf.js';
-import { datosFactura } from '../helpers/factura.js';
+import { generarFacturaPDF } from '../compartido/ayudantes/facturaPdf.js';
+import { datosFactura } from '../compartido/ayudantes/factura.js';
 import { enviarEmailComprobanteCompra } from '../compartido/ayudantes/email.js';
 import { leerListado, consultarListado, combinarWhere } from '../compartido/ayudantes/listado.js';
 import { condicionBusqueda } from '../helpers/busqueda.js';
 import { condicionFiltros, filtroEntero, filtroFecha, filtroNumero } from '../helpers/filtros.js';
-import { loteDisponible, reservasActivas } from '../helpers/pedidos.js';
+import { loteDisponible, reservasActivas } from '../modulos/pedidos/index.js';
 import { encolarTrabajo } from '../compartido/ayudantes/colaTrabajos.js';
 
 const reglas = [

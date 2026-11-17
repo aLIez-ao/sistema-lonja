@@ -1,10 +1,10 @@
-import { registro } from '../compartido/ayudantes/registro.js';
+import { registro } from '../../../compartido/ayudantes/registro.js';
 import { Op } from 'sequelize';
-import db from '../compartido/config/db.js';
-import { CarritoItem, Pedido, PedidoItem, DireccionEntrega, Lote, Compra, Especie } from '../models/index.js';
-import { ErrorDeUsuario, mensajeBD } from '../compartido/ayudantes/utiles.js';
-import { redondea } from '../compartido/ayudantes/fechas.js';
-import { cobrar } from '../helpers/pasarela.js';
+import db from '../../../compartido/config/db.js';
+import { CarritoItem, Pedido, PedidoItem, DireccionEntrega, Lote, Compra, Especie } from '../../../models/index.js';
+import { ErrorDeUsuario, mensajeBD } from '../../../compartido/ayudantes/utiles.js';
+import { redondea } from '../../../compartido/ayudantes/fechas.js';
+import { cobrar } from '../ayudantes/pasarela.js';
 import {
   costoEnvio,
   disponibilidadDeLotes,
@@ -14,14 +14,14 @@ import {
   reservasActivas,
   textoDireccion,
   totalLineas,
-} from '../helpers/pedidos.js';
-import { crearLimite } from '../compartido/ayudantes/seguridad.js';
+} from '../ayudantes/pedidos.js';
+import { crearLimite } from '../../../compartido/ayudantes/seguridad.js';
 import {
   ESTADO_PEDIDO,
   METODO_PAGO_PEDIDO,
   OPCIONES_PAGO_PEDIDO,
   OPCIONES_PAGO_PEDIDO_VALIDAS,
-} from '../models/Pedido.js';
+} from '../../../models/Pedido.js';
 
 const limitePagosFallidos = crearLimite({ max: 5, ventanaMs: 60 * 60 * 1000 });
 const includeEspecies = { model: Especie, as: 'especies' };

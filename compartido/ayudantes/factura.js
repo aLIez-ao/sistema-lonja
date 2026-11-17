@@ -1,8 +1,8 @@
 // Datos de la factura calculados una sola vez para la vista web y para el PDF,
 // de modo que ambos muestren exactamente lo mismo.
 import crypto from 'crypto';
-import { formatoFechaHora, dinero } from '../compartido/ayudantes/fechas.js';
-import { EMISOR } from '../compartido/ayudantes/pdfComun.js';
+import { formatoFechaHora, dinero } from './fechas.js';
+import { EMISOR } from './pdfComun.js';
 
 export function datosFactura(compra) {
   const comprador = compra.comprador || {};

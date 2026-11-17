@@ -10,7 +10,7 @@ import { textoBusqueda } from '../helpers/busqueda.js';
 import { rangoDelDia, hoy, dinero } from '../compartido/ayudantes/fechas.js';
 import { crearLimite } from '../compartido/ayudantes/seguridad.js';
 import { prepararLote, imagenDeEspecie, precioMinimo } from '../helpers/tienda.js';
-import { reservasActivas } from '../helpers/pedidos.js';
+import { reservasActivas } from '../modulos/pedidos/index.js';
 import { ponerOpinionesEnFicha, preguntasPublicas } from './socialController.js';
 
 // 30 sugerencias por minuto y por IP (se reinicia en las pruebas).

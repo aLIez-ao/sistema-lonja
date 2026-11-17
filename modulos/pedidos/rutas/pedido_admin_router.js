@@ -1,5 +1,5 @@
 import express from 'express';
-import * as c from '../controllers/pedidoAdminController.js';
+import * as c from '../controladores/pedidoAdminController.js';
 const router = express.Router();
 router.get('/', c.lista);
 router.get('/:id', c.detalle);

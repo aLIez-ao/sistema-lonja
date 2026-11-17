@@ -5,7 +5,7 @@ import {
   enviarEmailComprobanteCompra,
   enviarEmailPedido,
 } from '../compartido/ayudantes/email.js';
-import { generarFacturaPDF } from './facturaPdf.js';
+import { generarFacturaPDF } from '../compartido/ayudantes/facturaPdf.js';
 import { crearTokenBajaAvisos } from '../compartido/ayudantes/tokens.js';
 import { registrarProcesadorTrabajo } from '../compartido/ayudantes/colaTrabajos.js';
 

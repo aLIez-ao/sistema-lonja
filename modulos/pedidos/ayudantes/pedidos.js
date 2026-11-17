@@ -1,7 +1,7 @@
 import { Op } from 'sequelize';
-import { Pedido, PedidoItem, Lote, Compra } from '../models/index.js';
-import { redondea } from '../compartido/ayudantes/fechas.js';
-import { ESTADO_PEDIDO } from '../models/Pedido.js';
+import { Pedido, PedidoItem, Lote, Compra } from '../../../models/index.js';
+import { redondea } from '../../../compartido/ayudantes/fechas.js';
+import { ESTADO_PEDIDO } from '../../../models/Pedido.js';
 
 const numero = (valor, defecto) => (Number.isFinite(Number(valor)) ? Number(valor) : defecto);
 

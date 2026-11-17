@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { generarFacturaPDF } from '../helpers/facturaPdf.js';
+import { generarFacturaPDF } from '../compartido/ayudantes/facturaPdf.js';
 import { formatearMoneda, t } from '../compartido/ayudantes/i18n.js';
 
 // Este archivo prueba el simulador. No hereda credenciales de correo reales del .env local.

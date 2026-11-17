@@ -1,4 +1,4 @@
-import { registro } from '../compartido/ayudantes/registro.js';
+import { registro } from '../../../compartido/ayudantes/registro.js';
 import {
   CarritoItem,
   Pedido,
@@ -10,21 +10,21 @@ import {
   Especie,
   Tipo,
   Compra,
-} from '../models/index.js';
-import { aMensaje } from '../compartido/ayudantes/utiles.js';
-import { redondea } from '../compartido/ayudantes/fechas.js';
-import { generarFacturaPDF } from '../helpers/facturaPdf.js';
-import { datosFactura } from '../helpers/factura.js';
+} from '../../../models/index.js';
+import { aMensaje } from '../../../compartido/ayudantes/utiles.js';
+import { redondea } from '../../../compartido/ayudantes/fechas.js';
+import { generarFacturaPDF } from '../../../compartido/ayudantes/facturaPdf.js';
+import { datosFactura } from '../../../compartido/ayudantes/factura.js';
 import {
   costoEnvio,
   reservaMinutos,
   reservaEfectivoMinutos,
   reservasActivas,
   totalLineas,
-} from '../helpers/pedidos.js';
-import { prepararLote } from '../helpers/tienda.js';
-import { encolarTrabajo } from '../compartido/ayudantes/colaTrabajos.js';
-import { ESTADO_PEDIDO, OPCIONES_PAGO_PEDIDO } from '../models/Pedido.js';
+} from '../ayudantes/pedidos.js';
+import { prepararLote } from '../../../helpers/tienda.js';
+import { encolarTrabajo } from '../../../compartido/ayudantes/colaTrabajos.js';
+import { ESTADO_PEDIDO, OPCIONES_PAGO_PEDIDO } from '../../../models/Pedido.js';
 import { crearPedido, pagarPedido } from '../servicios/pedidos.js';
 
 const errorDe = (res, mensaje, estado = 400) =>

@@ -6,7 +6,7 @@ import app from './app.js';
 import { crearAdministradorInicial, crearTiposIniciales } from './helpers/semillas.js';
 import { asegurarEsquema } from './helpers/migraciones.js';
 import { verificarTransporte } from './compartido/ayudantes/email.js';
-import { liberarPedidosVencidos } from './helpers/pedidos.js';
+import { liberarPedidosVencidos } from './modulos/pedidos/index.js';
 import { validarSecretosInicio } from './helpers/validacionSecretos.js';
 import { detenerColaTrabajos, iniciarColaTrabajos } from './compartido/ayudantes/colaTrabajos.js';
 import './helpers/procesadoresTrabajos.js';
