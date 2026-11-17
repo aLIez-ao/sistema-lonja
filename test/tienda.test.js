@@ -3,7 +3,8 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
 import { arrancar, cliente, modelos } from './ayuda.js';
-import { limiteSugerencias, limitesDisponibles } from '../controllers/tiendaController.js';
+import { tiendaController } from '../modulos/tienda/index.js';
+const { limiteSugerencias, limitesDisponibles } = tiendaController;
 
 const { Tipo, Lote, Especie, EspecieCatalogo, Comprador, Compra, Usuario, Pedido, PedidoItem } = modelos;
 

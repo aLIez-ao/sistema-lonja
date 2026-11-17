@@ -1,5 +1,5 @@
 import express from 'express';
-import * as c from '../controllers/carritoController.js';
+import * as c from '../controladores/carritoController.js';
 
 const router = express.Router();
 router.get('/', c.verCarrito);

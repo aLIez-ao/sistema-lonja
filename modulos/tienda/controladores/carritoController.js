@@ -1,8 +1,8 @@
-import { CarritoItem, Lote, Especie, Tipo, EspecieCatalogo } from '../models/index.js';
-import { loteDisponible, disponibilidadDeLotes } from '../modulos/catalogo/index.js';
-import { totalLineas } from '../modulos/pedidos/index.js';
-import { prepararLote } from '../helpers/tienda.js';
-import { aMensaje } from '../compartido/ayudantes/utiles.js';
+import { CarritoItem, Lote, Especie, Tipo, EspecieCatalogo } from '../../../models/index.js';
+import { loteDisponible, disponibilidadDeLotes } from '../../catalogo/index.js';
+import { totalLineas } from '../../pedidos/index.js';
+import { prepararLote } from '../../../compartido/ayudantes/tiendaVista.js';
+import { aMensaje } from '../../../compartido/ayudantes/utiles.js';
 
 const includeLote = {
   model: Lote,

@@ -2,15 +2,15 @@
 // Solo se consultan lotes sin compra y especies activas; ningún dato de
 // compradores (nombres, correos o montos) sale por estas rutas.
 import { Op, fn, col, literal, where as sqlWhere } from 'sequelize';
-import db from '../compartido/config/db.js';
-import { Lote, Especie, EspecieCatalogo, Tipo, Compra } from '../models/index.js';
-import { leerListado, consultarListado, combinarWhere } from '../compartido/ayudantes/listado.js';
-import { filtroEntero, filtroNumero } from '../helpers/filtros.js';
-import { textoBusqueda } from '../helpers/busqueda.js';
-import { rangoDelDia, hoy, dinero } from '../compartido/ayudantes/fechas.js';
-import { crearLimite } from '../compartido/ayudantes/seguridad.js';
-import { prepararLote, imagenDeEspecie, precioMinimo } from '../helpers/tienda.js';
-import { reservasActivas } from '../modulos/catalogo/index.js';
+import db from '../../../compartido/config/db.js';
+import { Lote, Especie, EspecieCatalogo, Tipo, Compra } from '../../../models/index.js';
+import { leerListado, consultarListado, combinarWhere } from '../../../compartido/ayudantes/listado.js';
+import { filtroEntero, filtroNumero } from '../../../compartido/ayudantes/filtros.js';
+import { textoBusqueda } from '../../../compartido/ayudantes/busqueda.js';
+import { rangoDelDia, hoy, dinero } from '../../../compartido/ayudantes/fechas.js';
+import { crearLimite } from '../../../compartido/ayudantes/seguridad.js';
+import { prepararLote, imagenDeEspecie, precioMinimo } from '../../../compartido/ayudantes/tiendaVista.js';
+import { reservasActivas } from '../../catalogo/index.js';
 import { ponerOpinionesEnFicha, preguntasPublicas } from './socialController.js';
 
 // 30 sugerencias por minuto y por IP (se reinicia en las pruebas).

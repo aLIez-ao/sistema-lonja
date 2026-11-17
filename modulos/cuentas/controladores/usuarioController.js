@@ -6,7 +6,7 @@ import { mensajesError, mensajeBD, aMensaje } from '../../../compartido/ayudante
 import { problemasPassword, passwordInutilizable } from '../../../compartido/ayudantes/seguridad.js';
 import { aplicarFoto, borrarFoto } from '../ayudantes/avatar.js';
 import { enviarEnlacePassword, enviarVerificacionCorreo, resumenEnvio } from '../ayudantes/cuentas.js';
-import { condicionBusqueda } from '../../../helpers/busqueda.js';
+import { condicionBusqueda } from '../../../compartido/ayudantes/busqueda.js';
 import { reglaCorreo, reglaTelefono } from '../../../compartido/ayudantes/validacion.js';
 import { anexarParametrosQuery } from '../../../compartido/ayudantes/listado.js';
 

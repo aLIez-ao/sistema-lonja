@@ -1,4 +1,4 @@
-import { ENTIDADES, sugerencias } from '../helpers/busqueda.js';
+import { ENTIDADES, sugerencias } from '../../../compartido/ayudantes/busqueda.js';
 
 /** GET /buscar/sugerencias?entidad=...&q=... → [{ id, titulo, subtitulo, url }] */
 export const sugerenciasBusqueda = async (req, res) => {

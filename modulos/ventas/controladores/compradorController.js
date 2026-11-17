@@ -4,8 +4,8 @@ import { literal } from 'sequelize';
 import { Comprador, Compra, Lote, Especie, Tipo, Usuario } from '../../../models/index.js';
 import { mensajesError, mensajeBD, aMensaje, aError } from '../../../compartido/ayudantes/utiles.js';
 import { leerListado, consultarListado, combinarWhere } from '../../../compartido/ayudantes/listado.js';
-import { condicionBusqueda } from '../../../helpers/busqueda.js';
-import { condicionFiltros, filtroSiNo } from '../../../helpers/filtros.js';
+import { condicionBusqueda } from '../../../compartido/ayudantes/busqueda.js';
+import { condicionFiltros, filtroSiNo } from '../../../compartido/ayudantes/filtros.js';
 
 const reglas = [
   body('nombre')

@@ -1,7 +1,7 @@
 import express from 'express';
 import { cuentaController as cuenta, direccionController as direcciones } from '../modulos/cuentas/index.js';
 import * as pedidos from '../modulos/pedidos/index.js';
-import * as social from '../controllers/socialController.js';
+import { socialController as social } from '../modulos/tienda/index.js';
 
 const router = express.Router();
 

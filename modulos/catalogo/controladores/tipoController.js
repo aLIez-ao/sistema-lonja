@@ -3,7 +3,7 @@ import { literal } from 'sequelize';
 import { Tipo, Especie, Lote, Compra } from '../../../models/index.js';
 import { mensajesError, mensajeBD, aMensaje, aError } from '../../../compartido/ayudantes/utiles.js';
 import { leerListado, consultarListado } from '../../../compartido/ayudantes/listado.js';
-import { condicionBusqueda } from '../../../helpers/busqueda.js';
+import { condicionBusqueda } from '../../../compartido/ayudantes/busqueda.js';
 
 const reglas = [
   body('nombre')

@@ -1,6 +1,6 @@
 import express from 'express';
-import * as c from '../controllers/tiendaController.js';
-import * as social from '../controllers/socialController.js';
+import * as c from '../controladores/tiendaController.js';
+import * as social from '../controladores/socialController.js';
 
 // Se monta en la raíz: "/" es la tienda y "/tienda/*" sus páginas internas.
 const router = express.Router();

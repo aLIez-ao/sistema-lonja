@@ -4,8 +4,14 @@ import db from '../../../compartido/config/db.js';
 import { Lote, Especie, EspecieCatalogo, Tipo, Compra, Comprador, ListaItem } from '../../../models/index.js';
 import { mensajesError, mensajeBD, aMensaje, aError } from '../../../compartido/ayudantes/utiles.js';
 import { leerListado, consultarListado, combinarWhere } from '../../../compartido/ayudantes/listado.js';
-import { condicionBusqueda } from '../../../helpers/busqueda.js';
-import { condicionFiltros, filtroEntero, filtroFecha, filtroLista, filtroNumero } from '../../../helpers/filtros.js';
+import { condicionBusqueda } from '../../../compartido/ayudantes/busqueda.js';
+import {
+  condicionFiltros,
+  filtroEntero,
+  filtroFecha,
+  filtroLista,
+  filtroNumero,
+} from '../../../compartido/ayudantes/filtros.js';
 import {
   LoteVendidoError,
   exigirLoteNoVendido,

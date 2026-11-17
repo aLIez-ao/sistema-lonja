@@ -6,8 +6,8 @@
 // LIKE. El texto del usuario siempre viaja como parámetro enlazado, nunca
 // concatenado en el SQL.
 import { Op, fn, col, where as sqlWhere } from 'sequelize';
-import { Compra, Lote, Especie, EspecieCatalogo, Comprador, Tipo, Usuario } from '../models/index.js';
-import { formatoFechaHora, dinero } from '../compartido/ayudantes/fechas.js';
+import { Compra, Lote, Especie, EspecieCatalogo, Comprador, Tipo, Usuario } from '../../models/index.js';
+import { formatoFechaHora, dinero } from './fechas.js';
 
 export const ENTIDADES = ['compras', 'lotes', 'especies', 'catalogo', 'compradores', 'tipos', 'usuarios'];
 

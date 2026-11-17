@@ -2,8 +2,8 @@
 // condiciones de Sequelize. Los valores inválidos se ignoran (el validador
 // devuelve undefined) y el filtro simplemente no se aplica.
 import { Op, literal, where as sqlWhere } from 'sequelize';
-import { Especie } from '../models/index.js';
-import { fechaValida, rangoDelDia } from '../compartido/ayudantes/fechas.js';
+import { Especie } from '../../models/index.js';
+import { fechaValida, rangoDelDia } from './fechas.js';
 
 /** Fecha AAAA-MM-DD válida o undefined. */
 export const filtroFecha = (v) => (fechaValida(v) ? String(v) : undefined);

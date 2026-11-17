@@ -12,25 +12,22 @@ import {
   Usuario,
   CarritoItem,
   Tipo,
-} from '../models/index.js';
-import { crearLimite } from '../compartido/ayudantes/seguridad.js';
-import { enviarEmailRespuestaPregunta } from '../compartido/ayudantes/email.js';
-import { errorDeSitio, rutaReferer, volverA } from '../compartido/ayudantes/navegacion.js';
-import { nombrePublico, prepararLote, imagenDeEspecie } from '../helpers/tienda.js';
-import { disponibilidadDeLotes } from '../modulos/catalogo/index.js';
-import { ESTADO_PEDIDO } from '../models/Pedido.js';
+} from '../../../models/index.js';
+import { crearLimite } from '../../../compartido/ayudantes/seguridad.js';
+import { errorDeSitio, rutaReferer, volverA } from '../../../compartido/ayudantes/navegacion.js';
+import { prepararLote, imagenDeEspecie } from '../../../compartido/ayudantes/tiendaVista.js';
+import { disponibilidadDeLotes } from '../../catalogo/index.js';
+import { ESTADO_PEDIDO } from '../../../models/Pedido.js';
+import { elementoValido, obtenerListaFavoritos as listaFavoritos } from '../servicios/listas.js';
+import {
+  actualizarRespuestaPregunta,
+  preguntasPublicas as consultarPreguntasPublicas,
+  registrarPregunta,
+} from '../servicios/preguntas.js';
+import { guardarOpinionComprada, opinionesDeFicha as obtenerOpinionesDeFicha } from '../servicios/opiniones.js';
 
 const esJson = (req) => req.is('json') || req.accepts(['html', 'json']) === 'json';
 const tipoValido = (tipo) => tipo === 'lote' || tipo === 'especie';
-async function elementoValido(tipo, id_ref) {
-  return tipo === 'lote' ? Lote.findByPk(id_ref) : EspecieCatalogo.findByPk(id_ref);
-}
-async function listaFavoritos(id_usuario) {
-  return Lista.findOrCreate({ where: { id_usuario, nombre: 'Favoritos' }, defaults: { fecha: new Date() } }).then(
-    ([lista]) => lista,
-  );
-}
-
 const limitePreguntas = crearLimite({ max: 5, ventanaMs: 60 * 60 * 1000 });
 const limpio = (v, max) =>
   String(v ?? '')
@@ -327,10 +324,9 @@ export async function crearPregunta(req, res) {
     (id_cat && !Number.isInteger(id_cat))
   )
     return errorDeSitio(req, res, 400, 'Escribe una pregunta y elige un lote o una especie.', destino);
-  const objeto = id_lte ? await Lote.findByPk(id_lte) : await EspecieCatalogo.findByPk(id_cat);
-  if (!objeto) return errorDeSitio(req, res, 404, 'No encontramos ese lote o especie.', destino);
   limitePreguntas.fallo(key);
-  await Pregunta.create({ id_usuario: req.usuario.id, id_lte, id_cat, texto });
+  const resultado = await registrarPregunta({ usuarioId: req.usuario.id, idLote: id_lte, idEspecie: id_cat, texto });
+  if (!resultado.ok) return errorDeSitio(req, res, resultado.estado, resultado.mensaje, destino);
   return volverA(req, res, destino, { mensaje: 'Pregunta enviada. La publicaremos después de responderla.' });
 }
 export async function misPreguntas(req, res) {
@@ -350,15 +346,14 @@ export async function moderarPreguntas(req, res) {
   });
 }
 export async function responderPregunta(req, res) {
-  const pregunta = await Pregunta.findByPk(req.params.id, { include: [{ model: Usuario, as: 'autor' }] });
-  if (!pregunta) return errorDeSitio(req, res, 404, 'No encontramos esa pregunta.', '/preguntas');
   const respuesta = limpio(req.body.respuesta, 500);
-  if (req.body.estado === 'oculta') await pregunta.update({ estado: 'oculta' });
-  else if (respuesta) {
-    await pregunta.update({ respuesta, estado: 'respondida', id_usuario_resp: req.usuario.id, fecha_resp: new Date() });
-    if (pregunta.autor?.correo)
-      await enviarEmailRespuestaPregunta({ usuario: pregunta.autor, respuesta, pregunta: pregunta.texto });
-  }
+  const actualizada = await actualizarRespuestaPregunta({
+    preguntaId: req.params.id,
+    estado: req.body.estado,
+    respuesta,
+    usuarioId: req.usuario.id,
+  });
+  if (!actualizada) return errorDeSitio(req, res, 404, 'No encontramos esa pregunta.', '/preguntas');
   return volverA(req, res, '/preguntas', { mensaje: 'La pregunta se actualizó.' });
 }
 
@@ -368,60 +363,14 @@ export async function guardarOpinion(req, res) {
   const destino = `/tienda/especie/${encodeURIComponent(id_cat)}#opiniones`;
   if (!Number.isInteger(id_cat) || id_cat < 1 || !(estrellas >= 1 && estrellas <= 5) || !Number.isInteger(estrellas))
     return errorDeSitio(req, res, 400, 'Elige una especie y una calificación de una a cinco estrellas.', '/');
-  if (!(await EspecieCatalogo.findByPk(id_cat))) return errorDeSitio(req, res, 404, 'No encontramos esa especie.', '/');
-  let comprada = false;
-  if (req.usuario.codigo_cpr) {
-    const include = [
-      {
-        model: Lote,
-        as: 'lote',
-        required: true,
-        include: [{ model: Especie, as: 'especies', required: true, where: { id_cat } }],
-      },
-    ];
-    comprada = Boolean(await Compra.findOne({ where: { codigo_cpr: req.usuario.codigo_cpr, id_ped: null }, include }));
-    if (!comprada)
-      comprada = Boolean(
-        await Compra.findOne({
-          where: { codigo_cpr: req.usuario.codigo_cpr },
-          include: [
-            ...include,
-            {
-              model: Pedido,
-              as: 'pedido',
-              required: true,
-              where: {
-                estado: {
-                  [Op.in]: [
-                    ESTADO_PEDIDO.PAGADO,
-                    ESTADO_PEDIDO.PREPARANDO,
-                    ESTADO_PEDIDO.ENVIADO,
-                    ESTADO_PEDIDO.ENTREGADO,
-                  ],
-                },
-              },
-            },
-          ],
-        }),
-      );
-  }
-  if (!comprada) return errorDeSitio(req, res, 403, 'Solo puedes opinar sobre especies que compraste.', destino);
-  const [opinion] = await Opinion.findOrCreate({
-    where: { id_usuario: req.usuario.id, id_cat },
-    defaults: { estrellas, titulo: limpio(req.body.titulo, 80), texto: limpio(req.body.texto, 1000), visible: true },
+  const resultado = await guardarOpinionComprada({
+    usuario: req.usuario,
+    idCatalogo: id_cat,
+    estrellas,
+    titulo: req.body.titulo,
+    textoOpinion: req.body.texto,
   });
-  if (
-    opinion.estrellas !== estrellas ||
-    opinion.titulo !== limpio(req.body.titulo, 80) ||
-    opinion.texto !== limpio(req.body.texto, 1000)
-  )
-    await opinion.update({
-      estrellas,
-      titulo: limpio(req.body.titulo, 80),
-      texto: limpio(req.body.texto, 1000),
-      visible: true,
-      fecha: new Date(),
-    });
+  if (!resultado.ok) return errorDeSitio(req, res, resultado.estado, resultado.mensaje, destino);
   return volverA(req, res, destino, { mensaje: 'Tu opinión se guardó correctamente.' });
 }
 export async function misOpiniones(req, res) {
@@ -496,36 +445,9 @@ export async function cambiarVisibilidadOpinion(req, res) {
 }
 
 export async function ponerOpinionesEnFicha(id_cat, id_usuario = null) {
-  const opiniones = await Opinion.findAll({
-    where: { id_cat, visible: true },
-    include: [{ model: Usuario, as: 'autor', attributes: ['nombre_completo'] }],
-    order: [['fecha', 'DESC']],
-  });
-  const opinionesPublicas = opiniones.map((opinion) => ({
-    id_op: opinion.id_op,
-    estrellas: opinion.estrellas,
-    titulo: opinion.titulo,
-    texto: opinion.texto,
-    fecha: opinion.fecha,
-    autorPublico: nombrePublico(opinion.autor?.nombre_completo),
-  }));
-  const distribucion = [1, 2, 3, 4, 5].map((n) => opiniones.filter((o) => o.estrellas === n).length);
-  const opinionPropia = id_usuario ? await Opinion.findOne({ where: { id_cat, id_usuario } }) : null;
-  return {
-    opiniones: opinionesPublicas,
-    opinionPropia,
-    resumenOpiniones: {
-      total: opiniones.length,
-      media: opiniones.length ? opiniones.reduce((s, o) => s + o.estrellas, 0) / opiniones.length : 0,
-      distribucion,
-    },
-  };
+  return obtenerOpinionesDeFicha(id_cat, id_usuario);
 }
 
 export async function preguntasPublicas(condicion) {
-  return Pregunta.findAll({
-    where: { ...condicion, estado: 'respondida' },
-    attributes: ['id_preg', 'texto', 'respuesta', 'fecha', 'fecha_resp'],
-    order: [['fecha', 'DESC']],
-  });
+  return consultarPreguntasPublicas(condicion);
 }

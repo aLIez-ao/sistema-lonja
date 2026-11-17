@@ -5,8 +5,8 @@ import { col, fn, where as sqlWhere } from 'sequelize';
 import { Especie, EspecieCatalogo, Tipo } from '../../../models/index.js';
 import { mensajesError, mensajeBD, aMensaje, aError } from '../../../compartido/ayudantes/utiles.js';
 import { leerListado, consultarListado, combinarWhere } from '../../../compartido/ayudantes/listado.js';
-import { condicionBusqueda } from '../../../helpers/busqueda.js';
-import { condicionFiltros, filtroEntero, filtroLista } from '../../../helpers/filtros.js';
+import { condicionBusqueda } from '../../../compartido/ayudantes/busqueda.js';
+import { condicionFiltros, filtroEntero, filtroLista } from '../../../compartido/ayudantes/filtros.js';
 import { borrarImagen, guardarImagenDataURL } from '../../../compartido/ayudantes/imagenes.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

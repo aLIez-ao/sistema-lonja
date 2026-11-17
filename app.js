@@ -25,12 +25,14 @@ import {
   rutasCompras as router_compra,
   rutasReportes as router_reporte,
 } from './modulos/ventas/index.js';
-import router_busqueda from './routes/busqueda_router.js';
+import {
+  rutasBusqueda as router_busqueda,
+  rutasPublicas as router_tienda,
+  rutasCarrito as router_carrito,
+  socialController as social,
+} from './modulos/tienda/index.js';
 import router_cuenta from './routes/cuenta_router.js';
-import router_tienda from './routes/tienda_router.js';
-import router_carrito from './routes/carrito_router.js';
 import { router as router_pedido, rutasAdmin as router_pedido_admin } from './modulos/pedidos/index.js';
-import * as social from './controllers/socialController.js';
 import { formatoFechaHora } from './compartido/ayudantes/fechas.js';
 import { icono } from './compartido/ayudantes/iconos.js';
 import { CarritoItem, Lista, ListaItem } from './models/index.js';

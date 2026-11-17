@@ -1,5 +1,5 @@
 import express from 'express';
-import { sugerenciasBusqueda } from '../controllers/busquedaController.js';
+import { sugerenciasBusqueda } from '../controladores/busquedaController.js';
 
 const router = express.Router();
 
